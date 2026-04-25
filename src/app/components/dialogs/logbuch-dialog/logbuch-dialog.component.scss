@@ -1,0 +1,234 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  font-family: "Roboto", sans-serif;
+  color: #333;
+  width: 100%;
+  max-width: 100%;
+  /* Fixed height; the scroll appears inside mat-dialog-content when needed. */
+  height: 560px;
+  max-height: 90vh;
+}
+
+.logbuch-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 24px 4px;
+  flex-shrink: 0;
+
+  .logbuch-icon {
+    color: #338e9c;
+    font-size: 28px;
+    width: 28px;
+    height: 28px;
+  }
+
+  h2 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .counter {
+    margin-left: auto;
+    font-size: 12px;
+    color: #555;
+    white-space: nowrap;
+  }
+}
+
+mat-dialog-content {
+  padding: 0 24px;
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+
+.meta {
+  background-color: #f5f7fa;
+  border: 1px solid #e0e6eb;
+  border-radius: 4px;
+  padding: 10px 14px;
+  margin-bottom: 14px;
+  font-size: 13px;
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  row-gap: 4px;
+  column-gap: 12px;
+
+  .meta-row {
+    display: contents;
+  }
+
+  .meta-label {
+    font-weight: 600;
+    color: #555;
+  }
+
+  .meta-value {
+    color: #222;
+  }
+
+  .meta-id {
+    margin-left: 4px;
+    color: #888;
+    font-size: 12px;
+  }
+}
+
+.first-entry-note {
+  margin: 8px 0 0;
+  color: #555;
+  font-size: 13px;
+
+  strong { color: #338e9c; }
+}
+
+.no-changes {
+  margin: 8px 0;
+  color: #777;
+  font-style: italic;
+  font-size: 13px;
+}
+
+.diff-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  margin-top: 4px;
+
+  thead th {
+    text-align: left;
+    padding: 6px 10px;
+    background-color: #d4dce0;
+    color: #000;
+    font-weight: 600;
+    border-bottom: 1px solid #b8c3cb;
+
+    &:first-child { width: 30%; }
+    &:nth-child(2),
+    &:nth-child(3) { width: 35%; }
+  }
+
+  tbody {
+    th.diff-field {
+      text-align: left;
+      padding: 6px 10px;
+      font-weight: 600;
+      color: #444;
+      background-color: #fafafa;
+      border-bottom: 1px solid #eee;
+      vertical-align: top;
+      white-space: nowrap;
+    }
+
+    td {
+      padding: 6px 10px;
+      border-bottom: 1px solid #eee;
+      vertical-align: top;
+      word-break: break-word;
+    }
+
+    .diff-old {
+      color: #b71c1c;
+      text-decoration: line-through;
+    }
+
+    .diff-new {
+      color: #1b5e20;
+      font-weight: 500;
+    }
+
+    .cell-empty {
+      color: #999;
+      font-style: italic;
+      text-decoration: none;
+    }
+
+    /* Alternating row backgrounds */
+    tr:nth-child(odd) {
+      th.diff-field { background-color: #fafafa; }
+      td { background-color: #ffffff; }
+    }
+    tr:nth-child(even) {
+      th.diff-field { background-color: #eef1f3; }
+      td { background-color: #f5f7f9; }
+    }
+  }
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 32px 0;
+  color: #777;
+
+  mat-icon {
+    font-size: 32px;
+    width: 32px;
+    height: 32px;
+    margin-bottom: 8px;
+  }
+
+  p { margin: 0; font-style: italic; }
+}
+
+mat-dialog-actions {
+  padding: 12px 24px 16px;
+  gap: 8px;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+
+  .nav-group {
+    display: flex;
+    gap: 6px;
+
+    button {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+
+      mat-icon {
+        font-size: 18px;
+        width: 18px;
+        height: 18px;
+      }
+    }
+  }
+
+  .actions-spacer {
+    flex: 1;
+  }
+
+  .download-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+
+    mat-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+    }
+  }
+
+  /* Dark Schließen button */
+  .close-btn {
+    background-color: #2e4155 !important;
+    color: #ffffff !important;
+    font-weight: 500;
+    --mdc-filled-button-container-color: #2e4155;
+    --mdc-filled-button-label-text-color: #ffffff;
+
+    &:hover:not(:disabled) {
+      background-color: #3a526b !important;
+      --mdc-filled-button-container-color: #3a526b;
+    }
+  }
+}

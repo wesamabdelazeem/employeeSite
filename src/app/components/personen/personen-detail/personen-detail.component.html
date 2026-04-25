@@ -13,9 +13,28 @@
         <mat-icon>arrow_back</mat-icon>
       </button>
 
-      <button mat-icon-button aria-label="Menü öffnen" class="personen-icon">
+      <button
+        mat-icon-button
+        aria-label="Menü öffnen"
+        class="personen-icon"
+        [matMenuTriggerFor]="personenMenu"
+      >
         <mat-icon>menu</mat-icon>
       </button>
+      <mat-menu #personenMenu="matMenu">
+        <button mat-menu-item (click)="openLogbuch()">
+          <mat-icon>article</mat-icon>
+          <span>Logbuch</span>
+        </button>
+        <button mat-menu-item (click)="onMenuPrint()">
+          <mat-icon>print</mat-icon>
+          <span>Drucken</span>
+        </button>
+        <button mat-menu-item (click)="onMenuExport()">
+          <mat-icon>file_download</mat-icon>
+          <span>Exportieren</span>
+        </button>
+      </mat-menu>
     </div>
 
     <!-- Center: Page Title -->

@@ -24,8 +24,10 @@ import {MatProgressSpinnerModule} from '@angular/material/progress-spinner';
 import {MatListModule} from '@angular/material/list';
 import {MatTooltipModule} from '@angular/material/tooltip';
 import {MatDialog, MatDialogModule} from '@angular/material/dialog';
+import {MatMenuModule} from '@angular/material/menu';
 import {DateUtilsService} from '../../../services/utils/date-utils.service';
 import {ErrorDialogComponent} from '../../dialogs/error-dialog/error-dialog.component';
+import {LogbuchDialogComponent} from '../../dialogs/logbuch-dialog/logbuch-dialog.component';
 
 @Component({
   selector: 'app-personen-detail',
@@ -48,6 +50,7 @@ import {ErrorDialogComponent} from '../../dialogs/error-dialog/error-dialog.comp
     MatDatepickerModule,
     MatTooltipModule,
     MatDialogModule,
+    MatMenuModule,
     FormsModule
 
   ],
@@ -630,6 +633,45 @@ export class PersonenDetailComponent {
   onBack(): void {
     console.log('Back button clicked');
     this.router.navigate(['/personen']);
+  }
+
+  // ─── Toolbar menu actions ───────────────────────────────────────────────
+  openLogbuch(): void {
+    const fullName =
+      this.currentPerson
+        ? `${this.currentPerson.vorname ?? ''} ${this.currentPerson.nachname ?? ''}`.trim()
+        : undefined;
+    console.log('Menu action: Logbuch clicked', { personId: this.personId, fullName });
+
+    const id = this.personId ?? this.currentPerson?.id ?? '';
+    this.personenService.historyAuswertung(id).subscribe({
+      next: entries => {
+        console.log('historyAuswertung returned', entries.length, 'entries');
+        this.dialog.open(LogbuchDialogComponent, {
+          data: { title: 'Logbuch', subtitle: fullName, entries },
+          panelClass: 'logbuch-dialog-panel',
+          autoFocus: false,
+          width: '680px',
+          maxWidth: '95vw',
+        });
+      },
+      error: err => {
+        console.error('historyAuswertung failed', err);
+        this.dialog.open(LogbuchDialogComponent, {
+          data: { title: 'Logbuch', subtitle: fullName, entries: [] },
+          panelClass: 'logbuch-dialog-panel',
+          autoFocus: false,
+        });
+      },
+    });
+  }
+
+  onMenuPrint(): void {
+    console.log('Menu action: Drucken clicked', { personId: this.personId });
+  }
+
+  onMenuExport(): void {
+    console.log('Menu action: Exportieren clicked', { personId: this.personId });
   }
 
   togglePanel(panel: keyof typeof this.isPanelOpen): void {

@@ -1322,3 +1322,74 @@ export const MOCK_FEIERTAGE: any[] = [
   { datum: '2026-12-25', bezeichnung: 'Weihnachten' },
   { datum: '2026-12-26', bezeichnung: 'Stefanitag' },
 ];
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Person history (Logbuch / historyAuswertung)
+// ─────────────────────────────────────────────────────────────────────────────
+/** Column order in the back-end CSV export. Mirrors PersonHistoryEntry keys. */
+const PERSON_HISTORY_COLUMNS: string[] = [
+  'bearbeitungszeit', 'bearbeiter', 'bearbeiterId', 'vorgang',
+  'titel', 'vorname', 'nachname', 'emailGeschaeftlich',
+  'geburtsdatum', 'geschlecht', 'funktion', 'personalnr',
+  'anmerkung', 'emailPrivat', 'eintrittsDatum', 'austrittsDatum',
+  'aktiv', 'svnr', 'emailExtern', 'staatsangehoerigkeit',
+  'rolle', 'bucher', 'rechte', 'funktionen',
+  'firma', 'selbststaendig', 'windowsBenutzerkonto', 'stundensatz',
+  'bereitschaftsStundensatz', 'dienstverwendung', 'mitarbeiterart', 'geprueft',
+  'stundenkontingentJaehrlich', 'stundenkontingentJaehrlichVertrag', 'mobilNummerBmi', 'mobilNummerExtern',
+  'zimmerNummer', 'leerPdf', 'leistungskategorie', 'personenverantwortlicher',
+  'teamleiter', 'teamzuordnung', 'organisationseinheit', 'freigabegruppe',
+  'letzteBearbeitung',
+];
+
+/** Raw CSV body — semicolon-separated, double-quoted, one record per line. */
+const MOCK_PERSON_HISTORY_CSV = `"2024-02-28 15:35:48";"Thiem Peter Franz";"thiem01@bmi.gv.at";"PersonenPO";"Monsigneur";"Achret";"Brig";"a.b@bmi.gv.at";"19900512";"divers";"IV/2";"986532";"hier kommt wieder ein     als Trennzeichen hier startet neue Zeile nach einem Zeilenumbruch ggg";"k.x@a.lglg";"2020-02-03";"9999-12-31";"true";"01234567890123456789012345678901";"lala@holland.nl";"Österreich";"DEFAULT";"FREIER_BUCHER";"STP,LAN,RUS,BER,OST,OSB";"TEAML,ABTL";"firma";"true";"s.b";"145,00";;"SERVICEMANAGER_IN";"EXTERN_OHNE_BAKS";"true";"1600";"1400";"Mobi123/23456";"A123456789012345678901234";"HP111";"true";"22,00";"Dipl.Ing.(FH) Markus Blank";"Manfred Elsinger";"Netzwerk";;"Architektur";"2023-12-17";
+"2024-04-10 12:18:49";"Jahresabschluss";"Jahresabschluss";"ResetPersonJahreskontingent";"Monsigneur";"Achret";"Brig";"a.b@bmi.gv.at";"19900512";"divers";"IV/2";"986532";"hier kommt wieder ein     als Trennzeichen hier startet neue Zeile nach einem Zeilenumbruch ggg";"k.x@a.lglg";"2020-02-03";"9999-12-31";"true";"01234567890123456789012345678901";"lala@holland.nl";"Österreich";"DEFAULT";"FREIER_BUCHER";"STP,LAN,RUS,BER,OST,OSB";"TEAML,ABTL";"firma";"true";"s.b";"145,00";;"SERVICEMANAGER_IN";"EXTERN_OHNE_BAKS";"true";"1400";"1400";"Mobi123/23456";"A123456789012345678901234";"HP111";"true";"22,00";"Dipl.Ing.(FH) Markus Blank";"Manfred Elsinger";"Netzwerk";;"Architektur";"2023-12-17";
+"2025-02-04 10:02:53";"Terab Hassan";"terab01@bmi.gv.at";"PersonenPO";"Monsigneur";"Achret";"Brig";"a.b@bmi.gv.at";"19900512";"divers";"IV/2";"986532";"hier kommt wieder ein     als Trennzeichen hier startet neue Zeile nach einem Zeilenumbruch ggg  XXX";"k.x@a.lglg";"2020-02-03";"9999-12-31";"true";"01234567890123456789012345678901";"lala@holland.nl";"Österreich";"DEFAULT";"FREIER_BUCHER";"STP,LAN,RUS,BER,OST,OSB";"TEAML,ABTL";"firma";"true";"s.b";"145,00";"";"SERVICEMANAGER_IN";"EXTERN_OHNE_BAKS";"true";"1400";"1400";"Mobi123/23456";"A123456789012345678901234";"HP111";"true";"22,00";"Dipl.Ing.(FH) Markus Blank";"Manfred Elsinger";"Netzwerk";;"Architektur";"2023-12-17";
+"2025-04-24 12:52:27";"Thiem Peter Franz";"thiem01@bmi.gv.at";"PersonenPO";"Monsigneur";"Achret";"Brig";"a.b@bmi.gv.at";"19900512";"divers";"IV/2";"986532";"hier kommt wieder ein     als Trennzeichen hier startet neue Zeile nach einem Zeilenumbruch ggg  XXX";"k.x@a.lglg";"2020-02-03";"9999-12-31";"true";"01234567890123456789012345678901";"lala@holland.nl";"Österreich";"DEFAULT";"FREIER_BUCHER";"STP,LAN,RUS,BER,OST,OSB";"TEAML,ABTL";"firma";"true";"s.b";"145,00";"";;"EXTERN_OHNE_BAKS";"false";"1400";"1400";"Mobi123/23456";"A123456789012345678901234";"HP111";"true";"22,00";"Dipl.Ing.(FH) Markus Blank";"Manfred Elsinger";"Netzwerk";;"Architektur";"2023-12-17";
+"2025-04-24 12:52:37";"Thiem Peter Franz";"thiem01@bmi.gv.at";"PersonenPO";"Monsigneur";"Achret";"Brig";"a.b@bmi.gv.at";"19900512";"divers";"IV/2";"986532";"hier kommt wieder ein     als Trennzeichen hier startet neue Zeile nach einem Zeilenumbruch ggg  XXX";"k.x@a.lglg";"2020-02-03";"9999-12-31";"true";"01234567890123456789012345678901";"lala@holland.nl";"Österreich";"DEFAULT";"FREIER_BUCHER";"STP,LAN,RUS,BER,OST,OSB";"TEAML,ABTL";"firma";"true";"s.b";"145,00";"";"ARCHITEKT_IN";"EXTERN_OHNE_BAKS";"true";"1400";"1400";"Mobi123/23456";"A123456789012345678901234";"HP111";"true";"22,00";"Dipl.Ing.(FH) Markus Blank";"Manfred Elsinger";"Netzwerk";;"Architektur";"2023-12-17";
+"2026-02-26 10:33:01";"Thiem Peter Franz";"thiem01@bmi.gv.at";"PersonenPO";"Monsigneure";"Achret";"Brig";"a.b@bmi.gv.at";"19900512";"divers";"IV/2";"986532";"hier kommt wieder ein     als Trennzeichen hier startet neue Zeile nach einem Zeilenumbruch ggg  XXX";"k.x@a.lglg";"2020-02-03";"9999-12-31";"true";"01234567890123456789012345678901";"lala@holland.nl";"Österreich";"DEFAULT";"FREIER_BUCHER";"STP,LAN,RUS,BER,OST,OSB";"TEAML,ABTL";"firma";"true";"s.b";"145,00";"";"ARCHITEKT_IN";"EXTERN_OHNE_BAKS";"true";"1400";"1400";"Mobi123/23456";"A123456789012345678901234";"HP111";"true";"22,00";"Dipl.Ing.(FH) Markus Blank";"Manfred Elsinger";"Netzwerk";;"Architektur";"2023-12-17";
+"2026-04-22 10:45:35";"Thiem Peter Franz";"thiem01@bmi.gv.at";"PersonenPO";"Monsigneure";"Achretx";"Brig";"a.b@bmi.gv.at";"19900512";"divers";"IV/2";"986532";"hier kommt wieder ein     als Trennzeichen hier startet neue Zeile nach einem Zeilenumbruch ggg  XXX";"k.x@a.lglg";"2020-02-03";"9999-12-31";"true";"01234567890123456789012345678901";"lala@holland.nl";"Österreich";"DEFAULT";"FREIER_BUCHER";"STP,LAN,RUS,BER,OST,OSB";"TEAML,ABTL";"firma";"true";"s.b";"145,00";"";"ARCHITEKT_IN";"EXTERN_OHNE_BAKS";"true";"1400";"1400";"Mobi123/23456";`;
+
+/** Splits a CSV row that uses ';' as separator and '"' as quote, with no
+    escape sequence beyond doubled quotes. Empty fields (`;;`) become ''.
+    A trailing `;` is treated as a row terminator (no synthetic empty field
+    appended at the end). */
+function parseSemicolonRow(line: string): string[] {
+  const out: string[] = [];
+  let i = 0;
+  let buf = '';
+  let inQuotes = false;
+  let lastSeparatorIndex = -1;
+  while (i < line.length) {
+    const ch = line[i];
+    if (inQuotes) {
+      if (ch === '"' && line[i + 1] === '"') { buf += '"'; i += 2; continue; }
+      if (ch === '"') { inQuotes = false; i += 1; continue; }
+      buf += ch; i += 1;
+    } else {
+      if (ch === ';') { out.push(buf); buf = ''; lastSeparatorIndex = i; i += 1; continue; }
+      if (ch === '"') { inQuotes = true; i += 1; continue; }
+      buf += ch; i += 1;
+    }
+  }
+  const endedWithSeparator = lastSeparatorIndex === line.length - 1;
+  if (buf !== '' || !endedWithSeparator) out.push(buf);
+  return out;
+}
+
+/** Pre-parsed list of PersonHistoryEntry-shaped rows for the mock backend.
+    `_fieldCount` keeps track of how many real columns each row had so the
+    Logbuch diff can ignore "missing" trailing columns from truncated rows. */
+export const MOCK_PERSON_HISTORY: any[] = MOCK_PERSON_HISTORY_CSV
+  .split(/\r?\n/)
+  .map(l => l.trim())
+  .filter(l => l.length > 0)
+  .map(line => {
+    const fields = parseSemicolonRow(line);
+    const entry: any = { raw: line, _fieldCount: fields.length };
+    for (let i = 0; i < PERSON_HISTORY_COLUMNS.length; i++) {
+      entry[PERSON_HISTORY_COLUMNS[i]] = fields[i] ?? '';
+    }
+    return entry;
+  });

@@ -26,6 +26,7 @@ import {
   MOCK_VERTRAEGE,
   MOCK_ABSCHLUSS_INFO,
   MOCK_FEIERTAGE,
+  MOCK_PERSON_HISTORY,
 } from './mock-data';
 
 /**
@@ -165,6 +166,9 @@ export class MockBackendInterceptor implements HttpInterceptor {
     }
     if (endpoint.match(/^personen\/[^/]+\/abschluss\/info$/) && m === 'GET') {
       return MOCK_ABSCHLUSS_INFO;
+    }
+    if (endpoint.match(/^personen\/[^/]+\/historyAuswertung$/) && m === 'GET') {
+      return MOCK_PERSON_HISTORY;
     }
 
     // ── stempelzeiten ────────────────────────────────────────────────────

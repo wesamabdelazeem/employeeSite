@@ -1,0 +1,100 @@
+<div class="logbuch-header">
+  <mat-icon class="logbuch-icon">article</mat-icon>
+  <h2 mat-dialog-title>{{ title }}</h2>
+  <span class="counter" *ngIf="entries.length">
+    Eintrag {{ currentIndex + 1 }} von {{ entries.length }}
+  </span>
+</div>
+
+<mat-dialog-content>
+  <ng-container *ngIf="currentEntry as entry; else emptyState">
+    <!-- Top metadata -->
+    <div class="meta">
+      <div class="meta-row">
+        <span class="meta-label">Geändert am:</span>
+        <span class="meta-value">{{ entry.bearbeitungszeit }}</span>
+      </div>
+      <div class="meta-row">
+        <span class="meta-label">Geändert von:</span>
+        <span class="meta-value">{{ entry.bearbeiter }}</span>
+      </div>
+    </div>
+
+    <!-- Oldest entry -> no predecessor to compare against -->
+    <p *ngIf="isFirstVersion" class="first-entry-note">
+      <strong>Erstversion</strong> — keine Vorversion vorhanden.
+    </p>
+
+    <!-- Diff table -->
+    <ng-container *ngIf="!isFirstVersion">
+      <p *ngIf="!currentChanges.length" class="no-changes">
+        Keine Änderungen gegenüber dem vorherigen Eintrag.
+      </p>
+
+      <table class="diff-table" *ngIf="currentChanges.length">
+        <thead>
+          <tr>
+            <th></th>
+            <th>Vorher</th>
+            <th>Nachher</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let change of currentChanges">
+            <th class="diff-field">{{ change.label }}</th>
+            <td class="diff-old">
+              <span *ngIf="change.before">{{ change.before }}</span>
+              <span *ngIf="!change.before" class="cell-empty">—</span>
+            </td>
+            <td class="diff-new">
+              <span *ngIf="change.after">{{ change.after }}</span>
+              <span *ngIf="!change.after" class="cell-empty">—</span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </ng-container>
+  </ng-container>
+
+  <ng-template #emptyState>
+    <div class="empty-state">
+      <mat-icon>info_outline</mat-icon>
+      <p>Keine Logbuch-Einträge vorhanden.</p>
+    </div>
+  </ng-template>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <div class="nav-group">
+    <button
+      mat-stroked-button
+      (click)="previous()"
+      [disabled]="!canGoPrevious"
+    >
+      <mat-icon>chevron_left</mat-icon>
+      Vorheriger
+    </button>
+    <button
+      mat-stroked-button
+      (click)="next()"
+      [disabled]="!canGoNext"
+    >
+      Nächster
+      <mat-icon>chevron_right</mat-icon>
+    </button>
+  </div>
+
+  <span class="actions-spacer"></span>
+
+  <button
+    mat-stroked-button
+    color="primary"
+    class="download-btn"
+    (click)="downloadCsv()"
+    [disabled]="!entries.length"
+  >
+    <mat-icon>file_download</mat-icon>
+    Download CSV
+  </button>
+  <button mat-flat-button class="close-btn" (click)="dialogRef.close()">Schließen</button>
+</mat-dialog-actions>

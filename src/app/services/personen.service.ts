@@ -10,6 +10,7 @@ import {ApiPersonAnwesenheit} from '../models/ApiPersonAnwesenheit';
 import {ApiStempelzeit} from '../models/ApiStempelzeit';
 import {GetitRest3Service} from './getit-rest-3.service';
 import {map} from 'rxjs/operators';
+import {PersonHistoryEntry} from '../models/PersonHistoryEntry';
 
 @Injectable({
   providedIn: 'root'
@@ -85,6 +86,15 @@ export class PersonenService {
     console.log('API_URL_PERSONEN' , AppConstants.API_URL_PERSONEN);
     let url = AppConstants.API_URL_PERSONEN + '/' + id + '?persondetailgrad=FullPvTlName&berechneteStunden=true&addVertraege=true';
     return this.http.get<ApiPerson>(url);
+  }
+
+  /**
+   * Returns the audit-log (history-auswertung) for a single person.
+   * Hits the back-end / mock-backend interceptor — no inline mock data here.
+   */
+  historyAuswertung(personId: string): Observable<PersonHistoryEntry[]> {
+    console.log('historyAuswertung()', personId);
+    return this.http.get<PersonHistoryEntry[]>(`personen/${personId}/historyAuswertung`);
   }
 
 

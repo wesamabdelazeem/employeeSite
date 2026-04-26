@@ -169,6 +169,19 @@ export class AnwesenheitslisteListComponent {
     this.anwesenheitenService.getInfoPdf();
   }
 
+  // ─── Test menu actions ──────────────────────────────────────────────────
+  onMenuTestRefresh(): void {
+    console.log('Menu action: Aktualisieren clicked');
+  }
+
+  onMenuTestExport(): void {
+    console.log('Menu action: Exportieren clicked');
+  }
+
+  onMenuTestSettings(): void {
+    console.log('Menu action: Einstellungen clicked');
+  }
+
   openFilePicker() {
     console.log('openFilePicker()');
     this.fileInput.nativeElement.click();

@@ -159,8 +159,9 @@
   font-weight:      600;
   padding:          6px 12px;
   border-bottom:    none !important;
-  background-color: $primary-color !important;
-  color:            $white !important;
+  /* Header background — change this single value to recolor the table header. */
+  background-color: #d4dce0 !important;
+  color:            #000000 !important;
 }
 
 // Data rows — alternating + hover

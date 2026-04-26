@@ -22,6 +22,9 @@ $tablet: 900px;
 
 .container {
   animation: fadeIn 0.4s ease-in;
+  /* Use a single font family across the whole component (header, search,
+     table, side menu, dialog menu trigger). */
+  font-family: shared.$font-family-base;
   width: 100%!important;
   max-width: 100%;
   overflow-x: hidden;
@@ -199,6 +202,67 @@ $tablet: 900px;
   padding-bottom: 0 !important;
 }
 
+/* Inherit the component's font family on common Material widgets so the
+   header, search input, table cells, buttons, etc. all match. */
+.container {
+  input,
+  button,
+  .mat-mdc-button,
+  .mat-mdc-icon-button,
+  .mat-mdc-form-field,
+  .mat-mdc-cell,
+  .mat-mdc-header-cell,
+  .title,
+  .menu-button,
+  .neu-button {
+    font-family: inherit;
+  }
+}
+
+/* The mat-menu panel is rendered in a CDK overlay outside this component's
+   view tree, so we target it via its panelClass globally. Same font family
+   as the rest of the component, single uniform size for every item, with
+   a thin separator between items and MDI icons aligned with the labels. */
+::ng-deep .mat-mdc-menu-panel.attendance-menu {
+  font-family: shared.$font-family-base;
+  min-width: 220px;
+  border-radius: 6px;
+  padding: 4px 0;
+
+  .mat-mdc-menu-content { padding: 0; }
+
+  .mat-mdc-menu-item,
+  .mat-mdc-menu-item .mat-mdc-menu-item-text,
+  .mat-mdc-menu-item span {
+    font-family: shared.$font-family-base !important;
+    font-size: 14px !important;
+    line-height: 1.4;
+  }
+
+  .mat-mdc-menu-item {
+    height: 40px;
+    min-height: 40px;
+    padding: 0 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-bottom: 1px solid #e5e9ec;        /* thin separator line */
+
+    &:last-child { border-bottom: none; }
+    &:hover     { background-color: #f4f7f9; }
+  }
+
+  /* MDI icon styling. */
+  .mat-mdc-menu-item .menu-icon.mdi {
+    font-size: 18px;
+    line-height: 1;
+    width: 18px;
+    height: 18px;
+    color: #2e4155;
+    flex-shrink: 0;
+  }
+}
+
 *:focus {
   outline: none !important;
   box-shadow: none !important;
@@ -225,6 +289,28 @@ $tablet: 900px;
   .mat-table {
     width: 100%;
     min-width: 600px;
+    /* Force the browser to use the explicit column widths below instead of
+       auto-sizing to content — otherwise columns shift when the search
+       filter narrows the data. */
+    table-layout: fixed;
+  }
+
+  /* Fixed column widths — applied via the matColumnDef classes Angular
+     Material auto-generates on every <th>/<td> (.mat-column-<name>). */
+  ::ng-deep {
+    .mat-column-icon          { width: 40px;  min-width: 40px;  max-width: 40px; }
+    .mat-column-familienname  { width: 22%; }
+    .mat-column-vorname       { width: 18%; }
+    .mat-column-abwesendBis   { width: 18%; }
+    .mat-column-mitarbeiterart{ width: 18%; }
+    .mat-column-actions       { width: 90px; min-width: 90px; max-width: 90px; }
+
+    /* Long names shouldn't blow out the cell — clip + ellipsis. */
+    .mat-mdc-cell {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
   }
 
   ::ng-deep .mat-mdc-header-cell {

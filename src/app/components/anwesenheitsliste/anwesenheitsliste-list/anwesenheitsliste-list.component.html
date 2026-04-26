@@ -7,24 +7,36 @@
       <button mat-icon-button [matMenuTriggerFor]="menu" class="menu-button">
         <mat-icon>menu</mat-icon>
       </button>
-      <mat-menu #menu="matMenu" class="attendance-menu">
+      <mat-menu #menu="matMenu" class="attendance-menu" xPosition="after">
         <button mat-menu-item class="menu-item"
                 *ngIf="canView"
                 (click)="getTelefonListePdf()">
-          <mat-icon>picture_as_pdf</mat-icon>
+          <i class="mdi mdi-file-pdf-box menu-icon"></i>
           <span>Telefonliste</span>
         </button>
 
         <button mat-menu-item class="menu-item" (click)="openFilePicker()" *ngIf="canUpload">
-          <mat-icon>picture_as_pdf</mat-icon>
+          <i class="mdi mdi-file-upload-outline menu-icon"></i>
           <span>Telefonliste hochladen</span>
         </button>
         <button mat-menu-item class="menu-item" (click)="getInfoPdf()" *ngIf="canView">
-          <mat-icon>picture_as_pdf</mat-icon>
-           <span>Informationen</span>
+          <i class="mdi mdi-information-outline menu-icon"></i>
+          <span>Informationen</span>
         </button>
 
-
+        <!-- Test menu items -->
+        <button mat-menu-item class="menu-item" (click)="onMenuTestRefresh()">
+          <i class="mdi mdi-refresh menu-icon"></i>
+          <span>Aktualisieren</span>
+        </button>
+        <button mat-menu-item class="menu-item" (click)="onMenuTestExport()">
+          <i class="mdi mdi-download menu-icon"></i>
+          <span>Exportieren</span>
+        </button>
+        <button mat-menu-item class="menu-item" (click)="onMenuTestSettings()">
+          <i class="mdi mdi-cog-outline menu-icon"></i>
+          <span>Einstellungen</span>
+        </button>
       </mat-menu>
 
 

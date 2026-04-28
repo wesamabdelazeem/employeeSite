@@ -88,6 +88,17 @@ app-freigabe-historisch-list .table-content {
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2) !important;
 }
 
+/* Disable the entrance "fadeIn" animation that several list components
+   apply to their root container. The slight upward slide on every route
+   change was distracting; remove it everywhere in one place. */
+.fade-in,
+.container.fade-in,
+.section-content {
+  animation: none !important;
+  opacity: 1 !important;
+  transform: none !important;
+}
+
 /* Material Icons Fix */
 .mat-icon {
   height: auto !important;

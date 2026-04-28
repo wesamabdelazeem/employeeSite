@@ -58,7 +58,8 @@
     max-height: 320px; // Give more space on very small screens
   }
   .menu-list {
-    padding: 0;
+    padding: 0 !important;
+    margin: 0;
     display: flex;
     flex-direction: column;
 
@@ -317,5 +318,32 @@
 
     // For Microsoft browsers
     -ms-overflow-style: -ms-autohiding-scrollbar;
+  }
+}
+
+/* Zero Angular Material's default top padding on the nav-list / list-item so
+   the first menu item sits flush against the top of the sidebar. ::ng-deep
+   needed because the mdc-* classes are inside the encapsulated mat-nav-list. */
+:host ::ng-deep {
+  .sidebar {
+    padding-top: 0 !important;
+
+    .menu-list,
+    .menu-list.mat-mdc-list,
+    .menu-list.mat-mdc-nav-list,
+    .menu-list.mat-mdc-list-base,
+    .menu-list .mdc-list {
+      padding-top: 0 !important;
+      padding-bottom: 0 !important;
+      margin-top: 0 !important;
+    }
+
+    /* First menu item must sit at y=0 of the list. Material applies a default
+       top padding inside .mdc-list-item__content for the touch target — keep
+       it for non-first items but zero out the leading offset. */
+    .menu-list .mat-mdc-list-item:first-child,
+    .menu-list a:first-child.mat-mdc-list-item {
+      margin-top: 0 !important;
+    }
   }
 }

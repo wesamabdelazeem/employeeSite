@@ -187,6 +187,54 @@ app-personen-detail .mat-mdc-form-field.ng-invalid.ng-touched {
   }
 }
 
+/* ========================================
+   UNIFIED PAGE HEADER (applied app-wide)
+   - identical header bar height across every component
+   - sidebar font (Roboto), unified title size/weight
+   - title always centered (absolute-positioned over the bar so
+     left/right section content doesn't shift the centering)
+   - no border around the header bar
+   ======================================== */
+.container > .header,
+.container > div > .header,
+.absence-container > .unified-header,
+.table-header {
+  position: relative !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  height: 56px !important;
+  min-height: 56px !important;
+  max-height: 56px !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  box-sizing: border-box !important;
+}
+
+.container > .header .title,
+.container > .header .header-main .title,
+.container > div > .header .title,
+.container > div > .header .header-main .title,
+.absence-container > .unified-header .header-title,
+.table-header .table-title {
+  position: absolute !important;
+  left: 50% !important;
+  top: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  font-family: "Roboto", sans-serif !important;
+  font-size: 1.125rem !important;
+  font-weight: 500 !important;
+  line-height: 1.2 !important;
+  letter-spacing: 0.15px !important;
+  text-align: center !important;
+  white-space: nowrap !important;
+  pointer-events: none !important;
+}
+
 /* Compact dialog — strips Material surface padding so content touches the edges */
 .compact-dialog .mat-mdc-dialog-surface,
 .compact-dialog .mdc-dialog__surface {

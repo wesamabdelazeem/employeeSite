@@ -6,9 +6,8 @@
   </div>
   <span class="toolbar-spacer"></span>
   <div class="right-content">
-    <div class="development-container">
-      <mat-icon class="dev-icon" aria-hidden="true">code</mat-icon>
-      <span class="development-label">Entwicklung</span>
+    <div class="environment-container" [ngClass]="environmentClass">
+      <span class="environment-label">{{ environmentLabel }}</span>
     </div>
   </div>
 </mat-toolbar>

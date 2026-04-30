@@ -1,4 +1,76 @@
- 
+
+
+package at.gv.bmi.getit.gui.component.validation.annotation;
+
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.reflect.Field;
+
+import javax.validation.Constraint;
+import javax.validation.ConstraintValidator;
+import javax.validation.ConstraintValidatorContext;
+import javax.validation.Payload;
+
+import at.gv.bmi.getit.gui.model.DateRange;
+
+@Constraint(validatedBy = DateRangeNotEmpty.Validator.class)
+@Retention(RetentionPolicy.RUNTIME)
+public @interface DateRangeNotEmpty {
+	
+	String message() default "Datums dürfen nicht leer sein";
+	String fieldVon();
+	String fieldBis();
+	
+	Class<?>[] groups() default { };
+	public abstract Class<? extends Payload>[] payload() default {};
+
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	public static class Validator implements ConstraintValidator<DateRangeNotEmpty, DateRange> {
+		
+		private String fieldVon;
+		private String fieldBis;
+		
+		@Override
+		public void initialize(DateRangeNotEmpty constraintAnnotation) {
+			this.fieldVon=constraintAnnotation.fieldVon();
+			this.fieldBis=constraintAnnotation.fieldBis();
+		}
+
+		@Override
+		public boolean isValid(DateRange range, ConstraintValidatorContext context) {
+			if (range.getVon() == null && range.getBis() == null) {
+				context.disableDefaultConstraintViolation();
+				context.buildConstraintViolationWithTemplate("Die Felder '{fieldVon}' und '{fieldBis}' dürfen nicht leer sein")
+						.addConstraintViolation();
+				return false;				
+			}
+
+			if (range.getVon() == null) {
+				context.disableDefaultConstraintViolation();
+				context.buildConstraintViolationWithTemplate("Das Feld '{fieldVon}' darf nicht leer sein")
+						.addConstraintViolation();
+				return false;				
+			}
+			if (range.getBis() == null){
+				context.disableDefaultConstraintViolation();
+				context.buildConstraintViolationWithTemplate("Das Feld '{fieldBis}' darf nicht leer sein")
+						.addConstraintViolation();
+
+				return false;
+			}
+			context.disableDefaultConstraintViolation();
+			context.buildConstraintViolationWithTemplate("Das Feld '{fieldVon}' muss kleiner sein als '{fieldBis}'")
+			.addConstraintViolation();
+			
+			return  range.getVon().compareTo(range.getBis()) <= 0;
+			
+		}
+
+	}
+
+}
+
+----------------
 
 
 @Constraint(validatedBy = ValidRechte.Validator.class)

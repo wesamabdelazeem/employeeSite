@@ -28,6 +28,8 @@ import {MatMenuModule} from '@angular/material/menu';
 import {DateUtilsService} from '../../../services/utils/date-utils.service';
 import {ErrorDialogComponent} from '../../dialogs/error-dialog/error-dialog.component';
 import {LogbuchDialogComponent} from '../../dialogs/logbuch-dialog/logbuch-dialog.component';
+import {validateDateRange} from '../../../validators/date-range.validator';
+import {validateRechte} from '../../../validators/rechte.validator';
 
 @Component({
   selector: 'app-personen-detail',
@@ -600,14 +602,18 @@ export class PersonenDetailComponent {
 
     // ValidRechte — 'Online Stempeln Homeoffice' / 'Online Stempeln Büro'
     // require 'Stempeln' to also be selected.
-    const requiresStempeln =
-      rechte.includes('ONLINE_STEMPELN_HOMEOFFICE') ||
-      rechte.includes('ONLINE_STEMPELN_BUERO');
-    if (requiresStempeln && !rechte.includes('STEMPELN')) {
-      messages.push(
-        "'Online Stempeln Homeoffice' und 'Online Stempeln Büro' darf nur gemeinsam mit 'Stempeln' aktiviert werden"
-      );
-    }
+    messages.push(...validateRechte(rechte));
+
+    // DateRangeNotEmpty — Eintrittsdatum / Austrittsdatum must both be set
+    // and Eintritt must not be after Austritt.
+    messages.push(
+      ...validateDateRange(
+        this.personForm.get('eintrittsDatum')?.value,
+        this.personForm.get('austrittsDatum')?.value,
+        'Eintrittsdatum',
+        'Austrittsdatum'
+      )
+    );
 
     return messages;
   }

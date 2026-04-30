@@ -150,7 +150,8 @@ export class PersonenDetailComponent {
     { value: 'REMOTE_USER', label: 'Remote User' },
     { value: 'BEREITSCHAFT', label: 'Bereitschaft' },
     { value: 'ONLINE_STEMPELN_HOMEOFFICE', label: 'Online Stempeln Homeoffice' },
-    { value: 'ONLINE_STEMPELN_BUERO', label: 'Online Stempeln Büro' }
+    { value: 'ONLINE_STEMPELN_BUERO', label: 'Online Stempeln Büro' },
+    { value: 'TELEARBEITER', label: 'Telearbeiter' }
   ];
 
   funktionOptions = [
@@ -511,6 +512,20 @@ export class PersonenDetailComponent {
       return;
     }
 
+    // Cross-field constraint validation (mirrors backend PersonWrapper checks).
+    const constraintMessages = this.validatePersonConstraints();
+    if (constraintMessages.length > 0) {
+      this.dialog.open(ErrorDialogComponent, {
+        data: {
+          title: 'Ungültige Kombination',
+          detail: constraintMessages.join('\n'),
+        },
+        panelClass: 'custom-dialog-width',
+        autoFocus: false,
+      });
+      return;
+    }
+
     // Clear any previous validation errors on a successful submit attempt.
     this.validationErrors = [];
 
@@ -547,6 +562,54 @@ export class PersonenDetailComponent {
           this.isLoading = false;
         }
       });
+  }
+
+  /**
+   * Mirrors backend PersonWrapper cross-field checks
+   * (validateBucherProfil, validateRechtTelearbeiter). Returns the list of
+   * error messages, empty if the person is valid.
+   */
+  private validatePersonConstraints(): string[] {
+    const messages: string[] = [];
+    const mitarbeiterart = this.personForm.get('mitarbeiter')?.value;
+    const bucher = this.personForm.get('bucher')?.value;
+    const rechte: string[] = this.personForm.get('rechte')?.value || [];
+
+    // validateBucherProfil — Zivildiener may not be a Bucher.
+    if (
+      mitarbeiterart === 'ZIVILDIENSTLEISTENDER' &&
+      bucher != null && bucher !== '' && bucher !== 'KEIN_BUCHER'
+    ) {
+      messages.push('Ein Zivildiener kann kein Bucher sein');
+    }
+
+    // validateRechtTelearbeiter — Telearbeiter is mutually exclusive with
+    // stempeln, externer Mitarbeiter, and Zivildiener.
+    if (rechte.includes('TELEARBEITER')) {
+      const conflicts =
+        mitarbeiterart === 'EXTERN' ||
+        mitarbeiterart === 'EXTERN_OHNE_BAKS' ||
+        mitarbeiterart === 'ZIVILDIENSTLEISTENDER' ||
+        rechte.includes('STEMPELN');
+      if (conflicts) {
+        messages.push(
+          "Telearbeiter darf nicht 'stempeln' und kein 'externer Mitarbeiter' oder 'Zivildiener' sein. "
+        );
+      }
+    }
+
+    // ValidRechte — 'Online Stempeln Homeoffice' / 'Online Stempeln Büro'
+    // require 'Stempeln' to also be selected.
+    const requiresStempeln =
+      rechte.includes('ONLINE_STEMPELN_HOMEOFFICE') ||
+      rechte.includes('ONLINE_STEMPELN_BUERO');
+    if (requiresStempeln && !rechte.includes('STEMPELN')) {
+      messages.push(
+        "'Online Stempeln Homeoffice' und 'Online Stempeln Büro' darf nur gemeinsam mit 'Stempeln' aktiviert werden"
+      );
+    }
+
+    return messages;
   }
 
   private buildValidationErrors(): void {

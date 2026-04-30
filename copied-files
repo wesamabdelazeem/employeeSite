@@ -1,0 +1,42 @@
+ 
+
+
+@Constraint(validatedBy = ValidRechte.Validator.class)
+@Retention(RetentionPolicy.RUNTIME)
+public @interface ValidRechte {
+	
+	String message() default "'Online Stempeln Homeoffice' und 'Online Stempeln Büro' darf nur gemeinsam mit 'Stempeln' aktiviert werden";
+	
+	Class<?>[] groups() default { };
+	public abstract Class<? extends Payload>[] payload() default {};
+
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	public static class Validator implements ConstraintValidator<ValidRechte, List<RechtDto>> {
+		
+		
+		@Override
+		public void initialize(ValidRechte constraintAnnotation) {
+		}
+
+		@Override
+		public boolean isValid(List<RechtDto> rechte, ConstraintValidatorContext context) {
+			if(rechte==null){
+				return true;
+			}
+			if(rechte.contains(RechtDto.ONLINE_STEMPELN_HOMEOFFICE) && !rechte.contains(RechtDto.STEMPELN)){
+				return false;
+			}
+			if(rechte.contains(RechtDto.ONLINE_STEMPELN_BUERO) && !rechte.contains(RechtDto.STEMPELN)){
+				return false;
+			}			
+			return true;
+			
+		}
+
+	}
+
+}
+
+
+	@ValidRechte
+	public List<RechtDto> getRecht();

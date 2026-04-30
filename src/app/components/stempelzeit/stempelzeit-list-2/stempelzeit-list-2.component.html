@@ -109,7 +109,9 @@
         mat-row
         *matRowDef="let row; columns: displayedColumns "
         [class]="getRowClass(row)"
-        (click)="goToDetails(row)"
+        [attr.data-row-id]="row.id"
+        (click)="onRowClick(row)"
+        (dblclick)="onRowDblClick(row)"
         class="list-row"
       ></tr>
     </table>

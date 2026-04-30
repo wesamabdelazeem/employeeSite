@@ -1,4 +1,4 @@
-import {Component, OnInit, OnDestroy, Renderer2, inject} from '@angular/core';
+import {Component, OnInit, OnDestroy, Renderer2, inject, ElementRef} from '@angular/core';
 import { CommonModule } from '@angular/common';
  import { MatCardModule } from '@angular/material/card';
 import { MatInputModule } from '@angular/material/input';
@@ -67,6 +67,7 @@ export class StempelzeitList2Component {
 
   renderer= inject(Renderer2);
   router= inject(Router);
+  hostElement = inject(ElementRef<HTMLElement>);
 
 
   private destroy$ = new Subject<void>();
@@ -86,8 +87,18 @@ export class StempelzeitList2Component {
   showSideMenu: boolean = false;
   sideMenuType: 'phone' | 'info' | null = null;
   selectedPerson: ApiPerson | null = null;
+  selectedRowId: string | number | null = null;
   isLoading: boolean = false;
   errorMessage: string = '';
+
+  /** Single-click vs. double-click disambiguation timer. */
+  private clickTimeout: any = null;
+  /** Static cache that survives in-app navigation but resets on a full
+   *  page refresh (because a refresh re-evaluates the JS bundle). This
+   *  is what gives us "remember state on Back" without making the
+   *  state sticky across reloads. */
+  private static lastSelectedRowId: string | number | null = null;
+  private static lastShowInactive = false;
 
   sortState: { [key: string]: 'asc' | 'desc' } = {
     nachname: 'asc',
@@ -96,6 +107,8 @@ export class StempelzeitList2Component {
   };
 
   ngOnInit(): void {
+    this.restoreSelectedRowId();
+    this.showInactive = StempelzeitList2Component.lastShowInactive;
     this.loadDataFromServer();
     this.navigationRefreshService.refresh$
       .pipe(
@@ -156,6 +169,7 @@ export class StempelzeitList2Component {
   }
 
   onCheckboxChange(): void {
+    StempelzeitList2Component.lastShowInactive = this.showInactive;
     this.applyFilter();
   }
 
@@ -183,7 +197,30 @@ export class StempelzeitList2Component {
   // Apply current sort to the filtered data
   this.filteredData = this.applySorting(filtered);
   this.dataSource.data = this.filteredData;
+
+  // After the table renders, bring the previously-selected row into view.
+  this.scrollToSelectedRow();
 }
+
+  /** Scroll the previously-selected row into view inside the
+   *  `.table-container` only — never the outer page — so the page/table
+   *  headers stay visible. No-op if no row is selected or it's not
+   *  currently in the filtered set. */
+  private scrollToSelectedRow(): void {
+    if (this.selectedRowId === null || this.selectedRowId === undefined) return;
+    requestAnimationFrame(() => {
+      const root = this.hostElement.nativeElement as HTMLElement;
+      const escaped = String(this.selectedRowId).replace(/"/g, '\\"');
+      const row = root.querySelector<HTMLElement>(
+        `tr.list-row[data-row-id="${escaped}"]`
+      );
+      const container = root.querySelector<HTMLElement>('.table-container');
+      if (!row || !container) return;
+      const rowTop = row.offsetTop;
+      const target = rowTop - (container.clientHeight - row.clientHeight) / 2;
+      container.scrollTop = Math.max(0, target);
+    });
+  }
 
 private applySorting(data: ApiPerson[]): ApiPerson[] {
   const sortedField = Object.keys(this.sortState).find(field =>
@@ -204,7 +241,52 @@ private applySorting(data: ApiPerson[]): ApiPerson[] {
   });
 }
   getRowClass(row: ApiPerson): string {
-    return row.aktiv === false ? 'inactive-row' : '';
+    const classes: string[] = [];
+    if (row.aktiv === false) classes.push('inactive-row');
+    if (this.isRowSelected(row)) classes.push('selected-row');
+    return classes.join(' ');
+  }
+
+  isRowSelected(row: ApiPerson): boolean {
+    return (
+      this.selectedRowId !== null &&
+      row.id !== undefined &&
+      String(row.id) === String(this.selectedRowId)
+    );
+  }
+
+  /**
+   * Single click selects the row (without navigating). A pending timer is
+   * cleared by `onRowDblClick` if the user double-clicks within 250 ms,
+   * which lets dblclick win and route to the detail page.
+   */
+  onRowClick(row: ApiPerson): void {
+    if (this.clickTimeout) {
+      clearTimeout(this.clickTimeout);
+      this.clickTimeout = null;
+    }
+    this.clickTimeout = setTimeout(() => {
+      this.clickTimeout = null;
+      this.selectRow(row);
+    }, 250);
+  }
+
+  onRowDblClick(row: ApiPerson): void {
+    if (this.clickTimeout) {
+      clearTimeout(this.clickTimeout);
+      this.clickTimeout = null;
+    }
+    this.selectRow(row);
+    this.goToDetails(row);
+  }
+
+  private selectRow(row: ApiPerson): void {
+    this.selectedRowId = row.id ?? null;
+    StempelzeitList2Component.lastSelectedRowId = this.selectedRowId;
+  }
+
+  private restoreSelectedRowId(): void {
+    this.selectedRowId = StempelzeitList2Component.lastSelectedRowId;
   }
  toggleSort(field: string) {
   this.sortState[field] = this.sortState[field] === 'asc' ? 'desc' : 'asc';

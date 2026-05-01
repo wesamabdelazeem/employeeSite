@@ -235,6 +235,52 @@ app-personen-detail .mat-mdc-form-field.ng-invalid.ng-touched {
   pointer-events: none !important;
 }
 
+/* ========================================
+   DISABLED / READONLY FORM FIELDS — gray inner area, app-wide
+   Covers Material inputs / textareas / selects, the custom
+   <app-time-box> hour/minute inputs, and disabled buttons so every
+   interactive control turns gray consistently outside edit mode.
+   ======================================== */
+.mat-mdc-form-field.mat-form-field-disabled .mat-mdc-form-field-infix {
+  background-color: #ececec !important;
+}
+
+.mat-mdc-input-element:disabled,
+.mat-mdc-input-element[readonly],
+.mdc-text-field__input:disabled,
+.mdc-text-field__input[readonly],
+.mat-mdc-form-field.mat-form-field-disabled .mat-mdc-select-trigger,
+.mat-mdc-form-field.mat-form-field-disabled .mat-mdc-select-value {
+  background-color: #ececec !important;
+  color: #555 !important;
+  -webkit-text-fill-color: #555 !important; /* Safari overrides on disabled */
+}
+
+/* Custom <app-time-box> input — not a Material field, override its
+   built-in 0.5 opacity so the gray fill is visible. */
+input.time-value-display:disabled,
+input.time-value-input:disabled {
+  background-color: #ececec !important;
+  color: #555 !important;
+  opacity: 1 !important;
+}
+
+/* Disabled buttons — match the disabled-input look. Covers Material
+   buttons and plain HTML <button> (e.g. <app-time-box> +/- buttons). */
+button:disabled,
+.mat-mdc-button-disabled,
+.mat-mdc-icon-button[disabled],
+.mat-mdc-raised-button[disabled] {
+  background-color: #ececec !important;
+  color: #888 !important;
+  opacity: 1 !important;
+}
+
+button:disabled .mat-icon,
+.mat-mdc-button-disabled .mdc-button__label {
+  color: #888 !important;
+}
+
 /* Compact dialog — strips Material surface padding so content touches the edges */
 .compact-dialog .mat-mdc-dialog-surface,
 .compact-dialog .mdc-dialog__surface {

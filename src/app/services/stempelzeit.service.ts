@@ -11,6 +11,11 @@ import {ApiProdukt} from '../models/ApiProdukt';
 import {GetitRest2Service} from './getit-rest-2.service';
 import {ApiPerson} from '../models/ApiPerson';
 import {GetitRest3Service} from './getit-rest-3.service';
+import {
+  hasMockDetailData,
+  MOCK_PRODUKTE_BY_PERSON,
+  MOCK_STEMPELZEITEN_BY_PERSON
+} from '../mock/stempelzeit-detail.mock';
 
 @Injectable({
   providedIn: 'root'
@@ -43,11 +48,25 @@ export class StempelzeitService {
   }
 
   getStempelzeiten_(id : string): Observable<HttpResponse<ApiStempelzeit[]>> {
+    // Inline mock for the first 5 list rows (m1..m5) — see
+    // src/app/mock/stempelzeit-detail.mock.ts.
+    if (hasMockDetailData(id)) {
+      return of(new HttpResponse<ApiStempelzeit[]>({
+        body: [...MOCK_STEMPELZEITEN_BY_PERSON[id]],
+        status: 200,
+        statusText: 'OK (mock)'
+      }));
+    }
     let firstDayOfLastMonth = DateUtilsService.getFirstDayOfLastMonth();
     return  this.getitRestSevice__.getPersonStempelzeitenNoAbwesenheit(id, firstDayOfLastMonth);
   }
 
   getPersonGebuchtProdukte(personId : string) : Observable<ApiProdukt[]>{
+    // Inline mock for the first 5 list rows (m1..m5) — see
+    // src/app/mock/stempelzeit-detail.mock.ts.
+    if (hasMockDetailData(personId)) {
+      return of([...(MOCK_PRODUKTE_BY_PERSON[personId] ?? [])]);
+    }
     let firstDayOfLastMonth = DateUtilsService.getFirstDayOfLastMonth();
     return this.getitRestSevice_.getPersonProdukte(personId ,'gebucht', firstDayOfLastMonth);
 

@@ -215,7 +215,11 @@ textarea[matInput] {
     "Helvetica Neue", Arial, sans-serif !important;
   font-size: 14px !important;
   font-weight: 400 !important;
-  background: #ffffff !important;
+  /* Base background without !important so the disabled-state override
+     (`&:disabled` below + the global rules in styles.scss) can swap it
+     to gray. Keep the rest as !important to overcome other Material
+     defaults. */
+  background: #ffffff;
   border: 1px solid #d0d7de !important;
   border-radius: 4px !important;
   box-shadow: none !important;
@@ -256,11 +260,17 @@ textarea[matInput] {
     min-height: 120px !important;
   }
 
-  /* Disabled state */
-  &:disabled {
-    background-color: #f6f8fa !important;
+  /* Disabled state — use the same #ececec the rest of the disabled
+     inputs get (see "DISABLED FORM FIELDS" rule in styles.scss) so the
+     textarea visually matches every other disabled control. Also
+     covers `[readonly]` since some forms use readonly instead of
+     disabled to keep the value submittable. */
+  &:disabled,
+  &[readonly],
+  &:read-only {
+    background-color: #ececec !important;
     border-color: #d1d9e0 !important;
-    color: #656d76 !important;
+    color: #555 !important;
     cursor: not-allowed !important;
     resize: none !important;
   }

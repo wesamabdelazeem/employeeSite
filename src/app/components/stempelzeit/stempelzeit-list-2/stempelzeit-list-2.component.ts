@@ -101,7 +101,11 @@ export class StempelzeitList2Component {
   private static lastShowInactive = false;
 
   sortState: { [key: string]: 'asc' | 'desc' } = {
+    // Order matters: applySorting() picks the first field with a
+    // direction as the default sort key. nachname must stay first so
+    // the initial render is alphabetically sorted by family name.
     nachname: 'asc',
+    aktiv: 'asc',
     vorname: 'asc',
     mitarbeiterart: 'asc'
   };
@@ -310,6 +314,10 @@ private applySorting(data: ApiPerson[]): ApiPerson[] {
   let value = '';
 
   switch (field) {
+    case 'aktiv':
+      // Active rows first when sorted asc.
+      value = item.aktiv ? '0' : '1';
+      break;
     case 'nachname':
       value = (item.nachname || '').toString();
       break;

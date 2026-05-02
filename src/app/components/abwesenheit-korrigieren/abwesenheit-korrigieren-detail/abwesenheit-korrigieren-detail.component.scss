@@ -237,23 +237,38 @@
   text-align: center;
 }
 
+/* ------------------------------------------------------------------
+   Form layout — single column of rows. Each row is a flex line with a
+   fixed-width label on the left (right-aligned text) and the field /
+   time-box(es) flowing into the rest of the row. Every label sits at
+   the same right edge; every first field starts at the same left
+   edge, regardless of which row.
+   ------------------------------------------------------------------ */
+$abk-label-width: 180px;
+$abk-row-gap: 4px;
+$abk-col-gap: 14px;
+$abk-mat-input-pad: 16px; /* Material outline's internal padding */
+
 .taetigkeit-form {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  width: 100% !important;
-  padding-left: 20px;
+  gap: $abk-row-gap;
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 16px;
+  box-sizing: border-box;
   max-height: calc(100vh - 100px);
   overflow-y: auto;
   overflow-x: hidden;
 }
 
 .left-label-form {
+  /* Same column layout as .taetigkeit-form — drop the magic
+     `margin-left: 69px` that pushed the form off-center. */
   display: flex;
   flex-direction: column;
-  gap: 7px;
-  padding: 16px;
-  margin-left: 69px;
+  gap: $abk-row-gap;
 }
 
 .form-row {
@@ -263,53 +278,64 @@
   min-height: 32px;
 }
 
-
-
-
 .form-row-custom {
   display: flex;
-  align-items: center !important;
-  width:70%;
+  align-items: center;
+  gap: $abk-col-gap;
+  width: 100%;
+}
 
+/* Time rows align hour/minute boxes vertically centered. */
+.start {
+  align-items: center !important;
 }
-.start{
-  display: flex;
-  align-items: start !important;
-}
+
 .field-label {
-  font-weight:500;
+  font-weight: 500;
   color: #333;
-  min-width: 140px;
+  width: $abk-label-width;
+  flex-shrink: 0;
   text-align: right;
-  font-size: 17px;
-  // padding-right: 20px;
+  font-size: 14px;
+  padding-right: 4px;
 }
 
 .inner-label {
   font-weight: 500;
   color: #333;
-  margin: 0 0 0 15px;
+  margin: 0 0 0 12px;
+  font-size: 14px;
 }
 
 .start-label {
-  margin-top:5px!important;
-  position: relative;
-  left:4px}
+  /* Magic `position: relative; left: 4px` removed — the flex row +
+     fixed label width handle alignment now. */
+  margin-top: 0;
+}
 
 .date-field {
   width: 180px;
-  margin-left: 2px!important;
+  margin: 0;
 }
 
 .full-field {
-  flex-grow: 1;
-  max-width: 400px;
-  margin-left: 2px!important;
+  flex: 1 1 auto;
+  max-width: 100%;
+  margin: 0;
 }
 
 .minute-wrapper {
   display: flex;
   align-items: center;
+  gap: $abk-col-gap;
+  width: auto;
+}
+
+/* Push the first hour <app-time-box> right by Material's outline
+   padding so the digit lines up with the input text in the
+   Datum/Anmerkung rows. */
+.form-row-custom.start > app-time-box:first-of-type {
+  margin-left: $abk-mat-input-pad;
 }
 
 .align-top {
@@ -325,7 +351,7 @@
   flex-direction: column;
   align-items: start;
   justify-content: center;
-  margin-left: 18px;
+  margin-left: 0;
 }
 
 .dash {
@@ -417,27 +443,19 @@
   padding: 15px;
 }
 
+/* Wide-screen tweaks — keep the form centered, only slightly wider. */
 @media (min-width: 1920px) {
-  .time-input {
-    position: relative;
-    left: 2px;
-  }
+  .taetigkeit-form { max-width: 820px; }
 
-  .anmerkung-textarea {
-    width: 300px !important;
-  }
-  //   .table-row {
-  // margin-right:11px!important;  }
+  .anmerkung-textarea { width: 300px !important; }
 }
 
 @media (min-width: 2560px) {
-  .left-label-form{
-    margin-left:78px
-  }
-  //   .table-row {
-  // margin-right:16px!important;  }
+  .taetigkeit-form { max-width: 920px; }
 }
 
+/* Tablet & phone — stack the panels and the form rows so labels sit
+   above their inputs, prevent fixed pixel widths from overflowing. */
 @media (max-width: 768px) {
   .container2 {
     flex-direction: column;
@@ -449,10 +467,37 @@
 
   .table-cell {
     font-size: 12px;
-    // padding: 8px;
   }
-  //    .table-row {
-  // padding-left:1px!important;  }
+
+  .taetigkeit-form {
+    max-width: 100%;
+    padding: 12px;
+  }
+
+  .form-row-custom {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 4px;
+  }
+
+  .field-label {
+    width: auto;
+    text-align: left;
+    font-size: 13px;
+    padding-right: 0;
+  }
+
+  .date-field {
+    width: 100%;
+  }
+
+  .form-row-custom.start > app-time-box:first-of-type {
+    margin-left: 0;
+  }
+
+  .minute-wrapper {
+    margin-left: 0;
+  }
 }
 // .date-picker-toggle{position:relative;left: 130px;}
 .form-row-date{display: flex;
@@ -461,8 +506,8 @@
 
 
 .half-width {
-  width: 60%;
-  max-width: 400px;
+  width: auto;
+  max-width: 100%;
 }
 
 .half-width .mat-form-field {
@@ -472,14 +517,16 @@
 .date-field-container {
   display: flex;
   align-items: center;
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 .half-width .date-picker-toggle {
-  left: 0;
-  margin-left: -20px;
+  left: auto;
+  margin-left: 0;
 }
-.form-input-date{width: 160px!important;}
-.form-input-date:focus{border :1px solid #e6e3e3 !important}
+.form-input-date { width: 100% !important; }
+.form-input-date:focus { border: 1px solid #e6e3e3 !important; }
 
 
 .left-panel .header-cell {

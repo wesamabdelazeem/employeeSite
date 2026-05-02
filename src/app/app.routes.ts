@@ -30,6 +30,8 @@ import {VertragList2Component} from './components/vertrag-2/vertrag-list-2/vertr
 import {VertragDetail2Component} from './components/vertrag-2/vertrag-detail-2/vertrag-detail-2.component';
 import {PersonenListComponent} from './components/personen/personen-list/personen-list.component';
 import {PersonenDetailComponent} from './components/personen/personen-detail/personen-detail.component';
+import {Personen2ListComponent} from './components/personen-2/personen-2-list/personen-2-list.component';
+import {Personen2DetailComponent} from './components/personen-2/personen-2-detail/personen-2-detail.component';
 import {ProdukteListComponent} from './components/produkte/produkte-list/produkte-list.component';
 import {ProdukteDetailsComponent} from './components/produkte/produkte-details/produkte-details.component';
 import {
@@ -75,6 +77,9 @@ export const routes: Routes = [
   { path: 'personen', component: PersonenListComponent },
   { path: 'personen/:id', component: PersonenDetailComponent,  canActivate: [refreshGuard] },
   { path: 'personen/neu', component: PersonenDetailComponent,  canActivate: [refreshGuard] },
+  { path: 'personen-2', component: Personen2ListComponent },
+  { path: 'personen-2/:id', component: Personen2DetailComponent, canActivate: [refreshGuard] },
+  { path: 'personen-2/neu', component: Personen2DetailComponent, canActivate: [refreshGuard] },
 
   { path: 'produkte', component: ProdukteListComponent },
   { path: 'produkte/:id', component: ProdukteDetailsComponent,  canActivate: [refreshGuard] },

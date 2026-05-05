@@ -267,19 +267,41 @@ button[mat-icon-button], button[mat-button], button[mat-raised-button] {
   &:hover:not(:disabled) { background: linear-gradient(to right, #3e5870, #4a5d78); }
 }
 
+/* ----- Toolbar option menu (right-side burger) ---------------------
+   Previously set `.mat-menu-item { background: #2c3e50 }` (dark navy)
+   together with `color: #666` and a broken `font: 140px` shorthand —
+   the result was invisible text on a dark background. Replace with a
+   readable light-on-dark-text scheme. */
 #option-menu { background-color: gainsboro !important; }
 
-.mat-menu-item { background-color: #2c3e50!important; }
+.mat-mdc-menu-content,
+.mat-mdc-menu-content .mat-mdc-menu-item .mat-mdc-menu-item-text {
+  background-color: rgb(241, 246, 246) !important;
+  cursor: pointer !important;
+  border-radius: 5px !important;
+}
 
-.mat-mdc-menu-content, .mat-mdc-menu-content .mat-mdc-menu-item .mat-mdc-menu-item-tex { background-color: rgb(241, 246, 246) !important; cursor: pointer!important; border-radius: 5px!important; }
+.mat-mdc-menu-item,
+.mat-menu-item {
+  background-color: rgb(241, 246, 246) !important;
+  color: #333333 !important;
+  font-size: 14px !important;
+  cursor: pointer !important;
+}
 
-.mat-mdc-menu-item:hover { background-color: #ffffff !important; cursor: pointer!important; }
+.mat-mdc-menu-item:hover,
+.mat-menu-item:hover {
+  background-color: #ffffff !important;
+  color: #2E4155 !important;
+}
 
-.mat-mdc-menu-item { font: 140px !important; }
+.mat-mdc-menu-item .mdc-list-item__primary-text,
+.mat-mdc-menu-item .mat-mdc-menu-item-text {
+  color: #333333 !important;
+  font-size: 14px !important;
+}
 
-.mat-mdc-menu-content, .mat-mdc-menu-content .mat-mdc-menu-item .mat-mdc-menu-item-text { color:#666666 !important; font-size: 15px!important; }
-
-.mat-mdc-menu-item .mat-icon { font-size:15px!important; }
+.mat-mdc-menu-item .mat-icon { font-size: 18px !important; color: #555555 !important; margin-right: 8px; }
 
 .bis-date { width: 5px!important; }
 

@@ -40,6 +40,8 @@ import {ApiMitarbeiterart} from '../../../models/ApiMitarbeiterart';
 import {ConfirmationDialogComponent} from '../../confirmation-dialog/confirmation-dialog/confirmation-dialog.component';
 import {ApiProdukt} from '../../../models/ApiProdukt';
 import {ApiProduktPosition} from '../../../models/ApiProduktPosition';
+import {LogbuchDialogComponent} from '../../dialogs/logbuch-dialog/logbuch-dialog.component';
+import {getMockProduktHistory} from '../../../mock/produkt-history.mock';
 
 @Injectable()
 export class CustomDateAdapter extends NativeDateAdapter {
@@ -446,6 +448,24 @@ export class ProdukteDetailsComponent {
     } else {
       this.router.navigate(['/produkte']);
     }
+  }
+
+  /** Toolbar menu action — opens the shared LogbuchDialog populated
+   *  with mock produkt history (see src/app/mock/produkt-history.mock.ts).
+   *  Mirrors PersonenDetailComponent.openLogbuch — same dialog
+   *  component, same shape, just produkt-shaped data. */
+  openLogbuch(): void {
+    const produktId = this.produktData?.id ?? this.route.snapshot.paramMap.get('id') ?? '';
+    const produktName = this.produktData?.produktname || this.produktData?.kurzName || 'Produkt';
+    const entries = getMockProduktHistory(produktId);
+    console.log('Produkte menu: Logbuch clicked', { produktId, produktName, entryCount: entries.length });
+    this.dialog.open(LogbuchDialogComponent, {
+      data: { title: 'Logbuch', subtitle: produktName, entries },
+      panelClass: 'logbuch-dialog-panel',
+      autoFocus: false,
+      width: '680px',
+      maxWidth: '95vw',
+    });
   }
 
 

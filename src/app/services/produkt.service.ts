@@ -1,10 +1,11 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { Observable,  catchError, tap, throwError  } from 'rxjs';
+import { Observable, catchError, of, tap, throwError } from 'rxjs';
 import { Produkt } from '../models/person';
 import { AppConstants } from '../models/app-constants';
 import {ApiProdukt} from '../models/ApiProdukt';
 import {GetitRest2Service} from './getit-rest-2.service';
+import {hasMockProduktDetail, MOCK_PRODUKT_DETAILS} from '../mock/produkt-detail.mock';
 
 
 
@@ -25,18 +26,32 @@ export class ProduktService {
 
 
   getProdukte(): Observable<ApiProdukt[]> {
-    return this.getitRestService.getProdukte();
-
+    // Inline mock so the list lands on IDs that getProduktById() can
+    // resolve via MOCK_PRODUKT_DETAILS — see src/app/mock/produkt-detail.mock.ts.
+    const mocks = Object.values(MOCK_PRODUKT_DETAILS)
+      .filter((p, i, arr) => arr.findIndex(x => x.id === p.id) === i); // dedupe alias entries
+    return of(JSON.parse(JSON.stringify(mocks)));
+    // return this.getitRestService.getProdukte();
   }
 
 
 
   getProduktById(id: string): Observable<any> {
+    // Inline mock — known ids resolve directly, anything unknown falls
+    // back to the first mock so the tree always renders something.
+    // See src/app/mock/produkt-detail.mock.ts.
+    const mock = hasMockProduktDetail(id)
+      ? MOCK_PRODUKT_DETAILS[id]
+      : Object.values(MOCK_PRODUKT_DETAILS)[0];
+    console.log('Produkt mock served for id', id, '→', mock?.id);
+    return of(JSON.parse(JSON.stringify(mock)));
+    /*
     return this.http.get<Produkt>(AppConstants.API_URL_PRODUKTE + '/' + id +'?filter=filter')
     .pipe(
       tap(response => console.log('API Response:', response)),
       catchError(this.handleError)
     );
+    */
   }
 
 

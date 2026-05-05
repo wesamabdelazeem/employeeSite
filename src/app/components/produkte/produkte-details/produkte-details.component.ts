@@ -42,6 +42,8 @@ import {ApiProdukt} from '../../../models/ApiProdukt';
 import {ApiProduktPosition} from '../../../models/ApiProduktPosition';
 import {LogbuchDialogComponent} from '../../dialogs/logbuch-dialog/logbuch-dialog.component';
 import {getMockProduktHistory} from '../../../mock/produkt-history.mock';
+import {getMockProduktPositionHistory} from '../../../mock/produkt-position-history.mock';
+import {PRODUKT_POSITION_LOGBUCH_COLUMNS} from '../../../models/ProduktPositionHistoryEntry';
 
 @Injectable()
 export class CustomDateAdapter extends NativeDateAdapter {
@@ -461,6 +463,29 @@ export class ProdukteDetailsComponent {
     console.log('Produkte menu: Logbuch clicked', { produktId, produktName, entryCount: entries.length });
     this.dialog.open(LogbuchDialogComponent, {
       data: { title: 'Logbuch', subtitle: produktName, entries },
+      panelClass: 'logbuch-dialog-panel',
+      autoFocus: false,
+      width: '680px',
+      maxWidth: '95vw',
+    });
+  }
+
+  /** Position-side Logbuch — same dialog component, but with a
+   *  ProduktPosition-shaped column config so Vorgang / Start / Ende /
+   *  Aktiv / Buchungsfreigabe / Positionstyp / Auftraggeber /
+   *  Organisationseinheit are diffed instead of person columns. */
+  openProduktPositionLogbuch(): void {
+    const positionId = this.selectedPosition?.id ?? '';
+    const positionName = this.selectedPosition?.name || 'Produktposition';
+    const entries = getMockProduktPositionHistory(positionId, positionName);
+    console.log('Produktposition menu: Logbuch clicked', { positionId, positionName, entryCount: entries.length });
+    this.dialog.open(LogbuchDialogComponent, {
+      data: {
+        title: 'Logbuch',
+        subtitle: positionName,
+        entries,
+        columns: PRODUKT_POSITION_LOGBUCH_COLUMNS,
+      },
       panelClass: 'logbuch-dialog-panel',
       autoFocus: false,
       width: '680px',

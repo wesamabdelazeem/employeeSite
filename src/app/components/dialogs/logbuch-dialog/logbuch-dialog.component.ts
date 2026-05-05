@@ -11,13 +11,28 @@ import { MatTableModule } from '@angular/material/table';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { PersonHistoryEntry } from '../../../models/PersonHistoryEntry';
 
+/** A single column shown in the Logbuch dialog (label + property
+ *  name on the entry record). */
+export interface LogbuchColumn {
+  key: string;
+  header: string;
+}
+
 export interface LogbuchDialogData {
   /** Optional title (defaults to "Logbuch"). */
   title?: string;
-  /** Optional subtitle, e.g. the person's full name. */
+  /** Optional subtitle, e.g. the person's full name or produktposition. */
   subtitle?: string;
-  /** Audit-log entries from PersonenService.historyAuswertung. */
-  entries?: PersonHistoryEntry[];
+  /** Audit-log entries. The dialog is shape-agnostic — when `columns`
+   *  is provided it diffs/exports those columns instead of the
+   *  default PersonHistoryEntry layout. */
+  entries?: any[];
+  /** Columns to diff and CSV-export. Defaults to the PersonHistoryEntry
+   *  layout when omitted, so the personen Logbuch behaves as before. */
+  columns?: LogbuchColumn[];
+  /** Keys excluded from the Vorher/Nachher diff. Defaults to the audit
+   *  metadata fields (bearbeitungszeit, bearbeiter, …). */
+  diffExcludeKeys?: string[];
 }
 
 @Component({
@@ -97,14 +112,19 @@ export class LogbuchDialogComponent {
   ];
 
   /** Keys excluded from the Vorher/Nachher diff because they describe the
-      audit row itself, not the person's snapshot. */
-  private static readonly DIFF_EXCLUDE_KEYS: (keyof PersonHistoryEntry)[] = [
+      audit row itself, not the entity's snapshot. */
+  private static readonly DEFAULT_DIFF_EXCLUDE_KEYS: string[] = [
     'bearbeitungszeit', 'bearbeiter', 'bearbeiterId', 'vorgang', 'raw',
   ];
 
-  entries: PersonHistoryEntry[];
+  entries: any[];
   title: string;
   subtitle?: string;
+
+  /** Effective columns used for diff + CSV — either the caller's
+   *  custom config or the default person layout. */
+  private readonly columns: LogbuchColumn[];
+  private readonly diffExcludeKeys: Set<string>;
 
   /** Index of the entry currently shown in the dialog. */
   currentIndex = 0;
@@ -115,14 +135,20 @@ export class LogbuchDialogComponent {
   ) {
     this.title = data?.title ?? 'Logbuch';
     this.subtitle = data?.subtitle;
+    this.columns = data?.columns?.length
+      ? data.columns
+      : (LogbuchDialogComponent.CSV_COLUMNS as LogbuchColumn[]);
+    this.diffExcludeKeys = new Set(
+      data?.diffExcludeKeys ?? LogbuchDialogComponent.DEFAULT_DIFF_EXCLUDE_KEYS
+    );
     // Sort newest → oldest so the dialog opens on the latest change.
     this.entries = [...(data?.entries ?? [])].sort((a, b) =>
-      (b.bearbeitungszeit || '').localeCompare(a.bearbeitungszeit || '')
+      (b?.bearbeitungszeit || '').localeCompare(a?.bearbeitungszeit || '')
     );
     this.currentIndex = 0;
   }
 
-  get currentEntry(): PersonHistoryEntry | null {
+  get currentEntry(): any | null {
     return this.entries[this.currentIndex] ?? null;
   }
 
@@ -148,16 +174,16 @@ export class LogbuchDialogComponent {
     const prev = this.entries[this.currentIndex + 1];
     if (!cur || !prev) return [];
 
-    const exclude = new Set<string>(LogbuchDialogComponent.DIFF_EXCLUDE_KEYS as string[]);
+    const exclude = this.diffExcludeKeys;
     // Only compare columns that BOTH rows actually contain. A row truncated
-    // by the back-end (fewer fields than CSV_COLUMNS) shouldn't surface every
-    // missing field as a "change" against a longer row.
-    const totalCols = LogbuchDialogComponent.CSV_COLUMNS.length;
+    // by the back-end (fewer fields than the column list) shouldn't surface
+    // every missing field as a "change" against a longer row.
+    const totalCols = this.columns.length;
     const curLen = (cur as any)._fieldCount ?? totalCols;
     const prevLen = (prev as any)._fieldCount ?? totalCols;
     const compareUpTo = Math.min(curLen, prevLen, totalCols);
 
-    return LogbuchDialogComponent.CSV_COLUMNS
+    return this.columns
       .map((c, idx) => ({ c, idx }))
       .filter(({ c, idx }) => idx < compareUpTo && !exclude.has(c.key as string))
       .map(({ c }) => ({
@@ -191,7 +217,7 @@ export class LogbuchDialogComponent {
       return;
     }
 
-    const cols = LogbuchDialogComponent.CSV_COLUMNS;
+    const cols = this.columns;
     const escape = (val: unknown): string => {
       const s = (val ?? '').toString().replace(/"/g, '""');
       return `"${s}"`;

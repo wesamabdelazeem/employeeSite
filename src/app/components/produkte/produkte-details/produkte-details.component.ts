@@ -44,6 +44,9 @@ import {LogbuchDialogComponent} from '../../dialogs/logbuch-dialog/logbuch-dialo
 import {getMockProduktHistory} from '../../../mock/produkt-history.mock';
 import {getMockProduktPositionHistory} from '../../../mock/produkt-position-history.mock';
 import {PRODUKT_POSITION_LOGBUCH_COLUMNS} from '../../../models/ProduktPositionHistoryEntry';
+import {StundenplanungDialogComponent} from '../../dialogs/stundenplanung-dialog/stundenplanung-dialog.component';
+import {GetitRest3Service} from '../../../services/getit-rest-3.service';
+import {MOCK_VERTRAG_STUNDENPLANUNG_ZIEL, getMockZieleForVerbraucher} from '../../../mock/vertrag-stundenplanung.mock';
 
 @Injectable()
 export class CustomDateAdapter extends NativeDateAdapter {
@@ -125,9 +128,50 @@ export class ProdukteDetailsComponent {
     private route: ActivatedRoute,
     public dialog: MatDialog,
     private produktService: ProduktService,
-    private errorHandlingService : ErrorHandlingService
-
+    private errorHandlingService : ErrorHandlingService,
+    private getitRest3: GetitRest3Service
   ) {}
+
+  /** Toolbar menu action — opens the Stundenumplanung dialog with the
+   *  list of Verbraucher for the current produkt's positions and a
+   *  list of target positions. Source data comes from
+   *  GetitRest3Service.getVertragPositionVerbraucherStundenplanung
+   *  (currently mocked — see src/app/mock/vertrag-stundenplanung.mock.ts). */
+  openStundenplanung(): void {
+    const id = this.produktData?.id ?? this.route.snapshot.paramMap.get('id') ?? '';
+    this.getitRest3.getVertragPositionVerbraucherStundenplanung(id).subscribe({
+      next: (response) => {
+        const verbraucher = (response.body ?? []) as any[];
+        console.log('Stundenplanung — verbraucher loaded', verbraucher.length, 'rows');
+        this.dialog.open(StundenplanungDialogComponent, {
+          data: {
+            title: 'Stundenumplanung',
+            verbraucher,
+            ziele: MOCK_VERTRAG_STUNDENPLANUNG_ZIEL,
+            // Right-side list updates whenever a source row is picked.
+            getZiele: getMockZieleForVerbraucher,
+          },
+          panelClass: 'stundenplanung-dialog-panel',
+          autoFocus: false,
+          width: 'auto',
+          maxWidth: '95vw',
+        });
+      },
+      error: (err) => {
+        console.error('Stundenplanung — load failed', err);
+        this.dialog.open(StundenplanungDialogComponent, {
+          data: {
+            title: 'Stundenumplanung',
+            verbraucher: [],
+            ziele: MOCK_VERTRAG_STUNDENPLANUNG_ZIEL,
+            getZiele: getMockZieleForVerbraucher,
+          },
+          panelClass: 'stundenplanung-dialog-panel',
+          autoFocus: false,
+        });
+      },
+    });
+  }
 
   ngOnInit(): void {
     this.selectedProdukt = history.state?.produktData;

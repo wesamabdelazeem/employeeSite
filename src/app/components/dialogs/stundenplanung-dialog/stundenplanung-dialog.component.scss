@@ -1,0 +1,216 @@
+/* Mirrors the visual family of LogbuchDialogComponent: a soft gray
+   header, generous content padding, a centered footer button row.
+   Internal layout is a 3-column grid so it matches the screenshot. */
+
+:host {
+  display: block;
+}
+
+.stundenplanung-header {
+  display: flex;
+  align-items: center;
+  background: #ececec;
+  border-bottom: 1px solid #cccccc;
+  padding: 4px 12px;
+  position: relative;
+
+  h2 {
+    flex: 1;
+    margin: 0;
+    font-family: "Roboto", sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+    color: #b91c1c;
+  }
+
+  .close-x {
+    color: #555;
+    margin-left: 8px;
+  }
+}
+
+.dialog-body {
+  padding: 16px 16px 8px !important;
+  background: #ffffff;
+  min-width: 980px;
+  max-width: 100%;
+  max-height: 70vh;
+  overflow: auto;
+}
+
+.three-col {
+  display: grid;
+  grid-template-columns: 1fr 160px 1fr;
+  gap: 16px;
+  align-items: stretch;
+}
+
+.col {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.section-title {
+  font-family: "Roboto", sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  color: #555;
+  margin: 0 0 6px 4px;
+}
+
+.col-center {
+  align-items: center;
+  justify-content: flex-start;
+  padding-top: 28px;
+}
+
+/* ---------- Tables ---------- */
+.table-scroll {
+  border: 1px solid #d0d0d0;
+  background: #fff;
+  max-height: 360px;
+  overflow: auto;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: "Roboto", sans-serif;
+  font-size: 13px;
+
+  thead th {
+    background: #f3f4f6;
+    color: #333;
+    font-weight: 600;
+    text-align: left;
+    padding: 8px 10px;
+    border-bottom: 1px solid #d0d0d0;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+  }
+
+  tbody td {
+    padding: 7px 10px;
+    border-bottom: 1px solid #ececec;
+    color: #333;
+    cursor: pointer;
+  }
+
+  tbody tr:hover td {
+    background: #f5f9fa;
+  }
+
+  tbody tr.selected td {
+    background: #c7e4ea !important;
+    color: #1a3942;
+  }
+
+  td.num,
+  th.num {
+    text-align: right;
+    padding-right: 14px;
+  }
+
+  td.empty {
+    text-align: center;
+    color: #888;
+    font-style: italic;
+    cursor: default;
+  }
+}
+
+/* ---------- Stunden stepper (visual cousin of <app-time-box>) ---------- */
+.stunden-stepper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.step-btn {
+  width: 56px;
+  height: 22px;
+  border: 1px solid #b8b8b8;
+  background: #f0f0f0;
+  color: #888;
+  border-radius: 2px;
+  font-size: 9px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &:hover:not(:disabled) {
+    background: #e0e0e0;
+    border-color: #999;
+    color: #333;
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+}
+
+.stunden-value {
+  width: 56px;
+  height: 30px;
+  border: 1px solid #b8b8b8;
+  background: #fff;
+  font-size: 18px;
+  font-weight: 600;
+  color: #1a3942;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ---------- Umplanen button ---------- */
+.umplanen-btn {
+  margin-top: 18px;
+  background: #ececec !important;
+  color: #555 !important;
+  border: 1px solid #cccccc !important;
+  font-family: "Roboto", sans-serif !important;
+  font-size: 13px !important;
+
+  mat-icon {
+    margin-right: 6px;
+    color: #555 !important;
+  }
+
+  &:not(:disabled) {
+    background: #e0eef0 !important;
+    border-color: #88c2cb !important;
+    color: #2a7a86 !important;
+
+    mat-icon { color: #2a7a86 !important; }
+  }
+
+  &:not(:disabled):hover {
+    background: #d0e8ec !important;
+    border-color: #338e9c !important;
+  }
+}
+
+/* ---------- Footer ---------- */
+mat-dialog-actions {
+  background: #ececec;
+  border-top: 1px solid #cccccc;
+  padding: 8px 12px !important;
+  margin: 0 !important;
+}
+
+.close-btn {
+  background: #f0f0f0 !important;
+  color: #333 !important;
+  border: 1px solid #cccccc !important;
+  font-family: "Roboto", sans-serif !important;
+  min-width: 90px;
+}
+
+.close-btn:hover {
+  background: #e6e6e6 !important;
+}

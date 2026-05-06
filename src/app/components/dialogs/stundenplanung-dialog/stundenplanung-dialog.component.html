@@ -1,0 +1,103 @@
+<div class="stundenplanung-header">
+  <h2 mat-dialog-title>{{ title }}</h2>
+  <button mat-icon-button class="close-x" (click)="dialogRef.close()" aria-label="Schließen">
+    <mat-icon>close</mat-icon>
+  </button>
+</div>
+
+<mat-dialog-content class="dialog-body">
+  <div class="three-col">
+
+    <!-- LEFT — Verbraucher für Stundenumplanung -->
+    <section class="col col-left">
+      <h3 class="section-title">Verbraucher für Stundenumplanung</h3>
+      <div class="table-scroll">
+        <table class="data-table verbraucher-table">
+          <thead>
+            <tr>
+              <th>Produktposition</th>
+              <th>Verbraucher</th>
+              <th class="num">Geplant</th>
+              <th class="num">Gebucht</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr
+              *ngFor="let row of verbraucher; let i = index"
+              [class.selected]="selectedVerbraucherIndex === i"
+              (click)="selectVerbraucher(i)"
+            >
+              <td>{{ produktpositionLabel(row) }}</td>
+              <td>{{ row.verbraucherName }}</td>
+              <td class="num">{{ row.stundenGeplant }}</td>
+              <td class="num">{{ row.stundenGebucht }}</td>
+            </tr>
+            <tr *ngIf="!verbraucher.length">
+              <td colspan="4" class="empty">Keine Verbraucher vorhanden.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- CENTER — Stunden stepper + Umplanen -->
+    <section class="col col-center">
+      <h3 class="section-title">Stunden</h3>
+      <div class="stunden-stepper">
+        <button type="button" class="step-btn" (click)="incStunden()" [disabled]="stunden >= maxStunden">
+          {{ stunden + 1 > maxStunden ? 0 : stunden + 1 }}
+        </button>
+        <div class="stunden-value">{{ stunden }}</div>
+        <button type="button" class="step-btn" (click)="decStunden()" [disabled]="stunden <= 0">
+          {{ stunden - 1 < 0 ? 0 : stunden - 1 }}
+        </button>
+      </div>
+
+      <button
+        mat-stroked-button
+        type="button"
+        class="umplanen-btn"
+        (click)="umplanen()"
+        [disabled]="!canUmplanen"
+      >
+        <mat-icon>arrow_forward</mat-icon>
+        Umplanen
+      </button>
+    </section>
+
+    <!-- RIGHT — Ziel der Stundenumplanung -->
+    <section class="col col-right">
+      <h3 class="section-title">Ziel der Stundenumplanung</h3>
+      <div class="table-scroll">
+        <table class="data-table ziel-table">
+          <thead>
+            <tr>
+              <th>Produktposition</th>
+              <th class="num">Geplant</th>
+              <th class="num">Gebucht</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr
+              *ngFor="let row of displayedZiele; let i = index"
+              [class.selected]="selectedZielIndex === i"
+              (click)="selectZiel(i)"
+            >
+              <td>{{ produktpositionLabel(row) }}</td>
+              <td class="num">{{ row.stundenGeplant }}</td>
+              <td class="num">{{ row.stundenGebucht }}</td>
+            </tr>
+            <tr *ngIf="!displayedZiele.length">
+              <td colspan="3" class="empty">Keine Ziele vorhanden.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+  </div>
+</mat-dialog-content>
+
+<mat-dialog-actions align="center">
+  <button mat-flat-button class="close-btn" (click)="dialogRef.close()">Schließen</button>
+</mat-dialog-actions>

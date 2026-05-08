@@ -1,87 +1,143 @@
-<div class="table-container">
-  <div class="table-header">
-    <div class="table-title-section">
-      <button class="px-3" mat-raised-button color="primary" (click)="createOrganisationseinheit()" aria-label="Neue Organisationseinheit erstellen">
-        <mat-icon >widgets</mat-icon>
-        Neu
+<div class="container fade-in">
+  <div class="header">
+    <div class="left-section">
+      <button
+        mat-raised-button
+        class="neu-button"
+        (click)="createOrganisationseinheit()"
+        aria-label="Neue Organisation anlegen"
+        matTooltip="Neue Organisation anlegen"
+        matTooltipPosition="below"
+      >
+        <i class="mdi mdi-cards-outline mdi-24px btn-icon" aria-hidden="true"></i>
+        <span class="btn-label">Neu</span>
       </button>
-
-
     </div>
-    <h2 class="table-title">Organisationseinheiten</h2>
 
-    <div class="table-actions">
-      <mat-checkbox [(ngModel)]="includeInactive" (change)="toggleInactive()" aria-label="Inklusive inaktive Einheiten">
-        inkl. inaktive
-      </mat-checkbox>
+    <div class="center-section">
+      <span class="title">Organisationseinheiten</span>
+    </div>
+
+    <div class="right-section">
+      <div class="checkbox-container">
+        <mat-checkbox
+          class="inkle-inactive"
+          [(ngModel)]="includeInactive"
+          (change)="toggleInactive()"
+        >
+          <span class="inkl">inkl. inaktive</span>
+        </mat-checkbox>
+      </div>
 
       <div class="search-container">
         <input
           type="text"
           placeholder="Suche"
           [(ngModel)]="searchTerm"
-          (keyup)="applyFilter()"
+          (input)="applyFilter()"
           class="search-input"
-
         />
-        <mat-icon>search</mat-icon>
+        <mat-icon class="search-icon">search</mat-icon>
       </div>
-
-
     </div>
   </div>
 
-  <div class="table-content">
-    <mat-table [dataSource]="dataSource" class="mat-elevation-z8" aria-label="Liste der Organisationseinheiten">
-
+  <div class="table-container">
+    <table
+      mat-table
+      [dataSource]="dataSource"
+      class="mat-elevation-z8 fixed-table"
+      *ngIf="dataSource?.data?.length"
+      aria-label="Liste der Organisationseinheiten"
+    >
       <ng-container matColumnDef="kurzbezeichnung">
-        <mat-header-cell *matHeaderCellDef>Kurzbez.</mat-header-cell>
-        <mat-cell *matCellDef="let org"
-                  [ngClass]="getStatusClass(org)"
-                  >{{ org.kurzBezeichnung }}</mat-cell>
+        <th mat-header-cell *matHeaderCellDef class="col-kurzbez">
+          <div class="sort-header" (click)="toggleSort('kurzbezeichnung')">
+            Kurzbez
+            <mat-icon class="sort-arrow">{{ getSortIcon('kurzbezeichnung') }}</mat-icon>
+          </div>
+        </th>
+        <td mat-cell *matCellDef="let org" [ngClass]="getStatusClass(org)" class="col-kurzbez">
+          {{ org.kurzBezeichnung }}
+        </td>
       </ng-container>
 
       <ng-container matColumnDef="bezeichnung">
-        <mat-header-cell *matHeaderCellDef>Bezeichnung</mat-header-cell>
-        <mat-cell *matCellDef="let org"
-                  [ngClass]="getStatusClass(org)">{{ org.bezeichnung }}</mat-cell>
+        <th mat-header-cell *matHeaderCellDef class="col-bezeichnung">
+          <div class="sort-header" (click)="toggleSort('bezeichnung')">
+            Bezeichnung
+            <mat-icon class="sort-arrow">{{ getSortIcon('bezeichnung') }}</mat-icon>
+          </div>
+        </th>
+        <td mat-cell *matCellDef="let org" [ngClass]="getStatusClass(org)" class="col-bezeichnung">
+          {{ org.bezeichnung }}
+        </td>
       </ng-container>
 
       <ng-container matColumnDef="leitung">
-        <mat-header-cell *matHeaderCellDef>Leitung</mat-header-cell>
-        <mat-cell *matCellDef="let org"
-                  [ngClass]="getStatusClass(org)">{{ org.leiter?.vorname }} {{org.leiter?.nachname}}</mat-cell>
+        <th mat-header-cell *matHeaderCellDef class="col-leitung">
+          <div class="sort-header" (click)="toggleSort('leitung')">
+            Leitung
+            <mat-icon class="sort-arrow">{{ getSortIcon('leitung') }}</mat-icon>
+          </div>
+        </th>
+        <td mat-cell *matCellDef="let org" [ngClass]="getStatusClass(org)" class="col-leitung">
+          {{ org.leiter?.vorname }} {{ org.leiter?.nachname }}
+        </td>
       </ng-container>
 
       <ng-container matColumnDef="uebergeordneteEinheit">
-        <mat-header-cell *matHeaderCellDef>Überg. Einheit</mat-header-cell>
-        <mat-cell *matCellDef="let org"
-                  [ngClass]="getStatusClass(org)">{{ org.parent?.kurzBezeichnung }}</mat-cell>
+        <th mat-header-cell *matHeaderCellDef class="col-uebergeordnet">
+          <div class="sort-header" (click)="toggleSort('uebergeordneteEinheit')">
+            Überg. Einheit
+            <mat-icon class="sort-arrow">{{ getSortIcon('uebergeordneteEinheit') }}</mat-icon>
+          </div>
+        </th>
+        <td mat-cell *matCellDef="let org" [ngClass]="getStatusClass(org)" class="col-uebergeordnet">
+          {{ org.parent?.kurzBezeichnung }}
+        </td>
       </ng-container>
 
       <ng-container matColumnDef="gueltigVon">
-        <mat-header-cell *matHeaderCellDef>Gültig von</mat-header-cell>
-        <mat-cell *matCellDef="let org"
-                  [ngClass]="getStatusClass(org)">{{ formatDate(org.gueltigVon) }}</mat-cell>
+        <th mat-header-cell *matHeaderCellDef class="col-date">
+          <div class="sort-header" (click)="toggleSort('gueltigVon')">
+            Gültig von
+            <mat-icon class="sort-arrow">{{ getSortIcon('gueltigVon') }}</mat-icon>
+          </div>
+        </th>
+        <td mat-cell *matCellDef="let org" [ngClass]="getStatusClass(org)" class="col-date">
+          {{ formatDate(org.gueltigVon) }}
+        </td>
       </ng-container>
 
       <ng-container matColumnDef="gueltigBis">
-        <mat-header-cell *matHeaderCellDef>Gültig bis</mat-header-cell>
-        <mat-cell *matCellDef="let org"
-                  [ngClass]="getStatusClass(org)">{{ formatDate(org.gueltigBis) }}</mat-cell>
+        <th mat-header-cell *matHeaderCellDef class="col-date">
+          <div class="sort-header" (click)="toggleSort('gueltigBis')">
+            Gültig bis
+            <mat-icon class="sort-arrow">{{ getSortIcon('gueltigBis') }}</mat-icon>
+          </div>
+        </th>
+        <td mat-cell *matCellDef="let org" [ngClass]="getStatusClass(org)" class="col-date">
+          {{ formatDate(org.gueltigBis) }}
+        </td>
       </ng-container>
 
-      <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
-      <mat-row
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr
+        mat-row
         *matRowDef="let row; columns: displayedColumns"
         (click)="selectRow(row)"
-        [class.selected-row]="selectedRows.includes(row)"
+        (dblclick)="goToDetails(row)"
+        [class.selected-row]="selectedRows.includes(row) || selectedRowId === row.id"
+        [attr.data-row-id]="row.id"
         [ngClass]="{ 'deleted-row': row.deleted }"
+        class="list-row"
+      ></tr>
+    </table>
 
-      >
-      </mat-row>
-    </mat-table>
-
-    <!-- Add pagination -->
+    <div *ngIf="!dataSource?.data?.length" class="empty-state">
+      <mat-icon>info_outline</mat-icon>
+      <span>Keine Daten gefunden</span>
+    </div>
   </div>
 </div>

@@ -1,0 +1,39 @@
+<h2 mat-dialog-title class="custom-dialog-title">Stundensatzänderung</h2>
+
+<mat-dialog-content class="dialog-body">
+  <p class="lead">
+    Soll ein neuer Verbraucher mit geändertem Stundensatz angelegt werden?
+  </p>
+
+  <ol class="explainer">
+    <li>
+      Der Verbraucher und die zugehörigen Stundenplanungen werden
+      <strong>resetted</strong>.
+    </li>
+    <li>
+      Ein <strong>Verbraucher</strong> mit geändertem Stundensatz und
+      Stundenplanungen auf Basis des alten Verbrauchers werden angelegt.
+    </li>
+  </ol>
+
+  <div class="input-row">
+    <label for="neuerStundensatz" class="input-label">Neuer Stundensatz:</label>
+    <input
+      id="neuerStundensatz"
+      type="number"
+      step="0.01"
+      class="stundensatz-input"
+      [(ngModel)]="neuerStundensatz"
+    />
+  </div>
+</mat-dialog-content>
+
+<mat-dialog-actions class="dialog-actions">
+  <button mat-button class="dialog-btn dialog-btn-secondary" (click)="onNein()">
+    Nein
+  </button>
+  <span class="spacer"></span>
+  <button mat-button class="dialog-btn dialog-btn-primary" (click)="onJa()">
+    Ja
+  </button>
+</mat-dialog-actions>

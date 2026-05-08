@@ -26,6 +26,7 @@ import {
   MOCK_VERTRAEGE,
   MOCK_ABSCHLUSS_INFO,
   MOCK_FEIERTAGE,
+  MOCK_PERSONENVERMERKE,
   MOCK_PERSON_HISTORY,
 } from './mock-data';
 
@@ -166,6 +167,12 @@ export class MockBackendInterceptor implements HttpInterceptor {
     }
     if (endpoint.match(/^personen\/[^/]+\/abschluss\/info$/) && m === 'GET') {
       return MOCK_ABSCHLUSS_INFO;
+    }
+    if (endpoint.match(/^personen\/[^/]+\/abschluss-info$/) && m === 'GET') {
+      return MOCK_ABSCHLUSS_INFO;
+    }
+    if (endpoint.match(/^personen\/[^/]+\/personenvermerke$/) && m === 'GET') {
+      return MOCK_PERSONENVERMERKE;
     }
     if (endpoint.match(/^personen\/[^/]+\/historyAuswertung$/) && m === 'GET') {
       return MOCK_PERSON_HISTORY;
@@ -329,6 +336,10 @@ export class MockBackendInterceptor implements HttpInterceptor {
     ) {
       return { ...(body as any), id: `tb-${Date.now()}`, version: 1 };
     }
+    const taetigkeitsbuchungMatch = endpoint.match(/^taetigkeitsbuchungen\/([^/]+)$/);
+    if (taetigkeitsbuchungMatch && m === 'POST') {
+      return { ...(body as any), id: taetigkeitsbuchungMatch[1], version: 2 };
+    }
 
     // ── freigabe-positionen ──────────────────────────────────────────────
     if (endpoint === 'freigabePositionen' && m === 'GET') {
@@ -358,6 +369,31 @@ export class MockBackendInterceptor implements HttpInterceptor {
 
     // ── feiertage ────────────────────────────────────────────────────────
     if (endpoint === 'feiertage' && m === 'GET') return MOCK_FEIERTAGE;
+
+    // ── geschaeftszahlen / rollenbezeichnungen ──────────────────────────
+    if (endpoint === 'geschaeftszahlen' && m === 'GET') {
+      return {
+        geschaeftszahl: [
+          'GZ-2024-001',
+          'GZ-2024-002',
+          'GZ-2025-001',
+          'GZ-2025-002',
+          'GZ-2026-001',
+        ],
+      };
+    }
+    if (endpoint === 'rollenbezeichnungen' && m === 'GET') {
+      return {
+        rollenbezeichnung: [
+          'Entwickler',
+          'Tester',
+          'Projektleiter',
+          'Architekt',
+          'Analyst',
+          'Servicemanager',
+        ],
+      };
+    }
 
     // Unknown endpoint — indicate pass-through.
     return undefined;

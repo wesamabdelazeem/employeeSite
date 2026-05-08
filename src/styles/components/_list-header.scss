@@ -1,0 +1,205 @@
+/* ========================================
+   UNIFIED LIST HEADER — extracted from
+   taetigkeiten-historisch-list so every
+   *-list component shares the same look.
+
+   Applies to any element matching the
+   selectors below at the global level, so
+   component .scss files no longer need to
+   redeclare the header block.
+   ======================================== */
+
+$phone: 600px;
+$tablet: 900px;
+
+[class$="-list"],
+[class*="-list "],
+app-abwesenheit-list,
+app-abwesenheit-korrigieren-list,
+app-anwesenheitsliste-list,
+app-bereitschaft-korrigieren-list,
+app-freigabe-list,
+app-freigabe-historisch-list,
+app-freigabe-korigieren-list,
+app-organisationeinheiten-list,
+app-personen-list,
+app-produkte-list,
+app-status-panel-list,
+app-taetigkeiten-historisch-list,
+app-taetigkeiten-korrigieren-list,
+app-zivildiener-list {
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #338e9c;
+    padding: 0 20px;
+    color: white;
+    border: 1px solid #0c4450;
+    width: 100%;
+    max-width: 100%;
+    height: 51.6px !important;
+    min-height: 51.6px !important;
+    max-height: 51.6px !important;
+    box-sizing: border-box;
+    font-family: Roboto, sans-serif;
+
+    @media (max-width: $phone) {
+      flex-direction: column;
+      gap: 10px;
+      padding: 10px;
+      height: auto !important;
+      min-height: 51.6px !important;
+      max-height: none !important;
+    }
+  }
+
+  .left-section,
+  .center-section,
+  .right-section {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .right-section {
+    flex-direction: row;
+
+    @media (max-width: $tablet) {
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+  }
+
+  .center-section .title {
+    font-size: 1.5rem;
+    font-weight: normal;
+    color: white;
+    margin: 0;
+    font-family: Roboto, sans-serif;
+
+    @media (max-width: $tablet) {
+      font-size: 1.2rem;
+    }
+
+    @media (max-width: $phone) {
+      font-size: 1rem;
+      text-align: center;
+    }
+  }
+
+  .menue {
+    margin: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.12) !important;
+    transition: all 0.25s cubic-bezier(0.165, 0.84, 0.44, 1) !important;
+    border-radius: 4px !important;
+    width: 40px !important;
+    height: 40px !important;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.25) !important;
+      transform: translateY(-1px);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    }
+  }
+
+  .neu-button {
+    background: linear-gradient(to right, #2c3e50, #34495e) !important;
+    transition: all 0.25s ease !important;
+    border-radius: 4px !important;
+    height: 40px !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white !important;
+    font-family: Roboto, sans-serif;
+
+    &:hover {
+      background: linear-gradient(to right, #3e5870, #4a5d78) !important;
+      transform: translateY(-1px);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    }
+
+    @media (max-width: $phone) {
+      width: 100%;
+    }
+  }
+
+  .checkbox-container {
+    display: flex;
+    cursor: pointer;
+
+    mat-checkbox {
+      color: white !important;
+
+      ::ng-deep {
+        .mdc-checkbox__background {
+          border-color: white !important;
+        }
+
+        .mdc-label {
+          color: white !important;
+          font-size: 14px;
+          white-space: nowrap;
+          font-family: Roboto, sans-serif;
+        }
+      }
+    }
+  }
+
+  .search-container {
+    display: flex;
+    border: 1px solid #ffff;
+    align-items: center;
+    background-color: white;
+    border-radius: 6px;
+    height: 32px;
+    min-width: 200px;
+    max-width: 100%;
+    box-sizing: border-box;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    padding: 0 8px 0 16px;
+    transition: border-color 0.3s ease;
+
+    &:focus-within {
+      border-color: #ffffff !important;
+      box-shadow: none !important;
+    }
+
+    @media (max-width: $tablet) {
+      min-width: 180px;
+    }
+
+    .search-input {
+      border: none;
+      outline: none !important;
+      background: transparent;
+      font-size: 13px;
+      width: 100%;
+      height: 100%;
+      padding: 0;
+      color: #333;
+      font-family: Roboto, sans-serif;
+
+      &:focus {
+        outline: none !important;
+        box-shadow: none !important;
+        border-color: transparent !important;
+      }
+
+      &::placeholder {
+        color: #000;
+      }
+    }
+
+    .search-icon {
+      color: gray;
+      font-size: 20px;
+      margin-left: 6px;
+    }
+  }
+}
+

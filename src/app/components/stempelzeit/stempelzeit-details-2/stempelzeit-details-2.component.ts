@@ -154,23 +154,14 @@ export class StempelzeitDetails2Component {
       }))
       .filter(opt => opt.value === ApiZeitTyp.ARBEITSZEIT);
 
-    // add current entry's zeitTyp if not already in list. zeitTyp may
-    // arrive either as the enum KEY (e.g. 'ARBEITSZEIT') or VALUE
-    // (e.g. 'Arbeitszeit') depending on the source — normalize before
-    // checking for duplicates so we never add a second 'Arbeitszeit' row.
+    // add current entry's zeitTyp if not already in list
     if (this.selectedNode?.timeEntry?.zeitTyp) {
-      const raw = this.selectedNode.timeEntry.zeitTyp.trim();
-      const displayValue = ApiZeitTyp[raw as keyof typeof ApiZeitTyp] ?? raw;
-      const enumKey =
-        raw in ApiZeitTyp
-          ? raw
-          : Object.keys(ApiZeitTyp).find(
-              k => ApiZeitTyp[k as keyof typeof ApiZeitTyp] === raw
-            ) ?? raw;
+      const currentKey = this.selectedNode.timeEntry.zeitTyp.trim();
+      const exists = options.some(opt => opt.key === currentKey);
 
-      const exists = options.some(opt => opt.value === displayValue);
       if (!exists) {
-        options.push({ key: enumKey, value: displayValue });
+        const displayValue = ApiZeitTyp[currentKey as keyof typeof ApiZeitTyp] ?? currentKey;
+        options.push({ key: currentKey, value: displayValue });
       }
     }
 

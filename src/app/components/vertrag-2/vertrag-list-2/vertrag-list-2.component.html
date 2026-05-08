@@ -1,129 +1,161 @@
-
 <div class="container fade-in">
-    <div class="header">
-      <div class="left-section">
-        <mat-icon class="menue">menu</mat-icon>
-        <button mat-raised-button class="neu-button" (click)="addProduct()">
-          <mat-icon>widgets</mat-icon>
-          Neu
-        </button>
-      </div>
-  
-      <div class="center-section">
-        <span class="title">Verträge</span>
-      </div>
-  
-      <div class="right-section">
-        <div class="checkbox-container">
-          <mat-checkbox
-            class="inkle-inactive"
-            [(ngModel)]="showInactive"
-            (change)="onCheckboxChange()"
-          >
-            inkl. inaktive
-          </mat-checkbox>
-        </div>
-  
-        <div class="search-container">
-          <input
-            type="text"
-            placeholder="Suche"
-            [(ngModel)]="searchTerm"
-            (input)="filterData()"
-            class="search-input"
-          />
-          <mat-icon class="search-icon">search</mat-icon>
-  
-        </div>
-      </div>
-    </div>
-  
-    <div class="table-container">
-      <table
-        mat-table
-        [dataSource]="dataSource"
-        class="mat-elevation-z8 custom-table"
+  <div class="header">
+    <div class="left-section">
+      <button
+        class="custom-menu menue-btn"
+        aria-label="Optionen"
+        type="button"
+        [matMenuTriggerFor]="listMenu"
+        matTooltip="Optionen"
+        matTooltipPosition="below"
       >
-  
-        <!-- Column 1: Vertragsname -->
-        <ng-container matColumnDef="verbraucht-werte-laden"  class="td-class">
-          <th mat-header-cell *matHeaderCellDef  id="td-vertrag">
-            <div class="sort-header" (click)="toggleSort('verbraucht-werte-laden')">
-              Vertragsname
-              <mat-icon class="sort-icon">{{ getSortIcon('verbraucht-werte-laden') }}</mat-icon>
-            </div>
-          </th>
-          <td mat-cell *matCellDef="let element" class="td-vertrag">
-            {{ element.vertragsname || '' }}
-          </td>
-        </ng-container>
-  
-        <!-- Column 2: Zusatz -->
-        <ng-container matColumnDef="zusatz" class="td-class" >
-          <th mat-header-cell *matHeaderCellDef id="td-zusatz">
-            <div class="sort-header" (click)="toggleSort('zusatz')" >
-              Zusatz
-              <mat-icon class="sort-icon">{{ getSortIcon('zusatz') }}</mat-icon>
-            </div>
-          </th>
-          <td mat-cell *matCellDef="let element" id="td-zusatzz">
-            {{ element.vertragszusatz || '' }}
-          </td>
-        </ng-container>
-  
-        <!-- Column 3: Stunden Geplant -->
-        <ng-container matColumnDef="geplan"  class="td-class ">
-          <th mat-header-cell *matHeaderCellDef id="td-stunden">
-            <div class="sort-header td-class-studen" (click)="toggleSort('geplan')">
-              Stunden Geplant
-              <mat-icon class="sort-icon">{{ getSortIcon('geplan') }}</mat-icon>
-            </div>
-          </th>
-          <td mat-cell *matCellDef="let element" class="stunden-cell">
-            {{ element.stundenGeplant || '' }}
-          </td>
-        </ng-container>
-  
-        <!-- Column 4: Org-Einheit -->
-        <ng-container matColumnDef="org-Einheit"  class="td-class">
-          <th mat-header-cell *matHeaderCellDef>
-            <div class="sort-header" (click)="toggleSort('org-Einheit')">
-              Org-Einheit
-              <mat-icon class="sort-icon">{{ getSortIcon('org-Einheit') }}</mat-icon>
-            </div>
-          </th>
-          <td mat-cell *matCellDef="let element" class="td-org">
-            {{ element.vertragsverantwortlicher?.organisationseinheit?.kurzBezeichnung || '' }}
-          </td>
-        </ng-container>
-  
-        <!-- Column 5: Verbraucht -->
-        <ng-container matColumnDef="verbrauchtDate"  class="td-class">
-  
-          <th mat-header-cell *matHeaderCellDef>
-            <div class="sort-header" (click)="toggleSort('verbrauchtDate')">
-              Verbraucht
-              <mat-icon class="sort-icon">{{ getSortIcon('verbrauchtDate') }}</mat-icon>
-            </div>
-          </th>
-          <td mat-cell *matCellDef="let element" class="td-verbraucht" >
-            {{ element.verbraucht || '' }}
-            <!-- Empty cell -->
-          </td>
-        </ng-container>
-  
-        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-        <tr
-          mat-row
-          *matRowDef="let row; columns: displayedColumns"
-          [class.inactive-row]="!row.aktiv"
-          (click)="goToDetails(row)"
-          class="list-row"
-        ></tr>
-      </table>
-  
-      <div *ngIf="dataSource.data.length === 0" class="no-data">
-        Keine Daten gefunden
+        <i class="mdi mdi-menu mdi-24px" aria-hidden="true"></i>
+      </button>
+      <mat-menu #listMenu="matMenu" class="option-menu">
+        <button mat-menu-item>
+          <i class="mdi mdi-download-box-outline mdi-24px" aria-hidden="true"></i>Verbraucht-Werte laden
+        </button>
+      </mat-menu>
+      <button
+        mat-raised-button
+        class="neu-button"
+        (click)="addProduct()"
+        aria-label="Neuen Vertrag anlegen"
+        matTooltip="Neuen Vertrag anlegen"
+        matTooltipPosition="below"
+      >
+        <i class="mdi mdi-file-document mdi-24px btn-icon" aria-hidden="true"></i>
+        <span class="btn-label">Neu</span>
+      </button>
+    </div>
+
+    <div class="center-section">
+      <span class="title">Vertrage</span>
+    </div>
+
+    <div class="right-section">
+      <div class="checkbox-container">
+        <mat-checkbox
+          class="inkle-inactive"
+          [(ngModel)]="showInactive"
+          (change)="onCheckboxChange()"
+        >
+          <span class="inkl">inkl. inaktive</span>
+        </mat-checkbox>
+      </div>
+
+      <div class="search-container">
+        <input
+          type="text"
+          placeholder="Suche"
+          [(ngModel)]="searchTerm"
+          (input)="filterData()"
+          class="search-input"
+        />
+        <i class="mdi mdi-magnify mdi-24px search-icon" aria-hidden="true"></i>
       </div>
     </div>
   </div>
+
+  <div class="table-container">
+    <table
+      mat-table
+      [dataSource]="dataSource"
+      matSort
+      class="mat-elevation-z8 fixed-table"
+      *ngIf="dataSource.data.length"
+    >
+      <!-- VERTRAGSNAME -->
+      <ng-container matColumnDef="vertragsname">
+        <th mat-header-cell *matHeaderCellDef class="col-vertragsname">
+          <div class="sort-header" (click)="toggleSort('vertragsname')">
+            Vertragsname
+            <mat-icon class="sort-arrow" *ngIf="activeSortColumn === 'vertragsname'">
+              {{ sortState['vertragsname'] === 'asc' ? 'keyboard_arrow_up' : 'keyboard_arrow_down' }}
+            </mat-icon>
+          </div>
+        </th>
+        <td mat-cell *matCellDef="let element" class="col-vertragsname">
+          {{ element.vertragsname || '-' }}
+        </td>
+      </ng-container>
+
+      <!-- ZUSATZ -->
+      <ng-container matColumnDef="zusatz">
+        <th mat-header-cell *matHeaderCellDef class="col-zusatz">
+          <div class="sort-header" (click)="toggleSort('zusatz')">
+            Zusatz
+            <mat-icon class="sort-arrow" *ngIf="activeSortColumn === 'zusatz'">
+              {{ sortState['zusatz'] === 'asc' ? 'keyboard_arrow_up' : 'keyboard_arrow_down' }}
+            </mat-icon>
+          </div>
+        </th>
+        <td mat-cell *matCellDef="let element" class="col-zusatz">
+          {{ element.vertragszusatz || '-' }}
+        </td>
+      </ng-container>
+
+      <!-- STUNDEN GEPLANT -->
+      <ng-container matColumnDef="geplan">
+        <th mat-header-cell *matHeaderCellDef class="col-stunden">
+          <div class="sort-header" (click)="toggleSort('geplan')">
+          Geplant
+            <mat-icon class="sort-arrow" *ngIf="activeSortColumn === 'geplan'">
+              {{ sortState['geplan'] === 'asc' ? 'keyboard_arrow_up' : 'keyboard_arrow_down' }}
+            </mat-icon>
+          </div>
+        </th>
+        <td mat-cell *matCellDef="let element" class="col-stunden">
+          {{ element.stundenGeplant || '-' }}
+        </td>
+      </ng-container>
+
+      <!-- ORG-EINHEIT -->
+      <ng-container matColumnDef="org-Einheit">
+        <th mat-header-cell *matHeaderCellDef class="col-org">
+          <div class="sort-header" (click)="toggleSort('org-Einheit')">
+            Org-Einheit
+            <mat-icon class="sort-arrow" *ngIf="activeSortColumn === 'org-Einheit'">
+              {{ sortState['org-Einheit'] === 'asc' ? 'keyboard_arrow_up' : 'keyboard_arrow_down' }}
+            </mat-icon>
+          </div>
+        </th>
+        <td mat-cell *matCellDef="let element" class="col-org">
+          {{ element.vertragsverantwortlicher?.organisationseinheit?.kurzBezeichnung || '-' }}
+        </td>
+      </ng-container>
+
+      <!-- VERBRAUCHT -->
+      <ng-container matColumnDef="verbrauchtDate">
+        <th mat-header-cell *matHeaderCellDef class="col-verbraucht">
+          <div class="sort-header" (click)="toggleSort('verbrauchtDate')">
+            Verbraucht
+            <mat-icon class="sort-arrow" *ngIf="activeSortColumn === 'verbrauchtDate'">
+              {{ sortState['verbrauchtDate'] === 'asc' ? 'keyboard_arrow_up' : 'keyboard_arrow_down' }}
+            </mat-icon>
+          </div>
+        </th>
+        <td mat-cell *matCellDef="let element" class="col-verbraucht">
+          {{ element.stundenGebucht || '-' }}
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr
+        mat-row
+        *matRowDef="let row; columns: displayedColumns"
+        [class.inactive-row]="!row.aktiv"
+        [class.active-row]="row.aktiv"
+        [class.selected-row]="selectedRowId === row.id"
+        [attr.data-row-id]="row.id"
+        (click)="selectRow(row)"
+        (dblclick)="goToDetails(row)"
+        class="list-row"
+      ></tr>
+    </table>
+
+    <div *ngIf="dataSource.data.length === 0" class="no-data">
+      Keine Daten gefunden
+    </div>
+  </div>
+</div>

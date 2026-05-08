@@ -68,6 +68,13 @@ export class AppConstants {
   static readonly MSG_TAETIGKEITEN_LOADED_SUCCESS = 'Tätigkeitsbuchungen wurden erfolgreich geladen';
   static readonly MSG_TAETIGKEITEN_LOADED_ERROR = 'Tätigkeitsbuchungen wurden nicht geladen';
 
+  static readonly MSG_TAETIGKEITEN_CREATED_SUCCESS = 'Die Tätigkeitsbuchung wurde erfolgreich erzeugt';
+  static readonly MSG_TAETIGKEITEN_CREATED_ERROR = 'Die Tätigkeitsbuchung wurde nicht erzeugt';
+  static readonly MSG_TAETIGKEITEN_UPDATED_SUCCESS = 'Die Tätigkeitsbuchung wurde erfolgreich geändert';
+  static readonly MSG_TAETIGKEITEN_UPDATED_ERROR = 'Die Tätigkeitsbuchung wurde nicht geändert';
+  static readonly MSG_TAETIGKEITEN_DELETED_SUCCESS = 'Die Tätigkeitsbuchung wurde erfolgreich gelöscht';
+  static readonly MSG_TAETIGKEITEN_DELETED_ERROR = 'Die Tätigkeitsbuchung wurde nicht gelöscht';
+
   static getFunctionValue(label: string): string {
         const item = PERSON_FUNCTION_TYPEN.find(item => item.label === label);
         return item ? item.value : label; // fallback to value if not found

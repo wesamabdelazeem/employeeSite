@@ -128,14 +128,6 @@ export class NavigationService {
     },
 
     {
-      label: 'Personen 2 (theme)',
-      icon: 'mdi-account-edit',
-      route: '/personen-2',
-      active: false,
-      allowedRoles: [ApiRolle.DEFAULT, ApiRolle.ADMIN_PROJECT_OFFICE, ApiRolle.PROJECT_OFFICE, ApiRolle.ADMIN_LEITER],
-    },
-
-    {
       label: 'Produkte',
       icon: 'mdi-cards-outline',
       route: '/produkte',

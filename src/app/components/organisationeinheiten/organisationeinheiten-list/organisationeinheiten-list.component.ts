@@ -1,4 +1,4 @@
-import { Component, EventEmitter, OnInit, Output } from '@angular/core';
+import { Component, ElementRef, EventEmitter, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
@@ -9,6 +9,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatMenuModule } from '@angular/material/menu';
+import { MatTooltipModule } from '@angular/material/tooltip';
 
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 //import { Datalistorganizationanc } from '../../../models/datalistorganizationanc';
@@ -33,6 +34,7 @@ import {ApiOrganisationseinheit} from '../../../models/ApiOrganisationseinheit';
     MatCheckboxModule,
     MatProgressSpinnerModule,
     MatMenuModule,
+    MatTooltipModule,
   ],
   templateUrl: './organisationeinheiten-list.component.html',
   styleUrl: './organisationeinheiten-list.component.scss'
@@ -56,33 +58,34 @@ export class OrganisationeinheitenListComponent {
   datalistoftaple: ApiOrganisationseinheit[] = [];
   selectedRows: ApiOrganisationseinheit[] = [];
 
+  private static readonly LAST_ROW_KEY = 'orgeinheiten.lastRowId';
+  selectedRowId: string | null = null;
+
+  sortState: { [key: string]: 'asc' | 'desc' | '' } = {
+    kurzbezeichnung: '',
+    bezeichnung: '',
+    leitung: '',
+    uebergeordneteEinheit: '',
+    gueltigVon: '',
+    gueltigBis: '',
+  };
+  activeSortColumn: string = '';
+
   constructor(
     private OrganisationseinheitService: OrganisationseinheitService,
     private router: Router,
     private errorHandlingService : ErrorHandlingService,
+    private host: ElementRef<HTMLElement>,
   //  private sharedDataService: SharedDataServiceService
   ) { }
 
   ngOnInit(): void {
+    this.selectedRowId = sessionStorage.getItem(OrganisationeinheitenListComponent.LAST_ROW_KEY);
+
     this.OrganisationseinheitService.getActiveData().subscribe({
       next: (data) => {
-       /* const sortedData = data.sort((a, b) => {
-          // Handle null/undefined by sorting them to the end
-          if (!a.kurzBezeichnung && !b.kurzBezeichnung) return 0;
-          if (!a.kurzBezeichnung) return 1;
-          if (!b.kurzBezeichnung) return -1;
-
-          // Case-insensitive comparison
-          const nameA = a.kurzBezeichnung.toLowerCase();
-          const nameB = b.kurzBezeichnung.toLowerCase();
-
-          return nameA.localeCompare(nameB);
-        });
-
-        */
-
         this.dataSource.data = data;
-        console.log('Sorted data:', data.length);
+        this.scrollToSelectedRow();
       },
       error: (err) => {
         this.errorHandlingService.handleAppError(err);
@@ -178,9 +181,37 @@ export class OrganisationeinheitenListComponent {
     });
   }
 
+  /**
+   * Scrolls the previously-selected row into view by adjusting only the
+   * table-container's scrollTop. Using scrollIntoView would also scroll the
+   * page and hide the header — this scopes the scroll to the inner container.
+   */
+  private scrollToSelectedRow(): void {
+    if (!this.selectedRowId) return;
+    const id = this.selectedRowId;
+    setTimeout(() => {
+      const container = this.host.nativeElement.querySelector('.table-container') as HTMLElement | null;
+      const row = this.host.nativeElement.querySelector(`[data-row-id="${id}"]`) as HTMLElement | null;
+      if (!container || !row) return;
+      const targetTop = row.offsetTop - (container.clientHeight - row.clientHeight) / 2;
+      container.scrollTop = Math.max(0, targetTop);
+    });
+  }
+
   selectRow(row: ApiOrganisationseinheit): void {
-    this.selectedRows = [row]; // Clear previous selections and select only the current row
-    console.log('Selected-Org', row);
+    this.selectedRows = [row];
+    this.selectedRowId = row.id ?? null;
+    if (row.id) {
+      sessionStorage.setItem(OrganisationeinheitenListComponent.LAST_ROW_KEY, row.id);
+    }
+  }
+
+  goToDetails(row: ApiOrganisationseinheit): void {
+    this.selectedRows = [row];
+    this.selectedRowId = row.id ?? null;
+    if (row.id) {
+      sessionStorage.setItem(OrganisationeinheitenListComponent.LAST_ROW_KEY, row.id);
+    }
     this.router.navigate(['/organisationseinheiten', row.id], {
       state: { selectedOrganisation: row }
     });
@@ -203,6 +234,58 @@ export class OrganisationeinheitenListComponent {
     }
 
 
+  }
+
+  toggleSort(column: string): void {
+    if (this.activeSortColumn !== column) {
+      Object.keys(this.sortState).forEach(k => this.sortState[k] = '');
+      this.sortState[column] = 'desc';
+      this.activeSortColumn = column;
+    } else {
+      this.sortState[column] = this.sortState[column] === 'desc' ? 'asc' : 'desc';
+    }
+    this.applySort();
+  }
+
+  getSortIcon(column: string): string {
+    if (this.sortState[column] === 'desc') return 'keyboard_arrow_down';
+    return 'keyboard_arrow_up';
+  }
+
+  private applySort(): void {
+    const column = this.activeSortColumn;
+    if (!column) return;
+    const direction = this.sortState[column];
+    if (!direction) return;
+
+    const data = [...this.dataSource.data];
+    data.sort((a, b) => {
+      const valA = this.getSortValue(a, column);
+      const valB = this.getSortValue(b, column);
+      if (valA < valB) return direction === 'asc' ? -1 : 1;
+      if (valA > valB) return direction === 'asc' ? 1 : -1;
+      return 0;
+    });
+    this.dataSource.data = data;
+  }
+
+  private getSortValue(row: ApiOrganisationseinheit, column: string): string | number {
+    switch (column) {
+      case 'kurzbezeichnung':
+        return (row.kurzBezeichnung ?? '').toLowerCase();
+      case 'bezeichnung':
+        return (row.bezeichnung ?? '').toLowerCase();
+      case 'leitung':
+        return `${row.leiter?.nachname ?? ''} ${row.leiter?.vorname ?? ''}`.toLowerCase();
+      case 'uebergeordneteEinheit':
+        return (row.parent?.kurzBezeichnung ?? '').toLowerCase();
+      case 'gueltigVon':
+        return row.gueltigVon ? new Date(row.gueltigVon).getTime() : 0;
+      case 'gueltigBis':
+        return row.gueltigBis ? new Date(row.gueltigBis).getTime() : 0;
+      default:
+        return '';
+    }
   }
 
 }

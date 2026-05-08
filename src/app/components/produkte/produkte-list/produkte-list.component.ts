@@ -1,4 +1,4 @@
-import { Component , ViewChild, AfterViewInit} from '@angular/core';
+import { Component, ViewChild, AfterViewInit, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatInputModule } from '@angular/material/input';
@@ -7,11 +7,13 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { FormsModule } from '@angular/forms';
 import { MatCheckboxModule } from '@angular/material/checkbox';
-import { MatSortModule, MatSort, Sort } from '@angular/material/sort';
+import { MatSortModule, MatSort } from '@angular/material/sort';
 import { MatTableModule, MatTableDataSource } from '@angular/material/table';
+import { MatMenuModule } from '@angular/material/menu';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { Router } from '@angular/router';
 import { ProduktService } from '../../../services/produkt.service';
-import {ApiProdukt} from '../../../models/ApiProdukt';
+import { ApiProdukt } from '../../../models/ApiProdukt';
 
 @Component({
   selector: 'app-produkte-list',
@@ -19,69 +21,36 @@ import {ApiProdukt} from '../../../models/ApiProdukt';
     CommonModule,
     MatTableModule,
     MatCardModule,
-    CommonModule,
     FormsModule,
-    MatTableModule,
     MatFormFieldModule,
     MatInputModule,
     MatIconModule,
     MatButtonModule,
     MatCheckboxModule,
     MatSortModule,
+    MatMenuModule,
+    MatTooltipModule,
   ],
   templateUrl: './produkte-list.component.html',
-  styleUrl: './produkte-list.component.scss'
+  styleUrl: './produkte-list.component.scss',
 })
-export class ProdukteListComponent {
-
-
+export class ProdukteListComponent implements AfterViewInit {
   @ViewChild(MatSort) sort!: MatSort;
-  dataSource = new MatTableDataSource<any>([]);
+  dataSource = new MatTableDataSource<ApiProdukt>([]);
 
   produkte: ApiProdukt[] = [];
   searchTerm = '';
   showInactive = false;
   displayedColumns: string[] = ['kurzName', 'produktname', 'start', 'ende'];
 
-  constructor(private produktService: ProduktService, private router: Router) {
-    // 3. CALL the service method to get the data
-    this.produktService.getProdukte().subscribe({
-      next: (data) => {
-        console.log('Successfully fetched data from ProduktService:', data);
-        this.produkte = this.sortData(data);
-        this.filterData();
-      },
-      error: (err) => {
-        console.error('Error fetching produkte list:', err);
-        alert(err);
-      },
-    });
-  }
+  private static readonly LAST_ROW_KEY = 'produkte.lastRowId';
+  selectedRowId: string | null = null;
 
-  ngAfterViewInit() {
-    console.log('Sort initialized:', this.sort);
-    this.dataSource.sort = this.sort;
-
-    this.dataSource.sortingDataAccessor = (item, property) => {
-      console.log('Sorting by:', property, 'Value:', item[property]); // Debug what's being sorted
-      switch (property) {
-        case 'start':
-        case 'ende':
-          const date = new Date(item[property]);
-          console.log('Date value:', date); // Check date parsing
-          return isNaN(date.getTime()) ? 0 : date.getTime();
-        default:
-          return (item[property] || '').toString().toLowerCase();
-      }
-    };
-  }
-  sortData(data: any[]): any[] {
-    return data.sort((a, b) => {
-      const nameA = a.kurzName?.toLowerCase() || '';
-      const nameB = b.kurzName?.toLowerCase() || '';
-      return nameA.localeCompare(nameB);
-    });
-  }
+  listMenuItems = [
+    { label: 'Produkte - Ergebnisverantwortliche', icon: 'mdi-file-pdf-box', action: 'Produkte-Ergebnisverantwortliche' },
+    { label: 'Produkte - Durchführungsverantwortliche', icon: 'mdi-file-pdf-box', action: 'Produkte-Durchfuehrungsverantwortliche' },
+    { label: 'Produkte - Servicemanager', icon: 'mdi-file-pdf-box', action: 'Produkte-Servicemanager' },
+  ];
 
   sortState: { [key: string]: 'asc' | 'desc' } = {
     kurzName: 'asc',
@@ -90,22 +59,69 @@ export class ProdukteListComponent {
     ende: 'desc',
   };
 
-  toggleSort(field: string) {
-    // Toggle direction
-    this.sortState[field] = this.sortState[field] === 'asc' ? 'desc' : 'asc';
+  constructor(
+    private produktService: ProduktService,
+    private router: Router,
+    private host: ElementRef<HTMLElement>,
+  ) {
+    this.selectedRowId = sessionStorage.getItem(ProdukteListComponent.LAST_ROW_KEY);
 
+    this.produktService.getProdukte().subscribe({
+      next: (response) => {
+        const data = response.body ?? [];
+        this.produkte = this.sortData(data);
+        this.filterData();
+        this.scrollToSelectedRow();
+      },
+      error: (err) => {
+        console.error('Error fetching produkte list:', err);
+      },
+    });
+  }
+
+  ngAfterViewInit() {
+    this.dataSource.sort = this.sort;
+    this.dataSource.sortingDataAccessor = (item: ApiProdukt, property: string): string | number => {
+      const value = (item as Record<string, unknown>)[property];
+      switch (property) {
+        case 'start':
+        case 'ende':
+          const date = value ? new Date(value as string) : null;
+          return date && !isNaN(date.getTime()) ? date.getTime() : 0;
+        default:
+          return (value ?? '').toString().toLowerCase();
+      }
+    };
+  }
+
+  onMenuAction(action: string): void {
+    console.log('[ProdukteList] menu action:', action);
+  }
+
+  sortData(data: ApiProdukt[]): ApiProdukt[] {
+    return [...data].sort((a, b) => {
+      const nameA = a.kurzName?.toLowerCase() || '';
+      const nameB = b.kurzName?.toLowerCase() || '';
+      return nameA.localeCompare(nameB);
+    });
+  }
+
+  toggleSort(field: string) {
+    this.sortState[field] = this.sortState[field] === 'asc' ? 'desc' : 'asc';
     const direction = this.sortState[field];
 
     const sorted = [...this.dataSource.data].sort((a, b) => {
-      let valueA = a[field];
-      let valueB = b[field];
+      const rawA = (a as Record<string, unknown>)[field];
+      const rawB = (b as Record<string, unknown>)[field];
+      let valueA: string | number;
+      let valueB: string | number;
 
       if (field === 'start' || field === 'ende') {
-        valueA = new Date(valueA).getTime();
-        valueB = new Date(valueB).getTime();
+        valueA = rawA ? new Date(rawA as string).getTime() : 0;
+        valueB = rawB ? new Date(rawB as string).getTime() : 0;
       } else {
-        valueA = (valueA || '').toString().toLowerCase();
-        valueB = (valueB || '').toString().toLowerCase();
+        valueA = (rawA ?? '').toString().toLowerCase();
+        valueB = (rawB ?? '').toString().toLowerCase();
       }
 
       if (valueA < valueB) return direction === 'asc' ? -1 : 1;
@@ -116,10 +132,9 @@ export class ProdukteListComponent {
     this.dataSource.data = sorted;
   }
 
-
   filterData() {
     const term = this.searchTerm.toLowerCase();
-    const filtered = this.produkte.filter(p => {
+    const filtered = this.produkte.filter((p) => {
       const matchesSearch =
         (p.kurzName || '').toLowerCase().includes(term) ||
         (p.produktname || '').toLowerCase().includes(term);
@@ -133,16 +148,45 @@ export class ProdukteListComponent {
     this.filterData();
   }
 
+  clearSearch() {
+    this.searchTerm = '';
+    this.filterData();
+  }
 
-
-  addProduct() {
+  addProduct(): void {
     this.router.navigate(['/produkte/neu']);
   }
 
-  goToDetails(row: any) {
+  selectRow(row: ApiProdukt): void {
+    this.selectedRowId = row.id ?? null;
+    if (row.id) {
+      sessionStorage.setItem(ProdukteListComponent.LAST_ROW_KEY, row.id);
+    }
+  }
 
+  goToDetails(row: ApiProdukt) {
+    if (row.id) {
+      sessionStorage.setItem(ProdukteListComponent.LAST_ROW_KEY, row.id);
+    }
+    this.selectedRowId = row.id ?? null;
     this.router.navigate(['/produkte', row.id], {
-      state: { produktData: row }
+      state: { produktData: row },
+    });
+  }
+
+  /**
+   * Scrolls the previously-selected row into view inside the table-container,
+   * mirroring the behaviour of organisationeinheiten-list.
+   */
+  private scrollToSelectedRow(): void {
+    if (!this.selectedRowId) return;
+    const id = this.selectedRowId;
+    setTimeout(() => {
+      const container = this.host.nativeElement.querySelector('.table-container') as HTMLElement | null;
+      const row = this.host.nativeElement.querySelector(`[data-row-id="${id}"]`) as HTMLElement | null;
+      if (!container || !row) return;
+      const targetTop = row.offsetTop - (container.clientHeight - row.clientHeight) / 2;
+      container.scrollTop = Math.max(0, targetTop);
     });
   }
 }

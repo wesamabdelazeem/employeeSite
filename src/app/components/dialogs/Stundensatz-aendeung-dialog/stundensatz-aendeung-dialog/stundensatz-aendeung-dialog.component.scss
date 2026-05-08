@@ -1,0 +1,107 @@
+::ng-deep .mat-mdc-dialog-content {
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+::ng-deep .mat-mdc-dialog-container .mat-mdc-dialog-surface {
+  border: 0 solid;
+  border-radius: 0;
+  overflow: hidden;
+}
+
+::ng-deep .custom-dialog-width .mat-mdc-dialog-surface {
+  width: 600px;
+  max-width: 90vw;
+}
+
+.custom-dialog-title {
+  background-color: #338e9c;
+  color: white;
+  padding: 10px;
+  margin: 0;
+  border-radius: 0;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  height: 48px;
+}
+
+.dialog-body {
+  padding: 16px 20px !important;
+  background: #ffffff;
+}
+
+.lead {
+  margin: 0 0 12px 0;
+  font-size: 14px;
+  color: #333;
+}
+
+.explainer {
+  margin: 0 0 16px 0;
+  padding-left: 20px;
+  font-size: 13px;
+  color: #444;
+}
+
+.explainer li {
+  margin-bottom: 4px;
+}
+
+.input-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.input-label {
+  font-size: 14px;
+  color: #555;
+  flex: 0 0 auto;
+}
+
+.stundensatz-input {
+  flex: 0 0 140px;
+  height: 32px;
+  padding: 4px 8px;
+  border: 1px solid #c7c7c7;
+  border-radius: 3px;
+  font-size: 14px;
+  outline: none;
+  background: #ffffff;
+
+  &:focus {
+    border-color: #338e9c;
+  }
+}
+
+.dialog-actions {
+  display: flex;
+  align-items: center;
+  padding: 10px 16px !important;
+  border-top: 1px solid #e0e0e0;
+  margin: 0 !important;
+}
+
+.spacer {
+  flex: 1;
+}
+
+.dialog-btn {
+  background-color: #2e4155 !important;
+  color: #ffffff !important;
+  border-radius: 4px !important;
+  padding: 4px 18px !important;
+  font-weight: 500;
+  min-width: 80px;
+}
+
+.dialog-btn-primary {
+  background-color: #2e4155 !important;
+}
+
+.dialog-btn-secondary {
+  background-color: #2e4155 !important;
+}

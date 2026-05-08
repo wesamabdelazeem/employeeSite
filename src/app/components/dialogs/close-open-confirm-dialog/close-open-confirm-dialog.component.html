@@ -1,0 +1,13 @@
+<h2 mat-dialog-title class="custom-dialog-title">
+  {{ data.isClosed ? 'Tag öffnen' : 'Tag schließen' }}
+</h2>
+<mat-dialog-content class="content-main">
+  <p>
+    Wollen Sie den Tag@if (data.dayName) { "{{ data.dayName }}"}
+    {{ data.isClosed ? 'wirklich öffnen?' : 'wirklich schließen?' }}
+  </p>
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <button mat-stroked-button color="primary" class="button-nein" (click)="cancel()">Nein</button>
+  <button mat-stroked-button color="primary" class="button-ja" (click)="confirm()">Ja</button>
+</mat-dialog-actions>

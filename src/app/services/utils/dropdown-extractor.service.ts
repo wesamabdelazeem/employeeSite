@@ -1,8 +1,11 @@
 import { Injectable } from '@angular/core';
+import { ApiProdukt } from '../../models/ApiProdukt';
+import { ApiProduktPosition } from '../../models/ApiProduktPosition';
+import { ApiProduktPositionBuchungspunkt } from '../../models/ApiProduktPositionBuchungspunkt';
 
 export interface DropdownOptions {
-  produktpositionOptions: any[];
-  buchungspunktOptions: any[];
+  produktpositionOptions: ApiProduktPosition[];
+  buchungspunktOptions: ApiProduktPositionBuchungspunkt[];
 }
 
 @Injectable({
@@ -10,38 +13,27 @@ export interface DropdownOptions {
 })
 export class DropdownExtractorService {
 
-  /**
-   * Extract unique produktposition and buchungspunkt options from products
-   */
-  extractDropdownOptions(products: any[]): DropdownOptions {
-    const positionsSet = new Set<string>();
-    const buchungspunkteSet = new Set<string>();
+  extractDropdownOptions(products: ApiProdukt[]): DropdownOptions {
+    const positionsById = new Map<string, ApiProduktPosition>();
+    const buchungspunkteById = new Map<string, ApiProduktPositionBuchungspunkt>();
 
     products.forEach(product => {
-      if (product.produktPosition) {
-        product.produktPosition.forEach((position: any) => {
-          if (position.produktPositionname) {
-            positionsSet.add(position.produktPositionname);
-          }
+      product.produktPosition?.forEach(position => {
+        if (position.id && !positionsById.has(position.id)) {
+          positionsById.set(position.id, position);
+        }
 
-          if (position.produktPositionBuchungspunkt) {
-            position.produktPositionBuchungspunkt.forEach((bp: any) => {
-              if (bp.buchungspunkt) {
-                buchungspunkteSet.add(bp.buchungspunkt);
-              }
-            });
+        position.produktPositionBuchungspunkt?.forEach(bp => {
+          if (bp.id && !buchungspunkteById.has(bp.id)) {
+            buchungspunkteById.set(bp.id, bp);
           }
         });
-      }
+      });
     });
 
     return {
-      produktpositionOptions: Array.from(positionsSet).map(name => ({
-        produktPositionName: name
-      })),
-      buchungspunktOptions: Array.from(buchungspunkteSet).map(name => ({
-        buchungspunktName: name
-      }))
+      produktpositionOptions: Array.from(positionsById.values()),
+      buchungspunktOptions: Array.from(buchungspunkteById.values()),
     };
   }
 }

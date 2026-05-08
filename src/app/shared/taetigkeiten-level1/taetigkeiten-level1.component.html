@@ -1,0 +1,37 @@
+<div class="form-header">
+  <h2 class="right-header">{{ title }}</h2>
+  <button
+    *ngIf="showCloseButton"
+    mat-button
+    class="header-btn"
+    (click)="onToggleClose()"
+    [matTooltip]="hasNotification ? 'Monatabschluss aufheben' : 'Monatabschluss'"
+  >
+    <i
+      class="mdi"
+      [class.mdi-check-circle-outline]="!hasNotification"
+      [class.mdi-close-circle-outline]="hasNotification"
+    ></i>
+    <span>{{ hasNotification ? 'Abschluss aufheben' : 'Monatabschluss' }}</span>
+  </button>
+</div>
+
+<form [formGroup]="formGroup" class="taetigkeit-form">
+  <div class="form-field-group taetigkeit-form-check">
+    <label class="field-label">Abgeschlossen:</label>
+    <mat-checkbox formControlName="abgeschlossen" class="field-input check-margin">
+    </mat-checkbox>
+  </div>
+
+  <div class="form-field-group">
+    <label class="field-label">Gebucht [Std:Min]:</label>
+    <mat-form-field appearance="outline" class="field-input">
+      <input
+        matInput
+        formControlName="gebuchtTotal"
+        [readonly]="!isEditing"
+        class="time-btn"
+      />
+    </mat-form-field>
+  </div>
+</form>

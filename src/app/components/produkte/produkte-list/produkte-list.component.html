@@ -1,10 +1,33 @@
 <div class="container fade-in">
   <div class="header">
     <div class="left-section">
-      <mat-icon class="menue">menu</mat-icon>
-      <button mat-raised-button class="neu-button" (click)="addProduct()">
-        <mat-icon>widgets</mat-icon>
-        Neu
+      <button
+        [matMenuTriggerFor]="produkteListMenu"
+        class="custom-menu menue-btn"
+        aria-label="Optionen"
+      >
+        <mat-icon>menu</mat-icon>
+      </button>
+      <mat-menu #produkteListMenu="matMenu" class="option-menu option-menu-wide">
+        <button
+          *ngFor="let item of listMenuItems"
+          mat-menu-item
+          (click)="onMenuAction(item.action)"
+        >
+          <i class="mdi {{ item.icon }} menu-item-icon"></i>
+          <span class="menu-item-label">{{ item.label }}</span>
+        </button>
+      </mat-menu>
+      <button
+        mat-raised-button
+        class="neu-button"
+        (click)="addProduct()"
+        aria-label="Neues Produkt anlegen"
+        matTooltip="Neues Produkt anlegen"
+        matTooltipPosition="below"
+      >
+        <i class="mdi mdi-cards-outline mdi-24px btn-icon" aria-hidden="true"></i>
+        <span class="btn-label">Neu</span>
       </button>
     </div>
 
@@ -19,7 +42,7 @@
           [(ngModel)]="showInactive"
           (change)="onCheckboxChange()"
         >
-          inkl. inaktive
+          <span class="inkl">inkl. inaktive</span>
         </mat-checkbox>
       </div>
 
@@ -42,110 +65,65 @@
       mat-table
       [dataSource]="dataSource"
       matSort
-      class="mat-elevation-z8"
+      class="mat-elevation-z8 fixed-table"
       *ngIf="dataSource.data.length"
     >
-      <!-- Column definitions with mat-sort-header -->
       <!-- KURZNAME -->
       <ng-container matColumnDef="kurzName">
-        <th mat-header-cell *matHeaderCellDef (click)="toggleSort('kurzName')">
-          Kurzname
-          <button
-            (click)="toggleSort('kurzName')"
-            style="background: none; border: none; cursor: pointer"
-          >
-              <span *ngIf="sortState['kurzName'] === 'asc'"
-              ><mat-icon class="sort-arrow" (click)="toggleSort('kurzName')"
-              >keyboard_arrow_up</mat-icon
-              ></span
-              >
-            <span *ngIf="sortState['kurzName'] === 'desc'"
-            ><mat-icon class="sort-arrow" (click)="toggleSort('kurzName')"
-            >keyboard_arrow_down</mat-icon
-            ></span
-            >
-          </button>
+        <th mat-header-cell *matHeaderCellDef class="col-kurzname">
+          <div class="sort-header" (click)="toggleSort('kurzName')">
+            Kurzname
+            <mat-icon class="sort-arrow">
+              {{ sortState['kurzName'] === 'asc' ? 'keyboard_arrow_up' : 'keyboard_arrow_down' }}
+            </mat-icon>
+          </div>
         </th>
-        <td mat-cell *matCellDef="let element">
+        <td mat-cell *matCellDef="let element" class="col-kurzname">
           {{ element.kurzName || "-" }}
         </td>
       </ng-container>
 
       <!-- PRODUKTNAME -->
       <ng-container matColumnDef="produktname">
-        <th
-          mat-header-cell
-          *matHeaderCellDef
-          (click)="toggleSort('produktname')"
-        >
-          Produktname
-          <button
-            (click)="toggleSort('produktname')"
-            style="background: none; border: none; cursor: pointer"
-          >
-              <span *ngIf="sortState['produktname'] === 'asc'"
-              ><mat-icon class="sort-arrow" (click)="toggleSort('produktname')"
-              >keyboard_arrow_up</mat-icon
-              ></span
-              >
-            <span *ngIf="sortState['produktname'] === 'desc'"
-            ><mat-icon class="sort-arrow" (click)="toggleSort('produktname')"
-            >keyboard_arrow_down</mat-icon
-            ></span
-            >
-          </button>
+        <th mat-header-cell *matHeaderCellDef class="col-produktname">
+          <div class="sort-header" (click)="toggleSort('produktname')">
+            Produktname
+            <mat-icon class="sort-arrow">
+              {{ sortState['produktname'] === 'asc' ? 'keyboard_arrow_up' : 'keyboard_arrow_down' }}
+            </mat-icon>
+          </div>
         </th>
-        <td mat-cell *matCellDef="let element">
+        <td mat-cell *matCellDef="let element" class="col-produktname">
           {{ element.produktname || "-" }}
         </td>
       </ng-container>
 
       <!-- START -->
       <ng-container matColumnDef="start">
-        <th mat-header-cell *matHeaderCellDef (click)="toggleSort('start')">
-          Start
-          <button
-            (click)="toggleSort('start')"
-            style="background: none; border: none; cursor: pointer"
-          >
-              <span *ngIf="sortState['start'] === 'asc'"
-              ><mat-icon class="sort-arrow" (click)="toggleSort('start')"
-              >keyboard_arrow_up</mat-icon
-              ></span
-              >
-            <span *ngIf="sortState['start'] === 'desc'"
-            ><mat-icon class="sort-arrow" (click)="toggleSort('start')"
-            >keyboard_arrow_down</mat-icon
-            ></span
-            >
-          </button>
+        <th mat-header-cell *matHeaderCellDef class="col-date">
+          <div class="sort-header" (click)="toggleSort('start')">
+            Start
+            <mat-icon class="sort-arrow">
+              {{ sortState['start'] === 'asc' ? 'keyboard_arrow_up' : 'keyboard_arrow_down' }}
+            </mat-icon>
+          </div>
         </th>
-        <td mat-cell *matCellDef="let element">
+        <td mat-cell *matCellDef="let element" class="col-date">
           {{ element.start | date : "dd.MM.yyyy" }}
         </td>
       </ng-container>
 
       <!-- ENDE -->
       <ng-container matColumnDef="ende">
-        <th mat-header-cell *matHeaderCellDef (click)="toggleSort('ende')">
-          Ende
-          <button
-            (click)="toggleSort('ende')"
-            style="background: none; border: none; cursor: pointer"
-          >
-              <span *ngIf="sortState['ende'] === 'asc'"
-              ><mat-icon class="sort-arrow" (click)="toggleSort('ende')"
-              >keyboard_arrow_up</mat-icon
-              ></span
-              >
-            <span *ngIf="sortState['ende'] === 'desc'"
-            ><mat-icon class="sort-arrow" (click)="toggleSort('ende')"
-            >keyboard_arrow_down</mat-icon
-            ></span
-            >
-          </button>
+        <th mat-header-cell *matHeaderCellDef class="col-date">
+          <div class="sort-header" (click)="toggleSort('ende')">
+            Ende
+            <mat-icon class="sort-arrow">
+              {{ sortState['ende'] === 'asc' ? 'keyboard_arrow_up' : 'keyboard_arrow_down' }}
+            </mat-icon>
+          </div>
         </th>
-        <td mat-cell *matCellDef="let element">
+        <td mat-cell *matCellDef="let element" class="col-date">
           {{ element.ende | date : "dd.MM.yyyy" }}
         </td>
       </ng-container>
@@ -155,7 +133,11 @@
         mat-row
         *matRowDef="let row; columns: displayedColumns"
         [class.inactive-row]="!row.aktiv"
-        (click)="goToDetails(row)"
+        [class.active-row]="row.aktiv"
+        [class.selected-row]="selectedRowId === row.id"
+        [attr.data-row-id]="row.id"
+        (click)="selectRow(row)"
+        (dblclick)="goToDetails(row)"
         class="list-row"
       ></tr>
     </table>

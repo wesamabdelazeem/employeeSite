@@ -1,0 +1,32 @@
+<div class="time-box" [class.time-box-disabled]="disabled" (wheel)="onWheel($event)">
+  <button
+    type="button"
+    class="time-step time-step-top"
+    (click)="increase()"
+    [disabled]="disabled || increaseDisabled || !canIncrease"
+  >
+    {{ nextValue }}
+  </button>
+
+  <div class="time-value">
+    <input
+      type="text"
+      inputmode="numeric"
+      pattern="[0-9]*"
+      [value]="value"
+      [readonly]="readonly || disabled"
+      [disabled]="disabled"
+      class="time-input"
+      (input)="onInput($event)"
+    />
+  </div>
+
+  <button
+    type="button"
+    class="time-step time-step-bottom"
+    (click)="decrease()"
+    [disabled]="disabled || decreaseDisabled || !canDecrease"
+  >
+    {{ previousValue }}
+  </button>
+</div>

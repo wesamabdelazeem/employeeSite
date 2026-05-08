@@ -21,32 +21,23 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { FormsModule } from '@angular/forms';
-import {MatDialog,MatDialogModule,MatDialogRef,MAT_DIALOG_DATA
-} from '@angular/material/dialog';
+import { MatDialog,MatDialogModule,MatDialogRef,MAT_DIALOG_DATA}from '@angular/material/dialog';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatCardModule } from '@angular/material/card';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { Injectable } from '@angular/core';
 import { MatDateFormats, NativeDateAdapter } from '@angular/material/core';
+import { DeleteConfirmDialogComponent } from '../../delete-confirm-dialog/delete-confirm-dialog.component';
+import { ErrorDialogComponent } from '../../dialogs/error-dialog/error-dialog.component';
+import { ApiProduktPosition } from '../../../models/ApiProduktPosition';
+import { ApiProduktPositionBuchungspunkt } from '../../../models/ApiProduktPositionBuchungspunkt';
+import { ApiProdukt } from '../../../models/ApiProdukt';
+import { ApiProduktPositionTyp } from '../../../models/ApiProduktPositionTyp';
 import { ProduktService } from '../../../services/produkt.service';
-import { PersonenService } from '../../../services/personen.service';
-import { forkJoin } from 'rxjs';
-import { Person } from '../../../models/person';
-import { LookupService } from '../../../services/utils/lookup.service';
-import { ErrorHandlingService } from '../../../services/error-handling.service';
-import {ApiPerson} from '../../../models/ApiPerson';
-import {ApiMitarbeiterart} from '../../../models/ApiMitarbeiterart';
-import {ConfirmationDialogComponent} from '../../confirmation-dialog/confirmation-dialog/confirmation-dialog.component';
-import {ApiProdukt} from '../../../models/ApiProdukt';
-import {ApiProduktPosition} from '../../../models/ApiProduktPosition';
-import {LogbuchDialogComponent} from '../../dialogs/logbuch-dialog/logbuch-dialog.component';
-import {getMockProduktHistory} from '../../../mock/produkt-history.mock';
-import {getMockProduktPositionHistory} from '../../../mock/produkt-position-history.mock';
-import {PRODUKT_POSITION_LOGBUCH_COLUMNS} from '../../../models/ProduktPositionHistoryEntry';
-import {StundenplanungDialogComponent} from '../../dialogs/stundenplanung-dialog/stundenplanung-dialog.component';
-import {GetitRest3Service} from '../../../services/getit-rest-3.service';
-import {MOCK_VERTRAG_STUNDENPLANUNG_ZIEL, getMockZieleForVerbraucher} from '../../../mock/vertrag-stundenplanung.mock';
+// import { ProduktpositionNode } from '../../../models/ProduktpositionNode';
+import { ProduktpositionNode } from '../../../models/ProduktpositionNode';
+import { GermanDateInputDirective } from '../../../shared/directives/german-date-input.directive';
 
 @Injectable()
 export class CustomDateAdapter extends NativeDateAdapter {
@@ -59,9 +50,39 @@ export class CustomDateAdapter extends NativeDateAdapter {
     }
     return super.format(date, displayFormat);
   }
+
+ 
+  override parse(value: any): Date | null {
+    if (value instanceof Date) return value;
+    if (value == null || value === '') return null;
+    if (typeof value === 'number') return new Date(value);
+
+    const str = String(value).trim();
+    if (!str) return null;
+
+    const parts = str.split(/[^\d]+/).filter(Boolean);
+    if (parts.length < 3) return super.parse(value);
+
+    let [d, m, y] = parts.map((p) => Number(p));
+    if (!Number.isFinite(d) || !Number.isFinite(m) || !Number.isFinite(y)) {
+      return super.parse(value);
+    }
+
+    if (y < 100) y += y < 70 ? 2000 : 1900;
+
+    const date = new Date(y, m - 1, d);
+    if (
+      date.getFullYear() !== y ||
+      date.getMonth() !== m - 1 ||
+      date.getDate() !== d
+    ) {
+      return null;
+    }
+    return date;
+  }
 }
 
-export const MY_DATE_FORMATS: MatDateFormats = {
+export const DATE_FORMATS: MatDateFormats = {
   parse: {
     dateInput: 'dd.MM.yyyy',
   },
@@ -73,14 +94,11 @@ export const MY_DATE_FORMATS: MatDateFormats = {
   },
 };
 
-
-
 @Component({
   selector: 'app-produkte-details',
   imports: [
-    CommonModule,
+   CommonModule,
     ReactiveFormsModule,
-
     MatFormFieldModule,
     MatInputModule,
     MatSelectModule,
@@ -98,29 +116,57 @@ export const MY_DATE_FORMATS: MatDateFormats = {
     MatTooltipModule,
     MatCardModule,
     MatToolbarModule,
-    HttpClientModule
+    HttpClientModule,
+    GermanDateInputDirective,
+  ],
+   providers: [
+    { provide: MAT_DATE_LOCALE, useValue: 'de-DE' },
+    { provide: DateAdapter, useClass: CustomDateAdapter },
+    { provide: MAT_DATE_FORMATS, useValue: DATE_FORMATS }
   ],
   templateUrl: './produkte-details.component.html',
   styleUrl: './produkte-details.component.scss'
 })
 export class ProdukteDetailsComponent {
 
-  produktForm!: FormGroup;
+   produktForm!: FormGroup;
   positionDetailForm!: FormGroup;
   childDetailForm!: FormGroup;
   isFormEditable = false;
   isPositionFormEditable = false;
   saving = false;
   loading = true;
-  produktData: ApiProdukt = {};
-  selectedProdukt : ApiProdukt = {};
-  produktpositionen: ApiProduktPosition[] = [];
-  selectedPosition: any | null = null;
+  produktData: ApiProdukt = {} as ApiProdukt;
+  produktpositionen: ProduktpositionNode[] = [];
+  selectedPosition: ProduktpositionNode | null = null;
   isChildFormEditable = false;
   verantwortlicherOptions: string[] = [];
   servicemanagerOptions: string[] = [];
-  isEditMode = false;
+  creatingParentId: string | null = null;
+ergebnisverantwortlicherOptions: string[] = [];  // add this line
+  auftraggeberOptions: string[] = ['Bundesministerium', 'Grossinger Walter', 'Musterfrau Erika'];
 
+  produktMenuItems = [
+    { label: 'Tätigkeiten Plan-Ist Vergleich', icon: 'mdi-alarm', action: 'Taetigkeiten-Plan-Ist-Vergleich' },
+    { label: 'Auswertung - Produkt', icon: 'mdi-file-excel', action: 'Auswertung-Produkt' },
+    { label: 'Logbuch', icon: 'mdi-file-document', action: 'Logbuch-Produkt' },
+  ];
+
+  positionMenuItems = [
+    { label: 'Stundenumbuchung', icon: 'mdi-alarm-plus', action: 'Stundenumbuchung' },
+    { label: 'Kosten Vorjahr', icon: 'mdi-file-excel', action: 'Kosten-Vorjahr' },
+    { label: 'Kosten Gesamt', icon: 'mdi-file-excel', action: 'Kosten-Gesamt' },
+    { label: 'Logbuch', icon: 'mdi-file-document', action: 'Logbuch-Produktposition' },
+    { label: 'Reset', icon: 'mdi-file-document', action: 'Reset-Produktposition' },
+  ];
+
+  buchungspunktMenuItems = [
+    { label: 'Logbuch', icon: 'mdi-file-document', action: 'Logbuch-Buchungspunkt' },
+  ];
+
+  onMenuAction(action: string): void {
+    console.log('[ProdukteDetail] menu action:', action, 'selected:', this.selectedPosition?.id ?? '-');
+  }
   constructor(
     private fb: FormBuilder,
     private router: Router,
@@ -128,247 +174,127 @@ export class ProdukteDetailsComponent {
     private route: ActivatedRoute,
     public dialog: MatDialog,
     private produktService: ProduktService,
-    private errorHandlingService : ErrorHandlingService,
-    private getitRest3: GetitRest3Service
   ) {}
 
-  /** Toolbar menu action — opens the Stundenumplanung dialog with the
-   *  list of Verbraucher for the current produkt's positions and a
-   *  list of target positions. Source data comes from
-   *  GetitRest3Service.getVertragPositionVerbraucherStundenplanung
-   *  (currently mocked — see src/app/mock/vertrag-stundenplanung.mock.ts). */
-  openStundenplanung(): void {
-    const id = this.produktData?.id ?? this.route.snapshot.paramMap.get('id') ?? '';
-    this.getitRest3.getVertragPositionVerbraucherStundenplanung(id).subscribe({
-      next: (response) => {
-        const verbraucher = (response.body ?? []) as any[];
-        console.log('Stundenplanung — verbraucher loaded', verbraucher.length, 'rows');
-        this.dialog.open(StundenplanungDialogComponent, {
-          data: {
-            title: 'Stundenumplanung',
-            verbraucher,
-            ziele: MOCK_VERTRAG_STUNDENPLANUNG_ZIEL,
-            // Right-side list updates whenever a source row is picked.
-            getZiele: getMockZieleForVerbraucher,
-          },
-          panelClass: 'stundenplanung-dialog-panel',
-          autoFocus: false,
-          width: 'auto',
-          maxWidth: '95vw',
-        });
-      },
-      error: (err) => {
-        console.error('Stundenplanung — load failed', err);
-        this.dialog.open(StundenplanungDialogComponent, {
-          data: {
-            title: 'Stundenumplanung',
-            verbraucher: [],
-            ziele: MOCK_VERTRAG_STUNDENPLANUNG_ZIEL,
-            getZiele: getMockZieleForVerbraucher,
-          },
-          panelClass: 'stundenplanung-dialog-panel',
-          autoFocus: false,
-        });
-      },
-    });
+ngOnInit(): void {
+  this.initMainForm();
+  this.initPositionDetailForm();
+
+  this.childDetailForm = this.fb.group({
+    buchungspunkt: ['', [Validators.required, Validators.maxLength(30)]],
+    aktiv: [false],
+  });
+
+  const id = this.route.snapshot.paramMap.get('id');
+
+  // Handle new produkt
+  if (!id || id === 'new' || id === 'neu') {
+    this.isFormEditable = true;
+    this.produktForm.enable();
+    this.loading = false;
+    return;
   }
 
-  ngOnInit(): void {
-    this.selectedProdukt = history.state?.produktData;
-
-    this.initMainForm();
-    this.initPositionDetailForm();
-
-    this.childDetailForm = this.fb.group({
-      docName: [''],
-      docTyp: [''],
-      aktiv: [false],
-    });
-
-    const id = this.route.snapshot.paramMap.get('id');
-    this.loadProduktData(id || '1');
-  }
+  this.loadProduktData(id);
+}
 
   private initMainForm(): void {
+    const max30 = Validators.maxLength(30);
     this.produktForm = this.fb.group({
-      produktname: ['', Validators.required],
-      kurzName: [''],
-      produktTyp: [''],
-      auftraggeber: [''],
-      ergebnisverantwortlicher: [''],
+      produktname: ['', [Validators.required, max30]],
+      kurzName: ['', [Validators.required, max30]],
+      produktTyp: ['', [Validators.required, max30]],
+      auftraggeber: ['', [Validators.required, max30]],
+      ergebnisverantwortlicher: ['', [Validators.required, max30]],
       aktiv: [false],
-      start: [null],
-      ende: [null],
-      auftraggeberOrganisation: [''],
-      anmerkung: ['']
+      start: [null, Validators.required],
+      ende: [new Date(9999, 11, 31), Validators.required],
+      auftraggeberOrganisation: ['', [Validators.required, max30]],
+      anmerkung: ['', max30]
     });
     this.produktForm.disable();
   }
 
   private initPositionDetailForm(): void {
+    const max30 = Validators.maxLength(30);
     this.positionDetailForm = this.fb.group({
       aktiv: [false],
-      produktposition: [''],
-      positionstyp: [''],
-      auftraggeber: [''],
-      durchfuehrungsverantwortlicher: [''],
-      servicemanager: [''],
-      start: [null],
+      produktPositionname: ['', [Validators.required, max30]],
+      produktPositionTyp: ['', [Validators.required, max30]],
+      auftraggeber: ['', [Validators.required, max30]],
+      durchfuehrungsverantwortlicher: ['', [Validators.required, max30]],
+      servicemanager: ['', max30],
+      start: [null, Validators.required],
       ende: [null],
-      organisationseinheit: [''],
-      anmerkung: [''],
+      auftraggeberOrganisation: ['', [Validators.required, max30]],
+      anmerkung: ['', max30],
       buchungsfreigabe: [false]
     });
     this.positionDetailForm.disable();
   }
 
-  private loadProduktData__(id: string): void {
-    this.loading = true;
-
-    let detailData : any = this.selectedProdukt;
-        console.log(`Loading product details for ID: ${id}`, detailData);
-
-        this.produktData = detailData;
-
-        const allVerantwortlicher: string[] = [];
-        const allServicemanager: string[] = [];
-
-        if (detailData.produktPosition) {
-          detailData.produktPosition.forEach((pos: any) => {
-            if (pos.durchfuehrungsverantwortlicher) {
-              const fullName = pos.durchfuehrungsverantwortlicher.vorname + ' ' + pos.durchfuehrungsverantwortlicher.nachname;
-              allVerantwortlicher.push(fullName);
-            }
-            if (pos.auftraggeberOrganisation) {
-              allServicemanager.push(pos.auftraggeberOrganisation);
-            }
-          });
-
-          this.verantwortlicherOptions = [...new Set(allVerantwortlicher)];
-          this.servicemanagerOptions = [...new Set(allServicemanager)];
-        }
-//
-        if (detailData.produktPosition) {
-          this.produktpositionen = detailData.produktPosition.map((parentPos: any) => {
-            const children = (parentPos.produktPositionBuchungspunkt || [])
-              .map((childPos: any, index: number) => ({
-              id: childPos.id || `${parentPos.id}-${index}`,
-              name: childPos.buchungspunkt,
-              aktiv: childPos.aktiv,
-              status: childPos.aktiv ? 'active' : 'inactive',
-              typ: 'Buchungspunkt' as const,
-              level: 2,
-              parentId: parentPos.id,
-              start: childPos.start ? new Date(childPos.start) : undefined,
-              ende: childPos.ende ? new Date(childPos.ende) : undefined,
-              auftraggeber: childPos.auftraggeber,
-              organisationseinheit: childPos.organisationseinheit,
-              durchfuehrungsverantwortlicher: childPos.durchfuehrungsverantwortlicher,
-              positionstyp: childPos.positionstyp,
-              buchungsfreigabe: childPos.buchungsfreigabe,
-              anmerkung: childPos.anmerkung,
-            }));
-
-            return {
-              id: parentPos.id,
-              name: parentPos.produktPositionname,
-              start: new Date(parentPos.start),
-              ende: new Date(parentPos.ende),
-              status: parentPos.aktiv ? 'active' : 'inactive',
-              aktiv: parentPos.aktiv,
-              typ: 'Produktposition' as const,
-              isExpanded: false,
-              level: 1,
-              children: children,
-              auftraggeber: parentPos.auftraggeber,
-              organisationseinheit: parentPos.auftraggeberOrganisation,
-              durchfuehrungsverantwortlicher:
-                parentPos.durchfuehrungsverantwortlicher?.vorname +
-                ' ' +
-                parentPos.durchfuehrungsverantwortlicher?.nachname,
-              positionstyp: parentPos.produktPositionTyp,
-              buchungsfreigabe: parentPos.buchungsfreigabe,
-              anmerkung: parentPos.anmerkung,
-              servicemanager: parentPos.auftraggeberOrganisation,
-            };
-          });
-
-        }
-        this.produktForm.patchValue(this.produktData);
-        this.produktForm.disable();
-        this.loading = false;
-
-
-
-
-  }
-
-
   private loadProduktData(id: string): void {
     this.loading = true;
     // const detailFileUrl = 'produkte_detail.json';
 
-    this.produktService.getProduktById(id).subscribe({
-      next: (detailData) => {
+    this.produktService.getProdukt(id).subscribe({
+      next: (response) => {
+        const detailData: ApiProdukt = response.body ?? ({} as ApiProdukt);
+        console.log('API DATA KEYS:', Object.keys(detailData));
         console.log(`Loading product details for ID: ${id}`, detailData);
 
         this.produktData = detailData;
 
-        const allVerantwortlicher: string[] = [];
-        const allServicemanager: string[] = [];
+          const allVerantwortlicher: string[] = [];
+  const allServicemanager: string[] = [];
+
+if (detailData.produktPosition) {
+    detailData.produktPosition.forEach((pos: ApiProduktPosition) => {
+      if (pos.durchfuehrungsverantwortlicher) {
+        const fullName = pos.durchfuehrungsverantwortlicher.vorname + ' ' + pos.durchfuehrungsverantwortlicher.nachname;
+        allVerantwortlicher.push(fullName);
+      }
+      if (pos.auftraggeberOrganisation) {
+        allServicemanager.push(pos.auftraggeberOrganisation);
+      }
+    });
+
+    this.verantwortlicherOptions = [...new Set(allVerantwortlicher)];
+    this.servicemanagerOptions = [...new Set(allServicemanager)];
+  }
 
         if (detailData.produktPosition) {
-          detailData.produktPosition.forEach((pos: any) => {
-            if (pos.durchfuehrungsverantwortlicher) {
-              const fullName = pos.durchfuehrungsverantwortlicher.vorname + ' ' + pos.durchfuehrungsverantwortlicher.nachname;
-              allVerantwortlicher.push(fullName);
-            }
-            if (pos.auftraggeberOrganisation) {
-              allServicemanager.push(pos.auftraggeberOrganisation);
-            }
-          });
+          this.produktpositionen = detailData.produktPosition.map((parentPos: ApiProduktPosition): ProduktpositionNode => {
+            const children: ProduktpositionNode[] = (parentPos.produktPositionBuchungspunkt || []).map(
+              (childPos: ApiProduktPositionBuchungspunkt, index: number): ProduktpositionNode => ({
+                id: childPos.id || `${parentPos.id}-${index}`,
+                name: childPos.buchungspunkt,
+                aktiv: childPos.aktiv,
+                status: childPos.aktiv ? 'active' : 'inactive',
+                typ: 'Buchungspunkt',
+                level: 2,
+                parentId: parentPos.id,
+              })
+            );
 
-          this.verantwortlicherOptions = [...new Set(allVerantwortlicher)];
-          this.servicemanagerOptions = [...new Set(allServicemanager)];
-        }
-//
-        if (detailData.produktPosition) {
-          this.produktpositionen = detailData.produktPosition.map((parentPos: any) => {
-            const children = (parentPos.produktPositionBuchungspunkt || []).map((childPos: any, index: number) => ({
-              id: childPos.id || `${parentPos.id}-${index}`,
-              name: childPos.buchungspunkt,
-              aktiv: childPos.aktiv,
-              status: childPos.aktiv ? 'active' : 'inactive',
-              typ: 'Buchungspunkt' as const,
-              level: 2,
-              parentId: parentPos.id,
-              start: childPos.start ? new Date(childPos.start) : undefined,
-              ende: childPos.ende ? new Date(childPos.ende) : undefined,
-              auftraggeber: childPos.auftraggeber,
-              organisationseinheit: childPos.organisationseinheit,
-              durchfuehrungsverantwortlicher: childPos.durchfuehrungsverantwortlicher,
-              positionstyp: childPos.positionstyp,
-              buchungsfreigabe: childPos.buchungsfreigabe,
-              anmerkung: childPos.anmerkung,
-            }));
+            const durchfName = parentPos.durchfuehrungsverantwortlicher
+              ? `${parentPos.durchfuehrungsverantwortlicher.vorname ?? ''} ${parentPos.durchfuehrungsverantwortlicher.nachname ?? ''}`.trim()
+              : '';
 
             return {
               id: parentPos.id,
               name: parentPos.produktPositionname,
-              start: new Date(parentPos.start),
-              ende: new Date(parentPos.ende),
+              start: parentPos.start ? new Date(parentPos.start) : undefined,
+              ende: parentPos.ende ? new Date(parentPos.ende) : undefined,
               status: parentPos.aktiv ? 'active' : 'inactive',
               aktiv: parentPos.aktiv,
-              typ: 'Produktposition' as const,
+              typ: 'Produktposition',
               isExpanded: false,
               level: 1,
-              children: children,
+              children,
               auftraggeber: parentPos.auftraggeber,
               organisationseinheit: parentPos.auftraggeberOrganisation,
-              durchfuehrungsverantwortlicher:
-                parentPos.durchfuehrungsverantwortlicher?.vorname +
-                ' ' +
-                parentPos.durchfuehrungsverantwortlicher?.nachname,
+              durchfuehrungsverantwortlicher: durchfName,
               positionstyp: parentPos.produktPositionTyp,
               buchungsfreigabe: parentPos.buchungsfreigabe,
               anmerkung: parentPos.anmerkung,
@@ -377,16 +303,41 @@ export class ProdukteDetailsComponent {
           });
 
         }
-        this.produktForm.patchValue(this.produktData);
+// Fix: ergebnisverantwortlicher is an object, convert to full name string
+const ergebnisObj = detailData.ergebnisverantwortlicher;
+const ergebnisFullName = ergebnisObj
+  ? `${ergebnisObj.vorname} ${ergebnisObj.nachname}`.trim()
+  : '';
+
+if (ergebnisFullName) {
+  this.ergebnisverantwortlicherOptions = [ergebnisFullName];
+}
+
+if (detailData.auftraggeber && !this.auftraggeberOptions.includes(detailData.auftraggeber)) {
+  this.auftraggeberOptions = [...this.auftraggeberOptions, detailData.auftraggeber];
+}
+
+this.produktForm.patchValue({
+  produktname:              detailData.produktname,
+  kurzName:                 detailData.kurzName,
+  produktTyp:               detailData.produktTyp,           // "ZENTRALE_KOMPONENTE"
+  auftraggeber:             detailData.auftraggeber,
+  ergebnisverantwortlicher: ergebnisFullName,                // "Gerhard Föda"
+  aktiv:                    detailData.aktiv,
+  start:                    detailData.start ? new Date(detailData.start) : null,
+  ende:                     detailData.ende  ? new Date(detailData.ende)  : new Date(9999, 11, 31),
+  auftraggeberOrganisation: detailData.auftraggeberOrganisation,
+  anmerkung:                detailData.anmerkung ?? '',
+});
         this.produktForm.disable();
         this.loading = false;
       },
-      error: (errorMessage: string) => {
+       error: (errorMessage: string) => {
         console.error(`CRITICAL: Error loading data via ProduktService: ${errorMessage}`);
         this.snackBar.open(errorMessage, 'Schließen', {
           duration: 8000,
           verticalPosition: 'top',
-          panelClass: ['error-snackbar']
+            panelClass: ['error-snackbar']
         });
         this.loading = false;
       },
@@ -402,162 +353,106 @@ export class ProdukteDetailsComponent {
     }
   }
 
-
-  onSubmit(): void {
-    if (this.produktForm.invalid) {
-      this.snackBar.open('Bitte füllen Sie alle Pflichtfelder aus.', 'Schließen', {
-        duration: 3000, verticalPosition: 'top',
-      });
-      return;
-    }
-
-    this.saving = true;
-    console.log('this.produktData-test', this.produktData);
-    console.log('this.produktForm.value', this.produktForm.value)
-
-
-
-    this.produktData = {
-      ...this.selectedProdukt,      // Keep existing properties
-      ...this.produktForm.value     // Override with form values
+onSubmit(): void {
+  if (this.produktForm.invalid) {
+    this.produktForm.markAllAsTouched();
+    const labelMap: Record<string, string> = {
+      produktname: 'Produktname',
+      kurzName: 'Kurzname',
+      produktTyp: 'Produkttyp',
+      auftraggeber: 'Auftraggeber',
+      ergebnisverantwortlicher: 'Ergebnisverantwortlicher',
+      start: 'Start',
+      ende: 'Ende',
+      auftraggeberOrganisation: 'Organisationseinheit',
     };
-
-    this.produktService.updateProdukt(this.produktData).subscribe( {
-      next: (updatedProdukt) => {
-        console.log("produktData-After-Update", updatedProdukt);
-
-        this.isEditMode = false;
-        this.isFormEditable = false;
-        this.produktForm.disable();
-
-        this.saving = false;
-        this.produktForm.get('version')?.setValue(updatedProdukt.version);
-
-        this.snackBar.open('Prodkut erfolgreich aktualisiert', 'Close', {
-          duration: 5000,
-          panelClass: ['custom-snackbar-1'],
-          horizontalPosition: 'center',
-          verticalPosition: 'top',
-        });
-
-
-      },
-      error: (err) => {
-        console.error('Fehler beim Aktualisieren der Person:', err);
-        this.errorHandlingService.handleAppError(err);
-
-
-        //    this.form.enable();
-      }
+    const missing = Object.keys(labelMap)
+      .filter((k) => this.produktForm.get(k)?.invalid)
+      .map((k) => labelMap[k]);
+    const detail = missing.length
+      ? `Bitte füllen Sie folgende Felder aus: ${missing.join(', ')}.`
+      : 'Bitte füllen Sie alle Pflichtfelder aus.';
+    this.dialog.open(ErrorDialogComponent, {
+      data: { title: 'Pflichtfelder fehlen', detail },
+      panelClass: 'custom-dialog-width',
     });
-
-    /*
-        setTimeout(() => {
-          //this.produktData = { ...this.produktData, ...this.produktForm.value };
-          this.produktData = this.produktForm.value;
-          console.log('this.produktData-test-2', this.produktData);
-          this.saving = false;
-          this.isFormEditable = false;
-          this.produktForm.disable();
-          this.snackBar.open('Daten wurden erfolgreich gespeichert', 'Schließen', {
-            duration: 3000, verticalPosition: 'top',
-          });
-        }, 1000);
-        */
+    return;
   }
 
-  onSubmit__(): void {
-    if (this.produktForm.invalid) {
-      this.snackBar.open('Bitte füllen Sie alle Pflichtfelder aus.', 'Schließen', {
-        duration: 3000, verticalPosition: 'top',
-      });
-      return;
-    }
+  this.saving = true;
+  const produkt = {
+    ...this.produktData,
+    ...this.produktForm.getRawValue(),
+  } as ApiProdukt;
+  const isNewProdukt = !produkt.id;
 
-    this.saving = true;
-    setTimeout(() => {
-      this.produktData = { ...this.produktData, ...this.produktForm.value };
+  const request$ = isNewProdukt
+    ? this.produktService.createProdukt(produkt)
+    : this.produktService.updateProdukt(produkt.id!, produkt);
+
+  request$.subscribe({
+    next: (response) => {
+      const saved = response.body ?? produkt;
+      this.produktData = { ...this.produktData, ...saved };
+
+      if (isNewProdukt && this.produktData?.id) {
+        window.history.replaceState({}, '', `/produkte/${this.produktData.id}`);
+      }
+
       this.saving = false;
       this.isFormEditable = false;
       this.produktForm.disable();
       this.snackBar.open('Daten wurden erfolgreich gespeichert', 'Schließen', {
         duration: 3000, verticalPosition: 'top',
       });
-    }, 1000);
-  }
+    },
+    error: (err) => {
+      console.error('Error saving produkt:', err);
+      this.saving = false;
+      this.snackBar.open('Fehler beim Speichern.', 'Schließen', {
+        duration: 3000, verticalPosition: 'top',
+        panelClass: ['error-snackbar'],
+      });
+    },
+  });
+}
 
-  onCancel(): void {
-    if (this.isFormEditable) {
-      this.isFormEditable = false;
-      this.produktForm.patchValue(this.produktData);
-      this.produktForm.disable();
-    } else {
+ onCancel(): void {
+  if (this.isFormEditable) {
+    if (!this.produktData?.id) {
       this.router.navigate(['/produkte']);
+      return;
     }
+    this.isFormEditable = false;
+    this.produktForm.patchValue(this.produktData);
+    this.produktForm.disable();
+  } else {
+    this.router.navigate(['/produkte']);
   }
+}
 
-  /** Toolbar menu action — opens the shared LogbuchDialog populated
-   *  with mock produkt history (see src/app/mock/produkt-history.mock.ts).
-   *  Mirrors PersonenDetailComponent.openLogbuch — same dialog
-   *  component, same shape, just produkt-shaped data. */
-  openLogbuch(): void {
-    const produktId = this.produktData?.id ?? this.route.snapshot.paramMap.get('id') ?? '';
-    const produktName = this.produktData?.produktname || this.produktData?.kurzName || 'Produkt';
-    const entries = getMockProduktHistory(produktId);
-    console.log('Produkte menu: Logbuch clicked', { produktId, produktName, entryCount: entries.length });
-    this.dialog.open(LogbuchDialogComponent, {
-      data: { title: 'Logbuch', subtitle: produktName, entries },
-      panelClass: 'logbuch-dialog-panel',
-      autoFocus: false,
-      width: '680px',
-      maxWidth: '95vw',
-    });
-  }
-
-  /** Position-side Logbuch — same dialog component, but with a
-   *  ProduktPosition-shaped column config so Vorgang / Start / Ende /
-   *  Aktiv / Buchungsfreigabe / Positionstyp / Auftraggeber /
-   *  Organisationseinheit are diffed instead of person columns. */
-  openProduktPositionLogbuch(): void {
-    const positionId = this.selectedPosition?.id ?? '';
-    const positionName = this.selectedPosition?.name || 'Produktposition';
-    const entries = getMockProduktPositionHistory(positionId, positionName);
-    console.log('Produktposition menu: Logbuch clicked', { positionId, positionName, entryCount: entries.length });
-    this.dialog.open(LogbuchDialogComponent, {
-      data: {
-        title: 'Logbuch',
-        subtitle: positionName,
-        entries,
-        columns: PRODUKT_POSITION_LOGBUCH_COLUMNS,
-      },
-      panelClass: 'logbuch-dialog-panel',
-      autoFocus: false,
-      width: '680px',
-      maxWidth: '95vw',
-    });
-  }
-
-
-  selectPosition(position: any): void {
-    if (this.selectedPosition?.id === position.id) {
+  selectPosition(position: ProduktpositionNode): void {
+    if (this.selectedPosition?.id && this.selectedPosition.id === position.id) {
       return;
     }
 
     this.selectedPosition = position;
     this.isPositionFormEditable = false;
-    this.isChildFormEditable = false; // Reset child edit
+    this.isChildFormEditable = false;
+    this.creatingParentId = null;
 
-    if (position.typ === 'Dokumentation' || position.typ === 'Buchungspunkt') {
+     if (position.typ === 'Dokumentation' || position.typ === 'Buchungspunkt') {
       this.childDetailForm.patchValue({
-        docName: position.name || '',
-        docTyp: position.typ || '',
+        buchungspunkt: position.name || '',
         aktiv: position.aktiv || false
       });
       this.childDetailForm.disable();
     } else {
       this.positionDetailForm.reset({
         ...position,
-        produktposition: position.name,
+        produktPositionname: position.name,
+        produktPositionTyp: position.positionstyp,
+        auftraggeberOrganisation: position.organisationseinheit,
       });
       this.positionDetailForm.disable();
     }
@@ -567,13 +462,53 @@ export class ProdukteDetailsComponent {
     if (!this.isPositionFormEditable) {
       this.isPositionFormEditable = true;
       this.positionDetailForm.enable();
-      this.positionDetailForm.get('produktposition')?.disable();
+      this.positionDetailForm.get('produktPositionname')?.disable();
     } else {
       this.savePositionDetails();
     }
   }
 
-  onEditOrSubmitChild(): void {
+  startCreateProduktposition(): void {
+    if (!this.produktData?.id) {
+      this.snackBar.open('Bitte Produkt zuerst speichern.', 'Schließen', {
+        duration: 3000, verticalPosition: 'top',
+      });
+      return;
+    }
+
+    this.selectedPosition = {
+      typ: 'Produktposition',
+      aktiv: true,
+      children: [],
+      isExpanded: false,
+      level: 1,
+    };
+    this.creatingParentId = null;
+
+    this.positionDetailForm.reset({ aktiv: true, ende: new Date(9999, 11, 31) });
+    this.positionDetailForm.enable();
+    this.isPositionFormEditable = true;
+    this.isChildFormEditable = false;
+  }
+
+  startCreateBuchungspunkt(parent: ProduktpositionNode): void {
+    if (!parent?.id) return;
+
+    this.selectedPosition = {
+      typ: 'Buchungspunkt',
+      aktiv: true,
+      parentId: parent.id,
+      level: 2,
+    };
+    this.creatingParentId = parent.id;
+
+    this.childDetailForm.reset({ aktiv: true });
+    this.childDetailForm.enable();
+    this.isChildFormEditable = true;
+    this.isPositionFormEditable = false;
+  }
+
+ onEditOrSubmitChild(): void {
     if (!this.isChildFormEditable) {
       this.isChildFormEditable = true;
       this.childDetailForm.enable();
@@ -582,47 +517,67 @@ export class ProdukteDetailsComponent {
     }
   }
 
-  onEditOrSubmitPositionOrChild(): void {
-    if (!this.selectedPosition) return;
+onEditOrSubmitPositionOrChild(): void {
+  if (!this.selectedPosition) return;
 
-    if (this.selectedPosition.typ === 'Produktposition') {
-      if (!this.isPositionFormEditable) {
-        this.isPositionFormEditable = true;
-        this.positionDetailForm.enable();
-        this.positionDetailForm.get('produktposition')?.enable();
-      } else {
-        this.savePositionDetails();
-      }
+  if (this.selectedPosition.typ === 'Produktposition') {
+    if (!this.isPositionFormEditable) {
+      this.isPositionFormEditable = true;
+      this.positionDetailForm.enable();
+      this.positionDetailForm.get('produktPositionname')?.enable();
     } else {
-      if (!this.isChildFormEditable) {
-        this.isChildFormEditable = true;
-        this.childDetailForm.enable();
-      } else {
-        this.saveChildDetails();
-      }
+      this.savePositionDetails();
+    }
+  } else {
+    if (!this.isChildFormEditable) {
+      this.isChildFormEditable = true;
+      this.childDetailForm.enable();
+    } else {
+      this.saveChildDetails();
     }
   }
+}
 
-  onCancelPositionOrChild(): void {
-    if (!this.selectedPosition) return;
+onCancelPositionOrChild(): void {
+  if (!this.selectedPosition) return;
 
-    if (this.selectedPosition.typ === 'Produktposition') {
-      this.onCancelPosition();
-    } else {
-      this.cancelChildDetails();
-    }
+  if (this.selectedPosition.typ === 'Produktposition') {
+    this.onCancelPosition();
+  } else {
+    this.cancelChildDetails();
   }
+}
 
   savePositionDetails(): void {
     if (!this.selectedPosition) return;
     if (this.positionDetailForm.invalid) {
-      this.snackBar.open('Bitte füllen Sie alle Pflichtfelder der Position aus.', 'Schließen', {
-        duration: 3000, verticalPosition: 'top',
+      this.positionDetailForm.markAllAsTouched();
+      const labelMap: Record<string, string> = {
+        produktPositionname: 'Produktposition',
+        produktPositionTyp: 'Positionstyp',
+        auftraggeber: 'Auftraggeber',
+        durchfuehrungsverantwortlicher: 'Durchf.-verantwortlicher',
+        start: 'Start/End',
+        auftraggeberOrganisation: 'Organisationseinheit',
+      };
+      const missing = Object.keys(labelMap)
+        .filter(k => this.positionDetailForm.get(k)?.invalid)
+        .map(k => labelMap[k]);
+      const detail = missing.length
+        ? `Bitte füllen Sie folgende Felder aus: ${missing.join(', ')}.`
+        : 'Bitte füllen Sie alle Pflichtfelder der Position aus.';
+      this.dialog.open(ErrorDialogComponent, {
+        data: { title: 'Pflichtfelder fehlen', detail },
+        panelClass: 'custom-dialog-width',
       });
       return;
     }
 
-    const updateInArray = (arr: any[], id: string | number, updatedData: any) => {
+    const updateInArray = (
+      arr: ProduktpositionNode[],
+      id: string,
+      updatedData: Partial<ProduktpositionNode>
+    ): boolean => {
       for (let i = 0; i < arr.length; i++) {
         if (arr[i].id === id) {
           arr[i] = { ...arr[i], ...updatedData, name: arr[i].name, typ: arr[i].typ };
@@ -636,49 +591,115 @@ export class ProdukteDetailsComponent {
       return false;
     };
 
-    updateInArray(this.produktpositionen, this.selectedPosition.id, this.positionDetailForm.getRawValue());
+    const raw = this.positionDetailForm.getRawValue() as Partial<ApiProduktPosition>;
+    const startDate = raw.start as unknown as Date | null;
+    const endeDate = raw.ende as unknown as Date | null;
 
-    this.isPositionFormEditable = false;
-    this.positionDetailForm.disable();
+    const position = {
+      ...this.selectedPosition,
+      ...raw,
+      id: this.selectedPosition?.id,
+      start: startDate ? startDate.toISOString() : undefined,
+      ende: endeDate ? endeDate.toISOString() : undefined,
+    } as unknown as ApiProduktPosition;
 
-    this.snackBar.open('Daten der Position wurden gespeichert.', 'Schließen', {
-      duration: 2000, verticalPosition: 'top',
+    const isNew = !position.id;
+    const request$ = isNew
+      ? this.produktService.createProduktPosition(position, this.produktData.id ?? '')
+      : this.produktService.updateProduktPosition(position.id!, position);
+
+    request$.subscribe({
+      next: (response) => {
+        const saved: ApiProduktPosition = response.body ?? position;
+
+        if (isNew) {
+          const status: 'active' | 'inactive' = raw.aktiv ? 'active' : 'inactive';
+          const newNode: ProduktpositionNode = {
+            id: saved.id,
+            name: raw.produktPositionname ?? saved.produktPositionname ?? '',
+            typ: 'Produktposition',
+            isExpanded: false,
+            level: 1,
+            children: [],
+            status,
+            aktiv: raw.aktiv,
+            start: startDate ?? undefined,
+            ende: endeDate ?? undefined,
+            auftraggeber: raw.auftraggeber,
+            organisationseinheit: raw.auftraggeberOrganisation,
+            durchfuehrungsverantwortlicher: raw.durchfuehrungsverantwortlicher as unknown as string | undefined,
+            positionstyp: raw.produktPositionTyp,
+            buchungsfreigabe: raw.buchungsfreigabe,
+            anmerkung: raw.anmerkung,
+            servicemanager: raw.auftraggeberOrganisation,
+          };
+          this.produktpositionen = [...this.produktpositionen, newNode];
+          this.selectedPosition = newNode;
+        } else {
+          updateInArray(this.produktpositionen, position.id!, saved as Partial<ProduktpositionNode>);
+        }
+
+        this.isPositionFormEditable = false;
+        this.positionDetailForm.disable();
+
+        this.snackBar.open('Daten der Position wurden gespeichert.', 'Schließen', {
+          duration: 2000, verticalPosition: 'top',
+        });
+      },
+      error: (err) => {
+        console.error('Error saving produktposition:', err);
+        this.snackBar.open('Fehler beim Speichern der Position.', 'Schließen', {
+          duration: 3000, verticalPosition: 'top',
+          panelClass: ['error-snackbar'],
+        });
+      },
     });
   }
 
   onCancelPosition(): void {
     if (!this.selectedPosition) return;
 
+    if (!this.selectedPosition.id) {
+      this.selectedPosition = null;
+      this.creatingParentId = null;
+      this.isPositionFormEditable = false;
+      this.positionDetailForm.reset();
+      this.positionDetailForm.disable();
+      return;
+    }
+
     this.isPositionFormEditable = false;
     this.positionDetailForm.reset({
       ...this.selectedPosition,
-      produktposition: this.selectedPosition.name,
+      produktPositionname: this.selectedPosition.name,
+      produktPositionTyp: this.selectedPosition.positionstyp,
+      auftraggeberOrganisation: this.selectedPosition.organisationseinheit,
     });
     this.positionDetailForm.disable();
   }
 
-  openDeleteDialog(): void {
-    if (!this.selectedPosition) return;
+ openDeleteDialog(): void {
+  if (!this.selectedPosition) return;
 
-    const dialogRef = this.dialog.open(ConfirmationDialogComponent, {
-      width: '350px',
-      data: {
-        title: `Löschen eines ${this.selectedPosition.typ}`,
-        message: `Wollen Sie den ${this.selectedPosition.typ} "${this.selectedPosition.name}" wirklich löschen?`,
-      },
-    });
+  const dialogRef = this.dialog.open(DeleteConfirmDialogComponent, {
+    width: '500px',
+    data: {
+      title: `Löschen eines ${this.selectedPosition.typ}`,
+      message: `Wollen Sie den ${this.selectedPosition.typ} "${this.selectedPosition.name}" wirklich löschen?`,
+    },
+  });
 
-    dialogRef.afterClosed().subscribe((result) => {
-      if (result) {
-        this.deleteSelectedPosition();
-      }
-    });
-  }
+  dialogRef.afterClosed().subscribe((result) => {
+    if (result) {
+      this.deleteSelectedPosition();
+    }
+  });
+}
 
   private deleteSelectedPosition(): void {
-    if (!this.selectedPosition) return;
+    if (!this.selectedPosition?.id) return;
 
-    const removeFromArray = (arr: any[], id: string | number): any[] => {
+    const removeFromArray = (arr: ProduktpositionNode[], id: string): ProduktpositionNode[] => {
       return arr.filter(item => {
         if (item.id === id) {
           return false;
@@ -690,66 +711,174 @@ export class ProdukteDetailsComponent {
       });
     };
 
-    this.produktpositionen = removeFromArray(this.produktpositionen, this.selectedPosition.id);
+    const isBuchungspunkt = this.selectedPosition.typ === 'Buchungspunkt'
+      || this.selectedPosition.typ === 'Dokumentation';
 
-    this.selectedPosition = null;
-    this.positionDetailForm.reset();
-    this.positionDetailForm.disable();
-    this.isPositionFormEditable = false;
+    const removedId: string = this.selectedPosition.id;
 
-    this.snackBar.open('Der Eintrag wurde erfolgreich gelöscht.', 'Schließen', {
-      duration: 3000,
-      verticalPosition: 'top',
-    });
+    const onSuccess = () => {
+      this.produktpositionen = removeFromArray(this.produktpositionen, removedId);
+
+      this.selectedPosition = null;
+      this.positionDetailForm.reset();
+      this.positionDetailForm.disable();
+      this.isPositionFormEditable = false;
+      this.childDetailForm.reset();
+      this.childDetailForm.disable();
+      this.isChildFormEditable = false;
+
+      this.snackBar.open('Der Eintrag wurde erfolgreich gelöscht.', 'Schließen', {
+        duration: 3000,
+        verticalPosition: 'top',
+      });
+    };
+
+    const onError = (err: unknown) => {
+      console.error('Delete failed', err);
+      this.snackBar.open('Fehler beim Löschen.', 'Schließen', {
+        duration: 3000, verticalPosition: 'top',
+        panelClass: ['error-snackbar'],
+      });
+    };
+
+    if (isBuchungspunkt) {
+      const position = {
+        ...this.selectedPosition,
+        deleted: true,
+      } as ApiProduktPositionBuchungspunkt;
+
+      this.produktService.updateProduktPositionBuchungspunkt(position.id!, position).subscribe({
+        next: onSuccess,
+        error: onError,
+      });
+    } else {
+      const position = {
+        ...this.selectedPosition,
+        deleted: true,
+      } as ApiProduktPosition;
+
+      this.produktService.updateProduktPosition(position.id!, position).subscribe({
+        next: onSuccess,
+        error: onError,
+      });
+    }
   }
 
   toggleMenu(): void {
     // Implement menu toggle logic
   }
   cancelChildDetails(): void {
-    this.childDetailForm.reset();
-    this.childDetailForm.disable();
-  }
-  saveChildDetails(): void {
     if (!this.selectedPosition) return;
 
-    if (this.childDetailForm.invalid) {
-      this.snackBar.open('Bitte füllen Sie alle Pflichtfelder aus.', 'Schließen', {
-        duration: 3000,
-        verticalPosition: 'top'
-      });
+    if (!this.selectedPosition.id) {
+      this.selectedPosition = null;
+      this.creatingParentId = null;
+      this.isChildFormEditable = false;
+      this.childDetailForm.reset();
+      this.childDetailForm.disable();
       return;
     }
 
-    const updatedData = this.childDetailForm.value;
-
-    const updateInArray = (arr: any[], id: string | number, updatedData: any) => {
-      for (let i = 0; i < arr.length; i++) {
-        if (arr[i].id === id) {
-          arr[i] = {
-            ...arr[i],
-            ...updatedData,
-            name: updatedData.docName || arr[i].name,
-            typ: arr[i].typ
-          };
-          this.selectedPosition = arr[i];
-          return true;
-        }
-        if (arr[i].children && updateInArray(arr[i].children!, id, updatedData)) {
-          return true;
-        }
-      }
-      return false;
-    };
-
-    updateInArray(this.produktpositionen, this.selectedPosition.id, updatedData);
-
     this.isChildFormEditable = false;
-    this.childDetailForm.disable();
-
-    this.snackBar.open('Daten wurden gespeichert.', 'Schließen', {
-      duration: 2000,
-      verticalPosition: 'top'
+    this.childDetailForm.patchValue({
+      buchungspunkt: this.selectedPosition.name || '',
+      aktiv: this.selectedPosition.aktiv || false,
     });
+    this.childDetailForm.disable();
   }
+   saveChildDetails(): void {
+  if (!this.selectedPosition) return;
+
+  if (this.childDetailForm.invalid) {
+    this.childDetailForm.markAllAsTouched();
+    this.dialog.open(ErrorDialogComponent, {
+      data: {
+        title: 'Pflichtfelder fehlen',
+        detail: 'Bitte geben Sie einen Buchungspunkt ein.',
+      },
+      panelClass: 'custom-dialog-width',
+    });
+    return;
+  }
+
+  const updatedData = this.childDetailForm.value as Partial<ApiProduktPositionBuchungspunkt>;
+
+  const updateInArray = (
+    arr: ProduktpositionNode[],
+    id: string,
+    patch: Partial<ApiProduktPositionBuchungspunkt>
+  ): boolean => {
+    for (let i = 0; i < arr.length; i++) {
+      if (arr[i].id === id) {
+        arr[i] = {
+          ...arr[i],
+          ...patch,
+          name: patch.buchungspunkt || arr[i].name,
+          typ: arr[i].typ
+        };
+        this.selectedPosition = arr[i];
+        return true;
+      }
+      if (arr[i].children && updateInArray(arr[i].children!, id, patch)) {
+        return true;
+      }
+    }
+    return false;
+  };
+
+  const position: ApiProduktPositionBuchungspunkt = {
+    id: this.selectedPosition.id,
+    aktiv: updatedData.aktiv,
+    buchungspunkt: updatedData.buchungspunkt ?? this.selectedPosition.name,
+  };
+
+  const isNew = !position.id;
+  const request$ = isNew
+    ? this.produktService.createProduktPositionBuchungspunkt(position, this.creatingParentId!)
+    : this.produktService.updateProduktPositionBuchungspunkt(position.id!, position);
+
+  request$.subscribe({
+    next: (response) => {
+      const saved: ApiProduktPositionBuchungspunkt = response.body ?? position;
+
+      if (isNew) {
+        const parentId = this.creatingParentId;
+        const status: 'active' | 'inactive' = updatedData.aktiv ? 'active' : 'inactive';
+        const newChild: ProduktpositionNode = {
+          id: saved.id,
+          name: updatedData.buchungspunkt ?? saved.buchungspunkt ?? '',
+          typ: 'Buchungspunkt',
+          level: 2,
+          parentId: parentId ?? undefined,
+          status,
+          aktiv: updatedData.aktiv,
+        };
+        const parent = this.produktpositionen.find((p: ProduktpositionNode) => p.id === parentId);
+        if (parent) {
+          parent.children = [...(parent.children ?? []), newChild];
+          parent.isExpanded = true;
+        }
+        this.selectedPosition = newChild;
+        this.creatingParentId = null;
+      } else {
+        updateInArray(this.produktpositionen, position.id!, saved as Partial<ProduktpositionNode>);
+      }
+
+      this.isChildFormEditable = false;
+      this.childDetailForm.disable();
+
+      this.snackBar.open('Daten wurden gespeichert.', 'Schließen', {
+        duration: 2000,
+        verticalPosition: 'top'
+      });
+    },
+    error: (err) => {
+      console.error('Error saving buchungspunkt:', err);
+      this.snackBar.open('Fehler beim Speichern.', 'Schließen', {
+        duration: 3000, verticalPosition: 'top',
+        panelClass: ['error-snackbar'],
+      });
+    },
+  });
+}
 }

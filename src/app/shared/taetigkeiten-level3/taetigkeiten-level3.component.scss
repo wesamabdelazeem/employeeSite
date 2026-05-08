@@ -1,0 +1,330 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.form-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 30px;
+  padding-bottom: 15px;
+  border-bottom: 2px solid #e0e0e0;
+  padding: 1px;
+  background-color: #338e9c;
+  flex-shrink: 0;
+}
+
+.form-header h2 {
+  margin: 0;
+  color: white;
+  flex: 1;
+  text-align: center;
+}
+
+.right-header {
+  font-weight: bold;
+  height: 41px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.delete-icon {
+  color: rgb(255, 0, 0) !important;
+}
+
+.header-btn {
+  border: 1px solid black !important;
+  border-radius: 4px !important;
+  padding: 5px !important;
+  color: white !important;
+  background-color: #2e4155;
+  height: 32px !important;
+  margin: 5px !important;
+  cursor: pointer !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  line-height: 1 !important;
+
+  ::ng-deep .mdc-button__label,
+  ::ng-deep .mat-button-wrapper {
+    display: inline-flex !important;
+    align-items: center !important;
+    line-height: 1 !important;
+  }
+
+  mat-icon,
+  .mat-icon {
+    font-size: 16px !important;
+    width: 16px !important;
+    height: 16px !important;
+    line-height: 16px !important;
+    margin-right: 4px;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    vertical-align: middle;
+  }
+
+  .mdi {
+    font-size: 16px !important;
+    line-height: 1 !important;
+    margin-right: 4px;
+    display: inline-flex !important;
+    align-items: center !important;
+    vertical-align: middle;
+  }
+
+  span {
+    display: inline-flex;
+    align-items: center;
+    line-height: 1;
+  }
+}
+
+.taetigkeit-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100% !important;
+  padding-left: 45px;
+  padding-bottom: 30px;
+  flex: 1 1 auto;
+  min-height: 0;
+  height: auto;
+  max-height: calc(100vh - 220px);
+  overflow-y: auto;
+  overflow-x: hidden;
+  font-size: 14px;
+
+  input,
+  textarea,
+  select,
+  button,
+  .mat-mdc-form-field,
+  .mat-mdc-select,
+  .mat-mdc-option,
+  .mdc-text-field__input,
+  .mat-mdc-input-element {
+    font-size: 14px !important;
+  }
+}
+
+.form-field-group {
+  display: flex;
+  align-items: center;
+}
+
+.field-label {
+  font-weight: 500;
+  color: #333;
+  width: 160px;
+  min-width: 160px;
+  flex: 0 0 160px;
+  text-align: right;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 4px;
+}
+
+.field-input {
+  flex: 1;
+  width: 300px !important;
+  max-width: 300px !important;
+  min-width: 300px !important;
+}
+
+.field-input.full-width {
+  width: 300px !important;
+  max-width: 300px !important;
+  min-width: 300px !important;
+}
+
+.field-input.full-width .mat-mdc-form-field {
+  width: 100%;
+}
+
+.field-input.full-width .mat-mdc-text-field-wrapper {
+  width: 100%;
+}
+
+.gebucht-third {
+  padding-bottom: 30px;
+}
+
+.datum:focus {
+  border: 1px solid #e6e3e3 !important;
+}
+
+.form-input {
+  width: 270px !important;
+}
+
+.form-input:focus {
+  border: 1px solid #e6e3e3 !important;
+}
+
+.date-picker-toggle {
+  position: relative;
+  right: 10px;
+}
+
+.time-section {
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
+}
+
+.time-section-locked {
+  pointer-events: none;
+}
+
+.time-group {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.time-label {
+  font-weight: 500;
+  color: #333;
+  width: 160px;
+  min-width: 160px;
+  flex: 0 0 160px;
+  text-align: right;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 4px;
+}
+
+.time-inputs-horizontal {
+  display: flex;
+  gap: 30px;
+  flex: 1;
+  padding-left: 10px !important;
+}
+
+.time-column {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 5px;
+}
+
+.mint {
+  position: relative;
+  bottom: 35%;
+}
+
+.time-unit {
+  font-weight: 500;
+  color: #333;
+  min-width: 100px;
+  text-align: right;
+  margin-bottom: 5px;
+}
+
+.anmerkung-empty {
+  ::ng-deep .mat-mdc-form-field .mat-mdc-input-element[matInput][rows][rows="3"],
+  ::ng-deep textarea[matInput][rows="3"] {
+    background-color: #fdecec !important;
+    background: #fdecec !important;
+  }
+
+  ::ng-deep .mat-mdc-text-field-wrapper,
+  ::ng-deep .mdc-text-field {
+    background-color: transparent !important;
+  }
+}
+
+/* Empty required field after save attempt — only the input itself goes light red */
+.field-empty {
+  ::ng-deep .mat-mdc-select .mat-mdc-select-trigger,
+  ::ng-deep input.mat-mdc-input-element {
+    background-color: #fdecec !important;
+  }
+}
+
+
+.jira-invalid {
+  ::ng-deep .mat-mdc-form-field-outline,
+  ::ng-deep .mdc-notched-outline__leading,
+  ::ng-deep .mdc-notched-outline__notch,
+  ::ng-deep .mdc-notched-outline__trailing {
+    border-color: #d32f2f !important;
+  }
+}
+
+.anmerkung-textarea-field {
+  resize: vertical !important;
+  min-height: 70px !important;
+  max-height: 200px !important;
+  line-height: 1.5 !important;
+  padding: 8px !important;
+  font-family: inherit !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+::ng-deep .drop-down-date {
+  min-width: 270px !important;
+  max-width: 270px !important;
+  width: 270px !important;
+}
+
+::ng-deep .drop-down-date .mat-datepicker-content {
+  position: relative !important;
+  right: 20px !important;
+}
+
+@media (max-width: 1400px) {
+  .field-input,
+  .field-input.full-width {
+    max-width: 100%;
+  }
+}
+
+@media (min-width: 1920px) {
+  .field-input,
+  .field-input.full-width {
+    max-width: 350px;
+  }
+}
+
+@media (max-width: 600px) {
+  .form-field-group {
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 6px;
+  }
+
+  .field-input,
+  .field-input.full-width {
+    flex: 1 1 100%;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  .time-group {
+    flex-wrap: wrap;
+  }
+}
+.drop-down.mat-mdc-select-panel {
+  min-width: 90% !important;
+  width: 90% !important;
+  margin-left: 15px !important;
+}
+.cdk-overlay-pane:not(.mat-mdc-select-panel-above) div.mat-mdc-select-panel{
+min-width: 90px !important;
+  width: 90px !important;
+  margin-left: 15px !important;
+}

@@ -1,7 +1,34 @@
 @use "styles/components/index" as *;
-@use "styles/theme" as *;
 @import "material-icons/iconfont/material-icons.css";
 @import "@mdi/font/css/materialdesignicons.css";
+// @import "styles/getit.scss";
+
+/* mat-select panel is rendered at the CDK overlay root, outside component
+   view-encapsulation. Width rules for panelClass="drop-down" must live here. */
+.mat-mdc-select-panel.drop-down,
+.cdk-overlay-pane .drop-down.mat-mdc-select-panel {
+  min-width: 90% !important;
+  width: 90% !important;
+  margin-left: 15px !important;
+}
+
+/* mat-menu panels also render in the CDK overlay. Force MDI icons inside
+   option-menu items down to 16px (overrides mdi-24px on the inline element). */
+.mat-mdc-menu-panel .mat-mdc-menu-item i.mdi,
+.cdk-overlay-pane .mat-mdc-menu-panel .mat-mdc-menu-item i.mdi,
+.option-menu .mat-mdc-menu-item i.mdi {
+  font-size: 16px !important;
+  width: 16px !important;
+  height: 16px !important;
+  line-height: 16px !important;
+  margin-right: 4px !important;
+}
+.mat-mdc-menu-panel .mat-mdc-menu-item i.mdi::before,
+.cdk-overlay-pane .mat-mdc-menu-panel .mat-mdc-menu-item i.mdi::before,
+.option-menu .mat-mdc-menu-item i.mdi::before {
+  font-size: 16px !important;
+  line-height: 16px !important;
+}
 // .custom-dropdown-panel {
 //   position:relative!important;
 //  top: 80px !important;
@@ -20,9 +47,15 @@ html {
 html,
 body {
   height: 100%;
-  font-family: Arial, sans-serif;
+  font-family: Roboto, sans-serif;
   background-color: #f5f5f5;
   overflow: hidden;
+}
+
+*,
+*::before,
+*::after {
+  font-family: Roboto, sans-serif;
 }
 
 /* Layout Structure */
@@ -115,8 +148,7 @@ app-freigabe-historisch-list .table-content {
 /* Compact date pickers inside the Eintritts/Austrittsdatum row — shrink
    the suffix icon + inner padding so the calendar icon sits closer to
    the input text. */
-app-personen-detail .date-range-row .date-range,
-app-personen-2-detail .date-range-row .date-range {
+app-personen-detail .date-range-row .date-range {
   .mat-mdc-form-field-icon-suffix {
     padding: 0 !important;
   }
@@ -141,9 +173,7 @@ app-personen-2-detail .date-range-row .date-range {
    by Angular view encapsulation. Paints only the inner input/textbox area
    light red (inside the notched outline), not the wrapper background. */
 app-personen-detail .mat-mdc-form-field.mat-form-field-invalid,
-app-personen-detail .mat-mdc-form-field.ng-invalid.ng-touched,
-app-personen-2-detail .mat-mdc-form-field.mat-form-field-invalid,
-app-personen-2-detail .mat-mdc-form-field.ng-invalid.ng-touched {
+app-personen-detail .mat-mdc-form-field.ng-invalid.ng-touched {
   /* Token tweaks so Material's own label / outline colours follow.
      Declarations kept before nested rules to satisfy Sass mixed-decls. */
   --mdc-outlined-text-field-outline-color: #d32f2f;
@@ -188,183 +218,6 @@ app-personen-2-detail .mat-mdc-form-field.ng-invalid.ng-touched {
 
   .no-print {
     display: none !important;
-  }
-}
-
-/* ========================================
-   UNIFIED PAGE HEADER (applied app-wide)
-   - identical header bar height across every component
-   - sidebar font (Roboto), unified title size/weight
-   - title always centered (absolute-positioned over the bar so
-     left/right section content doesn't shift the centering)
-   - no border around the header bar
-   ======================================== */
-.container > .header,
-.container > div > .header,
-.absence-container > .unified-header,
-.table-header {
-  position: relative !important;
-  width: 100% !important;
-  max-width: 100% !important;
-  height: 56px !important;
-  min-height: 56px !important;
-  max-height: 56px !important;
-  padding-top: 0 !important;
-  padding-bottom: 0 !important;
-  border: none !important;
-  outline: none !important;
-  box-shadow: none !important;
-  box-sizing: border-box !important;
-}
-
-.container > .header .title,
-.container > .header .header-main .title,
-.container > div > .header .title,
-.container > div > .header .header-main .title,
-.absence-container > .unified-header .header-title,
-.table-header .table-title {
-  position: absolute !important;
-  left: 50% !important;
-  top: 50% !important;
-  transform: translate(-50%, -50%) !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  font-family: "Roboto", sans-serif !important;
-  font-size: 1.125rem !important;
-  font-weight: 500 !important;
-  line-height: 1.2 !important;
-  letter-spacing: 0.15px !important;
-  text-align: center !important;
-  white-space: nowrap !important;
-  pointer-events: none !important;
-}
-
-/* ========================================
-   DISABLED / READONLY FORM FIELDS — gray inner area, app-wide
-   Covers Material inputs / textareas / selects, the custom
-   <app-time-box> hour/minute inputs, and disabled buttons so every
-   interactive control turns gray consistently outside edit mode.
-   ======================================== */
-.mat-mdc-form-field.mat-form-field-disabled .mat-mdc-form-field-infix {
-  background-color: #ececec !important;
-}
-
-.mat-mdc-input-element:disabled,
-.mat-mdc-input-element[readonly],
-.mdc-text-field__input:disabled,
-.mdc-text-field__input[readonly],
-.mat-mdc-form-field.mat-form-field-disabled .mat-mdc-select-trigger,
-.mat-mdc-form-field.mat-form-field-disabled .mat-mdc-select-value {
-  background-color: #ececec !important;
-  color: #555 !important;
-  -webkit-text-fill-color: #555 !important; /* Safari overrides on disabled */
-}
-
-/* Strip any border / divider / shadow Material draws around the
-   dropdown arrow when the select is disabled — the user-visible
-   bordered area should be the trigger itself, with no extra line
-   wrapping the arrow icon. */
-.mat-mdc-form-field.mat-form-field-disabled .mat-mdc-select-arrow-wrapper,
-.mat-mdc-form-field.mat-form-field-disabled .mat-mdc-select-arrow,
-.mat-mdc-select-disabled .mat-mdc-select-arrow-wrapper,
-.mat-mdc-select-disabled .mat-mdc-select-arrow {
-  border: none !important;
-  border-left: none !important;
-  border-right: none !important;
-  box-shadow: none !important;
-  background: transparent !important;
-  outline: none !important;
-}
-
-/* Custom <app-time-box> input — not a Material field, override its
-   built-in 0.5 opacity so the gray fill is visible. */
-input.time-value-display:disabled,
-input.time-value-input:disabled {
-  background-color: #ececec !important;
-  color: #555 !important;
-  opacity: 1 !important;
-}
-
-/* Disabled buttons — match the disabled-input look. Covers Material
-   buttons and plain HTML <button> (e.g. <app-time-box> +/- buttons). */
-button:disabled,
-.mat-mdc-button-disabled,
-.mat-mdc-icon-button[disabled],
-.mat-mdc-raised-button[disabled] {
-  background-color: #ececec !important;
-  color: #888 !important;
-  opacity: 1 !important;
-}
-
-button:disabled .mat-icon,
-.mat-mdc-button-disabled .mdc-button__label {
-  color: #888 !important;
-}
-
-/* ========================================
-   DATEPICKER FIELDS — calendar icon inside the input box
-   The compact-input style in _inputs.scss puts the visible border on
-   the <input> via `box-shadow inset`, so any matSuffix (incl. the
-   datepicker toggle) sits to the RIGHT of that border — visually
-   "outside" the input. For fields that contain a datepicker toggle we
-   move the border onto the form-field-flex (which wraps both the
-   input AND the suffix) so the calendar icon ends up inside the box.
-   ======================================== */
-/* Material auto-adds `.mat-mdc-form-field-has-icon-suffix` to any
-   form-field containing a matSuffix. That class drops the wrapper's
-   right padding and shrinks the infix to make room for the icon, so
-   the visible bordered area ends up wider/narrower than a sibling
-   field without a suffix. We force the wrapper geometry back to the
-   non-suffix layout and overlay the toggle on top instead. */
-.mat-mdc-form-field.mat-mdc-form-field-has-icon-suffix:has(.mat-datepicker-toggle) {
-
-  /* Restore the same wrapper geometry a non-suffix field has. */
-  .mat-mdc-text-field-wrapper {
-    padding-right: 16px !important;
-  }
-
-  .mat-mdc-form-field-flex {
-    position: relative;
-  }
-
-  .mat-mdc-form-field-infix {
-    width: 100% !important;
-    flex: 1 1 100% !important;
-    min-width: 0 !important;
-  }
-
-  /* Reserve room at the right of the input text so the value doesn't
-     run under the absolutely-positioned toggle. */
-  .mat-mdc-form-field-infix .mat-mdc-input-element {
-    padding-right: 32px !important;
-  }
-
-  /* Take the icon-suffix OUT of the flex flow and overlay it inside
-     the bordered area — the field's outer width then matches the
-     non-suffix siblings byte-for-byte. */
-  .mat-mdc-form-field-icon-suffix {
-    position: absolute;
-    top: 50%;
-    right: 4px;
-    transform: translateY(-50%);
-    padding: 0 !important;
-    z-index: 1;
-    pointer-events: auto;
-  }
-
-  .mat-mdc-form-field-icon-suffix .mat-mdc-icon-button.mat-mdc-button-base {
-    width: 26px;
-    height: 26px;
-    padding: 0 !important;
-    line-height: 26px;
-  }
-
-  .mat-mdc-form-field-icon-suffix .mat-mdc-icon-button .mat-icon,
-  .mat-mdc-form-field-icon-suffix .mat-datepicker-toggle-default-icon {
-    font-size: 18px;
-    width: 18px;
-    height: 18px;
-    line-height: 18px;
   }
 }
 

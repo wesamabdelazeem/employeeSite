@@ -106,8 +106,4 @@ getAbwesenheitsListe(): Observable<ApiStempelzeit[]> {
   return this.getitRestService.getStempelzeit(personId, getEnumKeyByValue(ApiZeitTyp, ApiZeitTyp.ABWESENHEIT), currentDay);
  }
  */
-
-
-
-
 }

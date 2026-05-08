@@ -340,15 +340,9 @@ $card-elevation: 2px 2px 8px rgba(0, 0, 0, 0.1);
 .checkbox-group {
   display: flex;
   flex-direction: row;
-  flex-wrap: wrap;
-  /* Don't pin a 616px fixed width — that pushed the right column wider
-     than its sibling columns in the other sections, breaking field
-     alignment as the browser resized. Fill the column instead. */
-  width: 100%;
-  max-width: 100%;
+  width: 616px;
   justify-content: center;
   padding: $spacing-sm 0;
-  box-sizing: border-box;
 
   .group-label {
     font-weight: 500;

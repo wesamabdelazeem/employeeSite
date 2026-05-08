@@ -1,26 +1,202 @@
+$phone: 600px;
+$tablet: 900px;
+$laptop: 1100px;
+$wide: 1920px;
+
+/* Component-wide font: same Roboto / 14px as the rest of the app.
+   Exclude icon elements — Material Icons / MDI use their own ligature font
+   and forcing Roboto on them would render the icon name as plain text. */
+:host,
+:host *:not(mat-icon):not(.mat-icon):not(.material-icons):not(.material-icons-outlined):not(i.mdi):not([class*="mdi-"]) {
+  font-family: Roboto, sans-serif;
+}
+
+:host .form-content,
+:host .form-content input,
+:host .form-content .mat-mdc-input-element,
+:host .form-content .mat-mdc-select-trigger,
+:host .form-content .mat-mdc-select-value,
+:host .form-content .field-label,
+:host .form-content .mat-mdc-option,
+:host .form-content mat-error {
+  font-size: 14px !important;
+}
+
 .form-container {
   background: white;
-  border-radius: 0px;
+  border-radius: 0;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow-x: hidden;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  max-height: 100vh;
+}
+
+/* Light-red background on empty/invalid required fields, applied
+   ONLY to the inner input/select element so the surrounding wrapper
+   stays white. Triggered after a save attempt only — see .ts. */
+::ng-deep .mat-mdc-form-field.field-empty
+  .mat-mdc-text-field-wrapper
+  .mat-mdc-form-field-flex
+  .mat-mdc-form-field-infix
+  .mat-mdc-input-element,
+::ng-deep .mat-mdc-form-field.field-empty
+  .mat-mdc-text-field-wrapper
+  .mat-mdc-form-field-flex
+  .mat-mdc-form-field-infix
+  .mat-mdc-select-trigger {
+  background-color: #fdecec !important;
+}
+
+/* Kill Chrome's blue autofill highlight on the email/text inputs after save —
+   forces the inner input back to white with regular text colour. */
+::ng-deep input:-webkit-autofill,
+::ng-deep input:-webkit-autofill:hover,
+::ng-deep input:-webkit-autofill:focus,
+::ng-deep input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 1000px #ffffff inset !important;
+  box-shadow: 0 0 0 1000px #ffffff inset !important;
+  -webkit-text-fill-color: #333 !important;
+  caret-color: #333 !important;
+  transition: background-color 9999s ease-in-out 0s;
+}
+
+/* Disabled inputs (after save) should stay white, not the Material grey/blue. */
+::ng-deep .mat-mdc-form-field.mat-form-field-disabled .mat-mdc-text-field-wrapper,
+::ng-deep .mat-mdc-form-field.mat-form-field-disabled input.mat-mdc-input-element,
+::ng-deep .mat-mdc-form-field.mat-form-field-disabled .mat-mdc-select-trigger {
+  background-color: #ffffff !important;
+  color: #333 !important;
+  -webkit-text-fill-color: #333 !important;
 }
 
 .form-header {
-  margin-bottom: 20px;
-  padding: 5px !important;
-  border-bottom: 1px solid #eee;
+  flex-shrink: 0;
+}
+
+.form-content {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  min-height: 0;
+  /* Make the form-content a containment context so child container
+     queries below can measure ITS width (i.e. the actual panel),
+     not the browser viewport. */
+  container-type: inline-size;
+  container-name: orgdetail;
+}
+
+.form-header {
   background-color: #338e9c;
-
-
+  border: 1px solid #0c4450;
+  padding: 5px 10px;
 }
 
-::placeholder {
-  opacity: 0.5;
-}
+.form-toolbar {
+  display: flex;
+  justify-content: space-between!important;
+  align-items: center!important;
+  width: 100%;
+  gap: 10px;
 
-.form-title {
-  font-size: 1.5rem;
-  color: #333;
-  margin: 0;
+  .toolbar-left,
+  .toolbar-right {
+    display: flex;
+    align-items: center!important;
+    gap: 8px;
+  }
+
+  .form-title {
+    margin: 0;
+    font-size: 1.25rem;
+    color: white;
+    font-weight: bold;
+    text-align: center;
+    flex: 1;
+  }
+
+  .cancel-btn,
+  .save-btn {
+    background: linear-gradient(to right, #2c3e50, #34495e) !important;
+    color: white !important;
+    border-radius: 4px !important;
+    height: 40px !important;
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding: 0 10px !important;
+    min-width: 0 !important;
+
+    &:hover:not(:disabled) {
+      background: linear-gradient(to right, #3e5870, #4a5d78) !important;
+    }
+
+    mat-icon {
+      font-size: 22px;
+      width: 22px;
+      height: 22px;
+      line-height: 22px;
+    }
+
+    .edit-icon.mdi {
+      font-size: 20px;
+      line-height: 20px;
+      color: white;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+  }
+
+  .back-btn {
+    background: #314559 !important;
+    background-image: none !important;
+    color: white !important;
+    cursor: pointer;
+    border-radius: 4px !important;
+    width: 70px !important;
+    min-width: 70px !important;
+    height: 40px !important;
+    padding: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    line-height: 40px !important;
+
+    &:hover:not(:disabled) {
+      background: #3e5870 !important;
+      background-image: none !important;
+    }
+
+    ::ng-deep .mat-mdc-button-touch-target {
+      width: 100% !important;
+      height: 100% !important;
+    }
+
+    ::ng-deep .mat-mdc-button-persistent-ripple,
+    ::ng-deep .mat-mdc-focus-indicator {
+      border-radius: 4px !important;
+    }
+
+    mat-icon {
+      font-size: 22px !important;
+      width: 22px !important;
+      height: 22px !important;
+      line-height: 22px !important;
+      margin: 0 !important;
+      padding: 0 !important;
+    }
+  }
+
+  .save-btn .edit-icon.mdi {
+    margin-right: 5px;
+    padding-left: 0;
+    margin-left: 0;
+  }
 }
 
 .loading-state {
@@ -29,262 +205,404 @@
   align-items: center;
   justify-content: center;
   padding: 40px;
+  gap: 12px;
 }
 
-.spinner {
-  border: 4px solid #f3f3f3;
-  border-top: 4px solid #3498db;
-  border-radius: 50%;
-  width: 40px;
-  height: 40px;
-  animation: spin 1s linear infinite;
-  margin-bottom: 15px;
+.form-content {
+  padding: 20px 20px;
+  box-sizing: border-box;
 }
 
-@keyframes spin {
-  0% {
-    transform: rotate(0deg);
-  }
-
-  100% {
-    transform: rotate(360deg);
-  }
+.org-form {
+  width: 100%;
+  box-sizing: border-box;
 }
 
-.section {
-  margin-bottom: 30px;
+.form-columns {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  align-items: flex-start;
 }
 
-.section-title {
-  font-size: 1.2rem;
-  color: #444;
-  margin-bottom: 20px;
-  padding-bottom: 8px;
-  border-bottom: 1px solid #eee;
-}
-
-.form-fields {
+.form-box {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
+  flex: 1 1 500px;
+  min-width: 0;
+}
+
+.left-box,
+.right-box {
+  flex: 1 1 500px;
+  min-width: 0;
 }
 
 .form-row {
   display: flex;
-  justify-content: space-between;
-}
-
-.form-field {
-  flex: 1;
-
-
-}
-
-.label-input-group {
-  display: flex;
   align-items: center;
-  gap: 5px;
+  flex: 0 0 auto;
+  &.spacer {
+    visibility: hidden;
+  }
 }
 
 .field-label {
-  font-size: 0.8rem;
-  color: #555;
-  min-width: 180px;
+  flex: 0 0 180px;
+  width: 180px;
   text-align: right;
-}
-
-.field-label.required::after {
-  content: " *";
-  color: #e74c3c;
-}
-
-input,
-select {
-  border: 1px solid #ddd;
-  border-radius: 4px;
   font-size: 0.85rem;
-  padding: 4px 5px;
-  height: 100%;
-  width: 250px;
-  /* Reduced from 50% to fixed 200px */
-  min-width: 105px;
-}
+  font-weight: 500;
+  color: #333;
+  padding-right: 4px;
+  margin-right: 0;
+  white-space: nowrap;
 
-.right {
-  display: flex;
-  justify-content: flex-end;
-  padding-right: 260px;
-}
-
-input:focus,
-select:focus {
-  outline: none;
-  border-color: #3498db;
-  box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
-}
-
-
-.form-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 15px;
-  margin-top: 30px;
-  padding-top: 20px;
-  border-top: 1px solid #eee;
-}
-
-button{
-  padding: 8px 20px;
-  border-radius: 4px;
-  font-size: 0.9rem;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-
-button {
-  background:  linear-gradient(to right, #2c3e50, #34495e);
-  color: white;
-  border: none;
-  display: flex;
-  align-items: center;
-  gap: 5px;
-}
-
-button:hover {
-  background: linear-gradient(to right, #3e5870, #4a5d78);
-}
-
-button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.save-icon {
-  font-size: 1rem;
-}
-
-.form-toolbar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  width: 100%;
-
-
-  .cancel-btn {
-
-    display: flex;
-
+  &.required::after {
+    content: ' *';
+    color: #e74c3c;
   }
 
-
-
-
-  .form-title {
-    margin: 0;
-    font-size: 20px;
-    color: white;
-    font-weight: bolder;
+  &.bis-label {
+    flex: 0 0 auto;
+    width: auto;
+    min-width: 30px;
+    text-align: right;
   }
 }
 
-.date-range-field {
-  display: flex;
-  align-items: center;
-  gap: 3px;
-  font-size: 0.8rem;
-  height: 26px;
+.field-input {
+  flex: 1 1 auto;             /* shrink with the box instead of forcing
+                                 a horizontal scrollbar at small widths */
+  width: auto;
+  min-width: 0;
+  max-width: 320px;
 
-  .field-label {
-    font-size: 0.75rem;
-    color: #444;
-    min-width: auto;
+  ::ng-deep .mat-mdc-form-field-subscript-wrapper {
+    min-height: 0;
   }
 
-  .bis-label {
-    margin-left: 0px;
-    font-size: 0.75rem;
-    height: 20px;
+  ::ng-deep .mat-mdc-text-field-wrapper {
+    background-color: #fff;
   }
 
-  .date-input {
-    width: 130px;
-    padding: 4px 0px;
-    font-size: 0.8rem;
-    border: 1px solid #ddd;
-    border-radius: 1px;
+  ::ng-deep .mat-mdc-form-field-icon-suffix {
+    padding-right: 4px;
   }
 
-  ::ng-deep .mat-datepicker-toggle {
-    padding: 0;
-    margin-left: -40px;
-    margin-bottom: 0;
+  ::ng-deep .mat-datepicker-toggle .mat-mdc-icon-button {
+    width: 40px;
+    height: 40px;
+    padding: 4px;
+    margin-left: 5px;
   }
 
   ::ng-deep .mat-datepicker-toggle-default-icon {
-    font-size: 16px;
+    width: 25px;
+    height: 25px;
+    margin-left: 5px;
+
+  }
+
+  &.date-input {
+    flex: 0 0 140px;
+    width: 140px;
+  }
+}
+
+.date-row {
+  flex-wrap: nowrap;
+  // gap: 6px;
+
+  .bis-label {
+    flex: 0 0 auto;
+    min-width: 28px;
+    padding: 0 2px;
+  }
+}
+
+::placeholder {
+  opacity: 0.5;
+}
+
+@media (max-width: 1300px) {
+  .field-input {
+    flex: 1 1 280px;
+    width: auto;
+    min-width: 0;
+    max-width: 320px;
+  }
+
+  .field-label {
+    flex: 0 0 160px;
+    width: 160px;
+  }
+}
+
+@media (max-width: $laptop) {
+  .form-content {
+    padding: 16px 18px;
+  }
+
+  .form-columns {
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .form-box {
+    width: 100%;
+  }
+
+  .form-row {
+    width: 100%;
+    flex-direction: row;
+    align-items: center;
+  }
+
+  .form-row.spacer {
+    display: none;
+  }
+
+  .field-label {
+    flex: 0 0 180px;
+    width: 180px;
+    text-align: right;
+    // padding-right: 8px;
+  }
+
+  .field-input {
+    flex: 0 0 50%;
+    width: 50%;
+    max-width: 50%;
+  }
+
+  .field-input.date-input {
+    flex: 0 0 auto;
+    width: auto;
+    max-width: none;
+  }
+}
+
+@media (max-width: $tablet) {
+  .form-content {
+    padding: 14px 14px;
+  }
+
+  .field-label {
+    flex: 0 0 150px;
+    width: 150px;
+    font-size: 0.8rem;
+  }
+
+  .form-toolbar {
+    .form-title {
+      font-size: 1.1rem;
+    }
   }
 }
 
 @media (max-width: 768px) {
-  .form-container {
-    padding: 15px;
-    border-radius: 0px !important;
+  .form-content {
+    padding: 12px;
   }
 
   .form-row {
-    flex-direction: column;
-    gap: 10px;
-  }
-
-  .label-input-group {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0px;
+    flex-direction: row;
+    align-items: center;
+    width: 100%;
   }
 
   .field-label {
-    min-width: 100%;
-    text-align: left;
+    flex: 0 0 130px;
+    width: 130px;
+    text-align: right;
+    // padding-right: 6px;
+    font-size: 0.78rem;
+    margin-bottom: 0;
   }
 
-  input,
-  select {
-    width: 100%;
-    min-width: 100%;
+  .field-input {
+    flex: 0 0 50%;
+    width: 50%;
+    max-width: 50%;
   }
 
-  .date-range-field {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 5px;
+  .field-input.date-input {
+    flex: 0 0 auto;
+    width: auto;
+    max-width: none;
   }
 
-  .date-range-field .date-input {
-    width: 100%;
-  }
+  .date-row {
+    flex-wrap: nowrap;
+    gap: 4px;
 
-  .error-message {
-    margin-left: 0;
-  }
-
-  .form-actions {
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 10px;
+    .bis-label {
+      flex: 0 0 auto;
+      width: auto;
+      min-width: 28px;
+      text-align: right;
+    }
   }
 
   .form-toolbar {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 10px;
-  }
+    flex-wrap: nowrap;
+    gap: 8px;
+    padding: 0;
 
-  .form-toolbar .form-title {
-    order: -1;
-    margin-bottom: 10px;
+    .form-title {
+      order: 0;
+      flex: 1 1 auto;
+      text-align: center;
+      font-size: 1rem;
+    }
+
+    .toolbar-left,
+    .toolbar-right {
+      flex: 0 0 auto;
+    }
+
+    .cancel-btn,
+    .save-btn {
+      height: 36px !important;
+
+      span {
+        font-size: 0.85rem;
+      }
+    }
+
+    .back-btn {
+      height: 38px !important;
+      width: 56px !important;
+      min-width: 56px !important;
+
+      mat-icon {
+        font-size: 22px !important;
+        width: 22px !important;
+        height: 22px !important;
+        line-height: 22px !important;
+      }
+    }
   }
 }
 
+@media (max-width: $phone) {
+  .form-header {
+    padding: 5px 6px;
+  }
 
+  .form-content {
+    padding: 10px 8px;
+  }
 
+  .field-label {
+    flex: 0 0 110px;
+    width: 110px;
+    font-size: 0.75rem;
+  }
+
+  .field-input {
+    flex: 0 0 50%;
+    width: 50%;
+    max-width: 50%;
+  }
+
+  .form-toolbar {
+    .form-title {
+      font-size: 0.95rem;
+    }
+
+    .cancel-btn,
+    .save-btn {
+      padding: 0 8px;
+
+      span {
+        display: none;
+      }
+    }
+  }
+}
+
+@media (min-width: $wide) {
+  .form-content {
+    // padding: 28px 36px;
+    max-width: 1800px;
+    margin: 0 14px;
+  }
+
+  .form-columns {
+    gap: 170px;
+  }
+
+  .field-label {
+    flex: 0 0 220px;
+    width: 220px;
+    font-size: 0.95rem;
+  }
+
+  .field-input {
+    flex: 0 0 380px;
+    width: 380px;
+  }
+}
+
+@media (min-width: 2560px) {
+  .form-content {
+    // padding: 28px 36px;
+    max-width: 1800px;
+    margin: 0 210px;
+  }
+
+  .form-columns {
+    gap: 220px;
+  }
+
+  .field-label {
+    flex: 0 0 260px;
+    width: 260px;
+    font-size: 1rem;
+  }
+
+  .field-input {
+    flex: 0 0 460px;
+    width: 460px;
+  }
+
+  .form-toolbar {
+    .form-title {
+      font-size: 1.5rem;
+    }
+  }
+}
+
+#gueltigBis{
+  width: 125px!important;
+}
+
+#gueltigVon{
+   width: 125px!important;
+}
+.border:focus{
+  border: 1px solid #E0E0E0 !important;
+
+}
+::ng-deep .drop-down{
+  min-width: 290px !important;
+   max-width: 290px !important;
+  width:290px !important;
+  margin-left:15px!important
+}
+// ::ng-deep .drop-down-date2{
+//   min-width: 273px !important;
+//    max-width: 273px !important;
+//   width:273px !important;
+//   margin-left:15px!important
+// }
+::ng-deep .field-input .mdc-text-field {
+  padding-left: 4px !important;
+  padding-right: 4px !important;
+}

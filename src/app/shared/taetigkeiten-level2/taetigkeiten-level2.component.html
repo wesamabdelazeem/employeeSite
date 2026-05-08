@@ -1,0 +1,66 @@
+<div class="form-header">
+  <h2 class="right-header">{{ title }}</h2>
+  <button
+    *ngIf="showCloseButton"
+    mat-button
+    class="header-btn"
+    (click)="onToggleClose()"
+    [matTooltip]="hasNotification ? 'Tagesabschluss aufheben' : 'Tagesabschluss'"
+  >
+    <i
+      class="mdi"
+      [class.mdi-check-circle-outline]="!hasNotification"
+      [class.mdi-close-circle-outline]="hasNotification"
+    ></i>
+    <span>{{ hasNotification ? 'Abschluss aufheben' : 'Tagesabschluss' }}</span>
+  </button>
+</div>
+
+<form [formGroup]="formGroup" class="taetigkeit-form">
+  <div class="form-field-group taetigkeit-form-check">
+    <label class="field-label">Abgeschlossen:</label>
+    <mat-checkbox formControlName="abgeschlossen" class="field-input check-margin">
+    </mat-checkbox>
+  </div>
+
+  <div class="form-field-group">
+    <label class="field-label">Gestempelt [Std:Min]:</label>
+    <mat-form-field appearance="outline" class="field-input">
+      <input
+        matInput
+        formControlName="gestempelt"
+        [readonly]="!isEditing"
+        class="time-btn"
+      />
+    </mat-form-field>
+  </div>
+
+  <div class="form-field-group">
+    <label class="field-label">Gebucht [Std:Min]:</label>
+    <mat-form-field appearance="outline" class="field-input">
+      <input
+        matInput
+        formControlName="gebucht"
+        [readonly]="!isEditing"
+        class="time-btn"
+      />
+    </mat-form-field>
+  </div>
+
+  <div class="form-field-group" *ngIf="hasStempelzeiten">
+    <label class="field-label">Stempelzeiten:</label>
+    <mat-form-field appearance="outline" class="field-input stempel-field">
+      <textarea
+        matInput
+        formControlName="stempelzeiten"
+        [readonly]="!isEditing"
+        class="stempel-textarea"
+        rows="3"
+        cdkTextareaAutosize
+        cdkAutosizeMinRows="3"
+        cdkAutosizeMaxRows="6"
+        placeholder="Stempelzeiten eingeben"
+      ></textarea>
+    </mat-form-field>
+  </div>
+</form>

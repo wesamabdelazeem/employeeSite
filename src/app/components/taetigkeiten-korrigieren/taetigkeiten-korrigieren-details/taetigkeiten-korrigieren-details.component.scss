@@ -1,0 +1,644 @@
+:host {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.container2 {
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.left-panel,
+.right-panel {
+  border-right: 1px solid #e0e0e0;
+  background-color: #fafafa;
+  flex: 1 1 50%;
+  min-width: 0;
+  height: 100vh;
+  font-family: Roboto, sans-serif;
+}
+
+.left-panel {
+  flex: 1 1 50%;
+  min-width: 0;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-right: 1px solid #e0e0e0;
+  background-color: #fafafa;
+}
+
+.left-panel-header {
+  flex-shrink: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #338e9c;
+}
+
+.left-panel-header button,
+.level2-container-bottom button,
+button[matTooltip],
+button[mattooltip] {
+  pointer-events: auto !important;
+  cursor: pointer !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  height: auto !important;
+  min-height: 0;
+  padding: 0 !important;
+  margin: 0;
+  border: none;
+  background: transparent;
+  line-height: 1;
+}
+
+.left-panel-header button *,
+.level2-container-bottom button *,
+button[matTooltip] *,
+button[mattooltip] * {
+  pointer-events: none !important;
+}
+
+.icon-header {
+  border: 1px solid black;
+  border-radius: 4px;
+  padding: 5px;
+  width: 45px !important;
+  color: white;
+  background-color: #2e4155;
+  height: 34px !important;
+  margin: 3px;
+  cursor: pointer;
+  display: flex;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+i.mdi.icon-header,
+.icon-header.mdi {
+  font-size: 22px !important;
+  line-height: 1 !important;
+}
+
+i.mdi.icon-header-alarm,
+.icon-header-alarm {
+  font-size: 22px !important;
+  line-height: 1 !important;
+  cursor: pointer !important;
+}
+
+.icon-add {
+  font-size: 15px;
+  padding-right: 7px;
+  color: green;
+}
+
+.icon-r {
+  font-size: 15px;
+  padding-right: 7px;
+  color: #b91c1c;
+}
+
+.title {
+  color: white;
+  margin-top: 10px;
+  margin-bottom: 10px;
+  font-weight: bold;
+}
+
+.right-panel {
+  flex: 1 1 50%;
+  min-width: 0;
+  background-color: white;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.right-panel .form-header {
+  flex-shrink: 0;
+}
+
+.right-panel,
+.right-panel input,
+.right-panel textarea,
+.right-panel select,
+.right-panel button,
+.right-panel .mat-mdc-form-field,
+.right-panel .mat-mdc-select,
+.right-panel .mat-mdc-option {
+  font-family: Roboto, sans-serif;
+}
+
+.right-panel-header {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #338e9c;
+}
+
+.title2 {
+  color: white;
+  margin-top: 10px;
+  margin-bottom: 10px;
+  font-weight: bold;
+}
+
+.tree {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  overflow-x: hidden;
+  background-color: transparent;
+  height: 0;
+  min-height: 0;
+}
+
+.tree,
+.taetigkeit-form {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  overflow-x: hidden;
+  max-height: calc(100vh - 220px);
+}
+
+.tree-node {
+  display: flex;
+  width: 100%;
+  padding: 3px 0;
+}
+
+.mat-tree-node {
+  border-bottom: 1px solid #e0e0e0;
+  cursor: pointer;
+  min-height: 35px !important;
+  height: auto !important;
+  user-select: none;
+  transition: background-color 0.2s ease;
+
+  &:hover {
+    background-color: #f5f5f5;
+  }
+
+  &.selected {
+    background-color: #e3f2fd;
+    border-left: 4px solid #2e4155;
+  }
+}
+
+.calendar-icon {
+  font-size: 16px;
+  color: #2e4155;
+}
+
+.gebucht-icon {
+  font-size: 15px;
+}
+
+.month-content {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+}
+
+.month-name {
+  font-size: 15px;
+  color: #2e4155;
+  font-weight: bold;
+}
+
+.month-gebucht {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.gebucht-label {
+  font-weight: normal;
+  font-size: 13px;
+  color: #502832e6 !important;
+}
+
+.gebucht-value {
+  font-weight: normal;
+  font-size: 13px;
+  min-width: 50px;
+}
+
+.expandable-node {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+  margin-left: 5px;
+}
+
+.level-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  line-height: 1.2;
+}
+
+.expandable-node-level2 {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  min-height: 44px !important;
+  align-items: center !important;
+}
+
+.level2-container {
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  gap: 0;
+  min-height: 24px;
+  padding: 0;
+  margin: 0;
+  align-items: center !important;
+}
+
+.day-content-wrapper {
+  display: flex;
+  flex-direction: column;
+  margin-left: 2px;
+  flex: 1;
+  gap: 0;
+  line-height: 1.1;
+}
+
+.day-header {
+  display: grid;
+  grid-template-columns: 120px 120px 120px 110px;
+  align-items: center;
+  gap: 0;
+  width: 100%;
+}
+
+.day-cell {
+  font-weight: bold;
+  font-size: 14px;
+  color: #333;
+  margin-left: 10px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.time-cell {
+  font-size: 13px;
+  color: #502832e6;
+  white-space: nowrap;
+  font-weight: bold;
+}
+
+.abgeschlossen-cell {
+  color: #b91c1c;
+  font-weight: 500;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.stempel-level2 {
+  display: flex;
+  align-items: center;
+  margin-left: 0;
+  gap: 5px;
+
+  .gebucht-icon {
+    font-size: 16px;
+    color: #666;
+    margin-left: 0;
+  }
+
+  .time-info {
+    margin-left: 0;
+    color: #666;
+    font-size: 12px;
+  }
+}
+
+.time-info {
+  font-size: 13px;
+  color: #666;
+  margin-right: 15px;
+}
+
+.arrow-stempel {
+  position: relative;
+  bottom: 8px;
+}
+
+.leaf-node2 {
+  padding-left: 16px;
+  flex-direction: column;
+  font-size: 14px;
+  display: flex;
+  gap: 2px !important;
+  line-height: 1.1;
+}
+
+.activity-product {
+  font-weight: bold;
+  color: #2e4155;
+}
+
+.activity-position,
+.activity-buchungspunkt {
+  color: #555;
+  padding-left: 15px;
+  font-weight: bold;
+}
+
+.activity-gebucht {
+  color: #502832e6 !important;
+  font-size: 13px;
+  padding-left: 5px;
+  font-weight: normal;
+}
+
+.activity-time {
+  color: #888;
+  font-size: 13px;
+  margin-left: 10px;
+  font-weight: normal;
+}
+
+/* Alarm form (inline, not extracted) */
+.form-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 30px;
+  padding-bottom: 15px;
+  border-bottom: 2px solid #e0e0e0;
+  padding: 1px;
+  background-color: #338e9c;
+  flex-shrink: 0;
+}
+
+.form-header h2 {
+  margin: 0;
+  color: white;
+  flex: 1;
+  text-align: center;
+}
+
+.right-header {
+  font-weight: bold;
+  height: 41px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.header-btn {
+  border: 1px solid black !important;
+  border-radius: 4px !important;
+  padding: 5px !important;
+  color: white !important;
+  background-color: #2e4155;
+  height: 32px !important;
+  margin: 5px !important;
+  cursor: pointer !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  line-height: 1 !important;
+
+  mat-icon,
+  .mat-icon {
+    font-size: 16px !important;
+    width: 16px !important;
+    height: 16px !important;
+    line-height: 16px !important;
+    margin-right: 4px;
+  }
+
+  span {
+    display: inline-flex;
+    align-items: center;
+    line-height: 1;
+  }
+}
+
+.taetigkeit-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100% !important;
+  padding-left: 45px;
+  padding-bottom: 30px;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  font-size: 14px;
+}
+
+.form-field-group {
+  display: flex;
+  align-items: center;
+}
+
+.field-label {
+  font-weight: 500;
+  color: #333;
+  width: 160px;
+  min-width: 160px;
+  flex: 0 0 160px;
+  text-align: right;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 4px;
+}
+
+.field-input {
+  flex: 1;
+  width: 300px !important;
+  max-width: 300px !important;
+  min-width: 300px !important;
+}
+
+.field-input.full-width {
+  width: 300px !important;
+  max-width: 300px !important;
+  min-width: 300px !important;
+}
+
+.time-section {
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
+}
+
+.time-section-locked {
+  pointer-events: none;
+}
+
+.time-group {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.time-label {
+  font-weight: 500;
+  color: #333;
+  width: 160px;
+  min-width: 160px;
+  flex: 0 0 160px;
+  text-align: right;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 4px;
+}
+
+.time-inputs-horizontal {
+  display: flex;
+  gap: 30px;
+  flex: 1;
+  padding-left: 10px !important;
+}
+
+.time-column {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 5px;
+}
+
+.mint {
+  position: relative;
+  bottom: 35%;
+}
+
+.time-unit {
+  font-weight: 500;
+  color: #333;
+  min-width: 100px;
+  text-align: right;
+  margin-bottom: 5px;
+}
+
+.anmerkung-empty {
+  ::ng-deep textarea[matInput][rows="3"] {
+    background-color: #fdecec !important;
+  }
+}
+
+/* Alarm form: empty required field — input itself goes light red */
+.field-empty {
+  ::ng-deep .mat-mdc-select .mat-mdc-select-trigger,
+  ::ng-deep input.mat-mdc-input-element {
+    background-color: #fdecec !important;
+  }
+}
+
+/* Alarm form: Dauer = 0 — color the time-box value cells light red */
+.dauer-empty {
+  ::ng-deep app-taetigkeiten-time-box .time-value,
+  ::ng-deep app-taetigkeiten-time-box .time-input,
+  ::ng-deep .time-box .time-value {
+    background-color: #fdecec !important;
+  }
+}
+
+.jira-invalid {
+  ::ng-deep .mdc-notched-outline__leading,
+  ::ng-deep .mdc-notched-outline__notch,
+  ::ng-deep .mdc-notched-outline__trailing {
+    border-color: #d32f2f !important;
+  }
+}
+
+.anmerkung-textarea-field {
+  resize: vertical !important;
+  min-height: 70px !important;
+  max-height: 200px !important;
+  line-height: 1.5 !important;
+  padding: 8px !important;
+  font-family: inherit !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+.gebucht-third {
+  padding-bottom: 30px;
+}
+
+.loading {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+  gap: 16px;
+  height: 0;
+  min-height: 0;
+}
+
+::ng-deep .drop-down {
+  min-width: 90% !important;
+  width: 90% !important;
+  margin-left: 15px !important;
+}
+
+@media (max-width: 1400px) {
+  .container2 {
+    flex-direction: column !important;
+    height: auto !important;
+    overflow: auto !important;
+    width: 100% !important;
+  }
+
+  .container2 > .left-panel,
+  .container2 > .right-panel {
+    flex: 0 0 auto !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    height: auto !important;
+    min-height: 50vh;
+    border-right: none !important;
+    border-bottom: 1px solid #e0e0e0;
+  }
+
+  .tree {
+    max-height: none !important;
+  }
+}
+
+@media (max-width: 600px) {
+  .day-header {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+
+  .left-panel-header {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .title {
+    font-size: 16px;
+  }
+}

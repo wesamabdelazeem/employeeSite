@@ -1,0 +1,557 @@
+import { Component, OnInit, ChangeDetectorRef, ViewEncapsulation } from '@angular/core';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { MatTreeFlatDataSource, MatTreeFlattener } from '@angular/material/tree';
+import { FlatTreeControl } from '@angular/cdk/tree';
+import { MatSnackBar } from '@angular/material/snack-bar';
+import { CommonModule } from '@angular/common';
+import { ReactiveFormsModule } from '@angular/forms';
+import { MatTreeModule } from '@angular/material/tree';
+import { MatIconModule } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
+import { MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatMenuModule } from '@angular/material/menu';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { ActivatedRoute, Router } from '@angular/router';
+import { MatDialog } from '@angular/material/dialog';
+import { TaetigkeitenHistorischService } from '../../../services/taetigkeiten-historisch.service';
+
+import {  MatCheckboxChange } from "@angular/material/checkbox";
+import { forkJoin } from 'rxjs';
+import { map } from 'rxjs/operators';
+import { HttpResponse } from '@angular/common/http';
+// import { ConfirmationDialogComponent } from '../../confirmation-dialog/confirmation-dialog.component';
+import { FlatNode } from '../../../models/Flat-node';
+import { TaetigkeitNode } from '../../../models/TaetigkeitNode';
+import { FormValidationService } from '../../../services/utils/form-validation.service';
+import { TimeUtilityService } from '../../../services/utils/time-utility.service';
+import { TreeNodeService } from '../../../services/utils/tree-node.service';
+import { DropdownExtractorService } from '../../../services/utils/dropdown-extractor.service';
+import { DateParserService } from '../../../services/utils/date-parser.service';
+// import { MatDatepicker } from "@angular/material/datepicker";
+import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatNativeDateModule } from '@angular/material/core';
+import { MAT_DATE_FORMATS, DateAdapter, MAT_DATE_LOCALE } from '@angular/material/core';
+import { CustomDateAdapter } from '../../../services/custom-date-adapter.service'; // adjust path as needed
+// Add these imports at the top of the file
+import { ActivityFormService } from '../../../services/utils/activity-form.service';
+// import { TimeInputService } from '../../../services/utils/time-input.service';
+import { NotificationService } from '../../../services/utils/notification.service';
+// import { DialogService } from '../../../services/utils/dialog.service';
+import { ApiProdukt } from '../../../models/ApiProdukt';
+import { ApiProduktPositionBuchungspunkt } from '../../../models/ApiProduktPositionBuchungspunkt';
+import { ApiProduktPosition } from '../../../models/ApiProduktPosition';
+import { TreeManagementService } from '../../../services/utils/tree-management.service';
+import { ApiTaetigkeitTyp } from '../../../models/ApiTaetigkeitTyp';
+import { ApiBuchungsart, getApiBuchungsartDisplayValues } from '../../../models/ApiBuchungsart';
+import { TaetigkeitFormValue } from '../../../models/TaetigkeitFormValue';
+import { ApiAbschlussInfo } from '../../../models/ApiAbschlussInfo';
+import { DateUtilsService } from '../../../services/utils/date-utils.service';
+import { TimeOverlapService } from '../../../services/utils/time-overlap.service';
+import { TaetigkeitenLevel1Component } from '../../../shared/taetigkeiten-level1/taetigkeiten-level1.component';
+import { TaetigkeitenLevel2Component } from '../../../shared/taetigkeiten-level2/taetigkeiten-level2.component';
+import { TaetigkeitenLevel3Component } from '../../../shared/taetigkeiten-level3/taetigkeiten-level3.component';
+
+export const DATE_FORMATS = {
+  parse: {
+    dateInput: 'DD.MM.YYYY',
+  },
+  display: {
+    dateInput: 'DD.MM.YYYY',
+    monthYearLabel: 'MMMM YYYY',
+    dateA11yLabel: 'LL',
+    monthYearA11yLabel: 'MMMM YYYY',
+  },
+};
+
+@Component({
+  selector: 'app-tatigkeiten-historisch-details',
+  imports: [
+    MatProgressSpinnerModule,
+    MatTreeModule,
+    MatIconModule,
+    MatButtonModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatSelectModule,
+    MatSnackBarModule,
+    ReactiveFormsModule,
+    CommonModule,
+     MatDatepickerModule,
+    MatNativeDateModule,
+    MatMenuModule,
+    MatTooltipModule,
+    TaetigkeitenLevel1Component,
+    TaetigkeitenLevel2Component,
+    TaetigkeitenLevel3Component,
+  ],
+  providers: [
+    { provide: MAT_DATE_LOCALE, useValue: 'de-DE' },
+    { provide: DateAdapter, useClass: CustomDateAdapter },
+    { provide: MAT_DATE_FORMATS, useValue: DATE_FORMATS }
+  ]
+  ,
+  templateUrl: './taetigkeiten-historisch-details.component.html',
+  styleUrl: './taetigkeiten-historisch-details.component.scss'
+})
+export class TaetigkeitenHistorischDetailsComponent {
+  private readonly baseBuchungsartOptions = ['ARBEITSZEIT', 'REMOTEZEIT'];
+  private readonly baseTaetigkeitOptions = Object.values(ApiTaetigkeitTyp);
+
+  produktOptions: ApiProdukt[] = [];
+   produktpositionOptions: ApiProduktPosition[] = [];
+   buchungspunktOptions: ApiProduktPositionBuchungspunkt[] = [];
+   abschlussInfo: ApiAbschlussInfo | null = null;
+currentPersonId: string = '';
+
+  get buchungsartOptions(): string[] {
+    const formValue = this.taetigkeitForm?.get('buchungsart')?.value;
+    const set = new Set<string>(this.baseBuchungsartOptions);
+    if (formValue && typeof formValue === 'string'
+        && !this.baseBuchungsartOptions.some(o => this.compareBuchungsart(o, formValue))) {
+      set.add(formValue);
+    }
+    return Array.from(set);
+  }
+
+  get taetigkeitOptions(): string[] {
+    const formValue = this.taetigkeitForm?.get('taetigkeit')?.value;
+    const set = new Set<string>(this.baseTaetigkeitOptions);
+    if (formValue && typeof formValue === 'string'
+        && !this.baseTaetigkeitOptions.some(o => this.compareTaetigkeit(o, formValue))) {
+      set.add(formValue);
+    }
+    return Array.from(set);
+  }
+
+  private compareBuchungsart(a: any, b: any): boolean {
+    if (a === b) return true;
+    if (a == null || b == null) return false;
+    const enumMap = ApiBuchungsart as unknown as Record<string, string>;
+    const norm = (v: any): string => {
+      const s = String(v);
+      return (enumMap[s] !== undefined ? enumMap[s] : s).toLowerCase();
+    };
+    return norm(a) === norm(b);
+  }
+
+  private compareTaetigkeit(a: any, b: any): boolean {
+    if (a === b) return true;
+    if (a == null || b == null) return false;
+    const enumMap = ApiTaetigkeitTyp as unknown as Record<string, string>;
+    const norm = (v: any): string => {
+      const s = String(v);
+      return (enumMap[s] !== undefined ? enumMap[s] : s).toLowerCase();
+    };
+    return norm(a) === norm(b);
+  }
+
+ dropdownOptions: string[] = [];
+selectedOption: string = '';
+
+  treeControl = new FlatTreeControl<FlatNode>(
+    node => node.level,
+    node => node.expandable
+  );
+
+private transformer = (node: TaetigkeitNode, level: number): FlatNode => {
+  const flatNode: FlatNode = {
+   expandable: level === 0 ? true :
+                level === 1 ? true :
+                (!!node.children && node.children.length > 0),
+    name: node.name,
+    level: level,
+    hasNotification: node.hasNotification || false,
+    formData: node.formData,
+    stempelzeitData: node.stempelzeitData,
+    monthName: node.monthName,
+    gebuchtTotal: node.gebuchtTotal,
+    dayName: node.dayName,
+    gestempelt: node.gestempelt,
+    gebucht: node.gebucht,
+    stempelzeitenList: node.stempelzeitenList,
+    productName: node.productName,
+    positionName: node.positionName,
+    gebuchtTime: node.gebuchtTime,
+     buchungspunkt: node.buchungspunkt,
+    timeRange: node.timeRange,
+     dateKey: node.dateKey,
+    monthKey: node.monthKey,
+  };
+
+  return flatNode;
+};
+
+  treeFlattener = new MatTreeFlattener(
+    this.transformer,
+    node => node.level,
+    node => node.expandable,
+    node => node.children
+  );
+
+  dataSource = new MatTreeFlatDataSource(this.treeControl, this.treeFlattener);
+
+  taetigkeitForm: FormGroup;
+  selectedNode: FlatNode | null = null;
+  isEditing = false;
+  isLoading = true;
+  personName: string = '';
+  isCreatingNew = false;
+  monthForm: FormGroup;
+  dayForm: FormGroup;
+
+  // Field display name mapping for validation errors
+  private fieldDisplayMap: { [key: string]: string } = {
+    'datum': 'Datum',
+    'buchungsart': 'Buchungsart',
+    'anmeldezeitStunde': 'Anmeldezeit Stunde',
+    'anmeldezeitMinuten': 'Anmeldezeit Minuten',
+    'abmeldezeitStunde': 'Abmeldezeit Stunde',
+    'abmeldezeitMinuten': 'Abmeldezeit Minuten',
+    'anmerkung': 'Anmerkung'
+  };
+  private readonly personRequest = {
+    detail: 'FullPvTlName',
+    berechneteStunden: true,
+    addVertraege: false
+  };
+
+  constructor(
+    private fb: FormBuilder,
+    private snackBar: MatSnackBar,
+    private route: ActivatedRoute,
+    private router: Router,
+    private cdr: ChangeDetectorRef,
+    private dialog: MatDialog,
+    private taetigkeitenHistorischService: TaetigkeitenHistorischService,
+    private formValidationService: FormValidationService,
+    private timeUtilityService: TimeUtilityService,
+
+  private treeNodeService: TreeNodeService,
+  private dropdownExtractorService: DropdownExtractorService,
+  private dateParserService: DateParserService,
+  private activityFormService: ActivityFormService,
+  // private timeInputService: TimeInputService,
+  private notificationService: NotificationService,
+  // private dialogService: DialogService,
+  private  treeManagementService:TreeManagementService,
+  ) {
+   this.taetigkeitForm = this.activityFormService.createActivityForm();
+this.monthForm = this.activityFormService.createMonthForm();
+this.dayForm = this.activityFormService.createDayForm();
+  }
+
+  ngOnInit() {
+    this.route.paramMap.subscribe(params => {
+      const personId = params.get('id');
+      if (personId) {
+        this.currentPersonId = personId;
+        this.loadData(personId);
+      }
+    });
+  }
+
+  buildYearDropdown(ersteBuchung: string): void {
+  const startYear = new Date(ersteBuchung).getFullYear();
+  const currentYear = new Date().getFullYear();
+
+  this.dropdownOptions = [];
+  for (let year = startYear; year <= currentYear; year++) {
+    this.dropdownOptions.push(year.toString());
+  }
+
+  this.selectedOption = currentYear.toString();
+}
+
+loadData(personId: string) {
+  this.isLoading = true;
+
+  this.taetigkeitenHistorischService.getPerson(
+    personId,
+    this.personRequest.detail,
+    this.personRequest.berechneteStunden,
+    this.personRequest.addVertraege
+  ).subscribe({
+    next: (response: HttpResponse<any>) => {
+      const person = response.body;
+      this.personName = `${person?.vorname ?? ''} ${person?.nachname ?? ''}`;
+
+      this.taetigkeitenHistorischService.abschlussInfo(personId).subscribe({
+        next: (abschlussResponse: HttpResponse<ApiAbschlussInfo>) => {
+          const abschlussInfo = abschlussResponse.body;
+          this.abschlussInfo = abschlussInfo;
+
+          if (abschlussInfo?.ersteBuchung) {
+            this.buildYearDropdown(abschlussInfo.ersteBuchung);
+          }
+
+          const yearToLoad = this.selectedOption;
+          const startDate = `${yearToLoad}-01-01`;
+          const endDate = `${yearToLoad}-12-31`;
+
+          forkJoin({
+            products: this.taetigkeitenHistorischService.getPersonProdukte(
+              personId, "", startDate, endDate
+            ).pipe(map((r: HttpResponse<ApiProdukt[]>) => r.body ?? [])),
+            stempelzeiten: this.taetigkeitenHistorischService.getPersonStempelzeiten(
+              personId, startDate, endDate
+            ).pipe(map(r => r.body ?? []))
+          }).subscribe({
+            next: (results) => {
+              this.produktOptions = results.products;
+              this.extractDropdownOptions(results.products);
+
+              const treeData = this.treeManagementService.transformToTreeStructure(
+                results.products,
+                results.stempelzeiten,
+                parseInt(this.selectedOption),
+                this.abschlussInfo!,
+                false
+              );
+
+              this.dataSource.data = treeData;
+              console.log('TREE DATA:', treeData);
+              console.log('Products count:', results.products.length);
+              console.log('Stempelzeiten count:', results.stempelzeiten.length);
+              this.isLoading = false;
+            },
+            error: (error: any) => {
+              console.error('Error loading data:', error);
+              this.isLoading = false;
+            }
+          });
+        },
+        error: (error: any) => {
+          console.error('Error loading abschlussInfo:', error);
+          this.isLoading = false;
+        }
+      });
+    },
+    error: (error: any) => {
+      console.error('Error loading person:', error);
+      this.isLoading = false;
+    }
+  });
+}
+onYearChange(personId: string): void {
+  const yearToLoad = this.selectedOption;
+  const startDate = `${yearToLoad}-01-01`;
+  const endDate = `${yearToLoad}-12-31`;
+
+  this.isLoading = true;
+
+  forkJoin({
+    products: this.taetigkeitenHistorischService.getPersonProdukte(personId, "", startDate, endDate).pipe(map((r: HttpResponse<ApiProdukt[]>) => r.body ?? [])),
+    stempelzeiten: this.taetigkeitenHistorischService.getPersonStempelzeiten(personId, startDate, endDate).pipe(map(r => r.body ?? []))
+  }).subscribe({
+    next: (results) => {
+      this.produktOptions = results.products;
+      this.extractDropdownOptions(results.products);
+
+      const treeData = this.treeManagementService.transformToTreeStructure(
+        results.products,
+        results.stempelzeiten,
+        parseInt(this.selectedOption),
+        this.abschlussInfo!,
+        false
+      );
+
+      this.dataSource.data = treeData;
+      this.isLoading = false;
+    },
+    error: (error) => {
+      console.error('Error reloading data:', error);
+      this.isLoading = false;
+    }
+  });
+}
+isMonthLocked(node: FlatNode): boolean {
+  console.log('monthKey:', node.monthKey, '| letzterMonatsabschluss:', this.abschlussInfo?.letzterMonatsabschluss, '| result:', node.monthKey! <= this.abschlussInfo!.letzterMonatsabschluss!);
+  if (!this.abschlussInfo?.letzterMonatsabschluss || !node.monthKey) return false;
+  return node.monthKey <= this.abschlussInfo.letzterMonatsabschluss;
+}
+
+isDateLocked(node: FlatNode): boolean {
+  if (!this.abschlussInfo?.letzterMonatsabschluss || !node.dateKey) return false;
+
+  const [year, month] = this.abschlussInfo.letzterMonatsabschluss.split('-').map(Number);
+  const lastDayOfClosedMonth = new Date(year, month, 0);
+  const nodeDate = new Date(node.dateKey);
+  nodeDate.setHours(0, 0, 0, 0);
+  lastDayOfClosedMonth.setHours(0, 0, 0, 0);
+
+  return nodeDate <= lastDayOfClosedMonth;
+}
+ extractDropdownOptions(products: ApiProdukt[]) {
+  const options = this.dropdownExtractorService.extractDropdownOptions(products);
+  this.produktpositionOptions = options.produktpositionOptions;
+  this.buchungspunktOptions = options.buchungspunktOptions;
+
+  console.log('Extracted positions:', this.produktpositionOptions);
+  console.log('Extracted buchungspunkte:', this.buchungspunktOptions);
+}
+
+ getDateFromFormattedDay(dayString: string): Date {
+  return this.dateParserService.getDateFromFormattedDay(dayString);
+}
+
+  goBackToList() {
+    this.router.navigate(['/taetigkeitenhistorischlist']);
+  }
+
+  onHeaderMenuOption(name: string): void {
+    console.log(name);
+  }
+
+  hasChild = (_: number, node: FlatNode) => node.expandable;
+
+  hasDayChildren(node: FlatNode): boolean {
+    return this.treeControl.getDescendants(node).length > 0;
+  }
+
+  onNodeClick(node: FlatNode) {
+    console.log('Node clicked:', node.level, node.name);
+
+    if (this.selectedNode !== node) {
+      this.isEditing = false;
+    }
+
+    this.selectedNode = node;
+
+    if (node.level === 2 && node.formData) {
+      this.populateForm(node.formData);
+    } else if (node.level === 0) {
+      this.populateMonthForm();
+    } else if (node.level === 1) {
+      this.populateDayForm();
+    }
+
+    if (this.selectedNode !== node) {
+      this.disableAllFormControls();
+    }
+      this.disableAllFormControls();
+
+  }
+
+populateForm(formData: TaetigkeitFormValue) {
+  this.activityFormService.populateActivityForm(this.taetigkeitForm, formData);
+}
+
+populateMonthForm(): void {
+  if (this.selectedNode?.level === 0) {
+    this.selectedNode.hasNotification = this.isMonthLocked(this.selectedNode);
+
+    this.activityFormService.populateMonthForm(this.monthForm, this.selectedNode);
+    this.monthForm.get('abgeschlossen')?.disable();
+    this.monthForm.get('gebuchtTotal')?.disable();
+  }
+}
+
+
+populateDayForm(): void {
+  if (this.selectedNode?.level === 1) {
+    this.selectedNode.hasNotification = this.isDateLocked(this.selectedNode);
+
+    this.activityFormService.populateDayForm(this.dayForm, this.selectedNode);
+    this.dayForm.get('abgeschlossen')?.disable();
+    this.dayForm.get('gestempelt')?.disable();
+    this.dayForm.get('gebucht')?.disable();
+    this.dayForm.get('stempelzeiten')?.disable();
+  }
+}
+
+  onCheckboxChange(event: MatCheckboxChange): void {
+    if (this.selectedNode && this.isEditing) {
+      this.selectedNode.hasNotification = event.checked;
+      console.log('Checkbox changed:', event.checked);
+    }
+  }
+
+disableAllFormControls(): void {
+  if (this.selectedNode?.level === 0) {
+    this.formValidationService.disableAllFormControls(this.monthForm);
+  } else if (this.selectedNode?.level === 1) {
+    this.formValidationService.disableAllFormControls(this.dayForm);
+  } else if (this.selectedNode?.level === 2) {
+    this.formValidationService.disableAllFormControls(this.taetigkeitForm);
+  }
+}
+
+  getFullDayOfWeekFromNode(node: FlatNode | null): string {
+    if (!node) return '';
+
+    const sourceString = node.dayName || node.name || '';
+
+    if (!sourceString) return '';
+
+    // Pattern matches: "So." or "Mo." etc, then spaces, then day number, then ". ", then month name
+    const dateMatch = sourceString.match(/(\w{2})\.\s+(\d{1,2})\.\s+(\w+)/);
+
+    if (dateMatch) {
+      const [, , day, monthName] = dateMatch;
+
+      const monthMap: { [key: string]: number } = {
+        'Januar': 0, 'Februar': 1, 'März': 2, 'April': 3, 'Mai': 4, 'Juni': 5,
+        'Juli': 6, 'August': 7, 'September': 8, 'Oktober': 9, 'November': 10, 'Dezember': 11
+      };
+      const month = monthMap[monthName];
+
+      if (month !== undefined) {
+        const year = new Date().getFullYear();
+        const date = new Date(year, month, parseInt(day));
+
+        if (!isNaN(date.getTime())) {
+          return date.toLocaleDateString('de-DE', { weekday: 'long' });
+        }
+      }
+    }
+    return '';
+  }
+
+  getDateDisplayFromNode(node: FlatNode | null): string {
+    if (!node) return '';
+
+    const sourceString = node.dayName || node.name || '';
+
+    if (!sourceString) return '';
+
+    // The format is: "So.  09. November"
+    const dateMatch = sourceString.match(/(\w{2})\.\s+(\d{1,2})\.\s+(\w+)/);
+
+    if (dateMatch) {
+      const [, , day, monthName] = dateMatch;
+      return `${day.padStart(2, '0')}. ${monthName}`;
+    }
+    return '';
+  }
+onNodeDoubleClick(node: FlatNode, event: Event): void {
+  event.stopPropagation();
+
+  if (!node.expandable) return;
+
+  const isExpanded = this.treeControl.isExpanded(node);
+
+  // Collapse all siblings at the same level before toggling
+  this.collapseSiblings(node);
+
+  if (isExpanded) {
+    this.treeControl.collapse(node);
+  } else {
+    this.treeControl.expand(node);
+  }
+}
+
+private collapseSiblings(node: FlatNode): void {
+  const allNodes = this.treeControl.dataNodes;
+
+  allNodes.forEach(n => {
+    if (n !== node && n.level === node.level && this.treeControl.isExpanded(n)) {
+      this.treeControl.collapseDescendants(n);
+      this.treeControl.collapse(n);
+    }
+  });
+}
+}

@@ -1,177 +1,200 @@
 <div class="form-container">
   <div class="form-header">
-
-    <!-- Toolbar -->
     <div class="form-toolbar">
-      <div class="flex gap-4">
+      <div class="toolbar-left">
         <button
+          mat-icon-button
           type="button"
-          class="cancel-btn"
-          (click)="onCancel()">
+          class="cancel-btn back-btn"
+          (click)="onCancel()"
+          aria-label="Zurück zur Liste"
+        >
           <mat-icon>arrow_back</mat-icon>
         </button>
 
         <button
           *ngIf="isFormEditable"
+          mat-stroked-button
           type="button"
           class="cancel-btn"
-          (click)="onCancel()"
-          [disabled]="saving">
+          (click)="onCancelEdit()"
+          [disabled]="saving"
+        >
           <mat-icon>close</mat-icon>
-          Abbrechen
+          <span>Abbrechen</span>
         </button>
       </div>
 
-      <h2 class="form-title">
-        {{ isNewOrganisationseinheit ? "Neue Organisationseinheit anlegen" :
-        "Organisationseinheit bearbeiten" }}
-      </h2>
-      <div>
+      <h2 class="form-title">Organisationseinheit</h2>
+
+      <div class="toolbar-right">
         <button
+          mat-stroked-button
           type="button"
           class="save-btn"
           (click)="onEditOrSubmit()"
-          [disabled]="saving">
-          <mat-icon>{{ isFormEditable ? 'check' : 'edit' }}</mat-icon>
-          {{ isFormEditable ? 'Speichern' : 'Bearbeiten' }}
+          [disabled]="saving"
+        >
+          <mat-icon *ngIf="isFormEditable">check</mat-icon>
+          <i *ngIf="!isFormEditable" class="mdi mdi-lead-pencil edit-icon"></i>
+          <span>{{ isFormEditable ? 'Speichern' : 'Bearbeiten' }}</span>
         </button>
       </div>
     </div>
-
   </div>
 
-  <!-- Loading State -->
   <div class="loading-state" *ngIf="loading">
-    <div class="spinner"></div>
+    <mat-spinner diameter="40"></mat-spinner>
     <p>Daten werden geladen...</p>
   </div>
 
-  <!-- Form Content -->
   <div class="form-content" *ngIf="!loading">
+    <form [formGroup]="organisationseinheitForm" class="org-form">
+      <div class="form-columns">
 
-
-    <form [formGroup]="organisationseinheitForm">
-       <div class="section">
-
-        <div class="form-fields">
-           <div class="form-row">
-            <div class="form-field">
-              <div class="label-input-group">
-                <label class="field-label required">Bezeichnung:</label>
-                <input type="text" formControlName="bezeichnung"
-                       placeholder="Bezeichnung eingeben">
-              </div>
-
-            </div>
-
-             <div class="form-field">
-              <div class="label-input-group date-range-field right">
-                <label class="field-label">Gültig von:</label>
-                <input
-                  matInput
-                  [matDatepicker]="startDatePicker"
-                  formControlName="gueltigVon"
-                  placeholder="TT.MM.JJJJ"
-                  type="text"
-                  class="date-input"
-
-                />
-                <mat-datepicker-toggle matSuffix
-                                       [for]="startDatePicker"></mat-datepicker-toggle>
-                <mat-datepicker #startDatePicker></mat-datepicker>
-
-                <label class="field-label bis-label">bis:</label>
-                <input
-                  matInput
-                  [matDatepicker]="endDatePicker"
-                  formControlName="gueltigBis"
-                  placeholder="DD.MM.YYYY"
-                  type="text"
-                  class="date-input" />
-                <mat-datepicker-toggle matSuffix
-                                       [for]="endDatePicker"></mat-datepicker-toggle>
-                <mat-datepicker #endDatePicker></mat-datepicker>
-              </div>
-            </div>
-
+        <div class="form-box left-box">
+          <div class="form-row">
+            <label class="field-label" for="bezeichnung">Bezeichnung:</label>
+            <mat-form-field
+              appearance="outline"
+              class="field-input boreder"
+              [class.field-empty]="isFieldEmpty('bezeichnung')"
+            >
+              <input
+                id="bezeichnung"
+                matInput
+                formControlName="bezeichnung"
+                placeholder="Bezeichnung eingeben"
+                class="border"
+              />
+              <mat-error *ngIf="organisationseinheitForm.get('bezeichnung')?.hasError('required')">
+                Bezeichnung ist erforderlich
+              </mat-error>
+            </mat-form-field>
           </div>
 
-           <div class="form-row">
-            <div class="form-field">
-              <div class="label-input-group">
-                <label class="field-label">Kurzbezeichnung:</label>
-                <input type="text" formControlName="kurzbezeichnung"
-                       placeholder="Kurzbezeichnung eingeben">
-              </div>
-            </div>
-
-             <div class="form-field">
-              <div class="label-input-group right">
-                <label class="field-label">E-Mail:</label>
-                <input
-                  type="email"
-                  formControlName="email"
-                  placeholder="E-Mail-Adresse eingeben"
-                  [class.invalid]="organisationseinheitForm.get('email')?.invalid && organisationseinheitForm.get('email')?.touched" />
-              </div>
-              <div class="error-message"
-                   *ngIf="organisationseinheitForm.get('email')?.hasError('email') && organisationseinheitForm.get('email')?.touched">
-                Bitte geben Sie eine gültige E-Mail-Adresse ein
-              </div>
-            </div>
+          <div class="form-row">
+            <label class="field-label" for="kurzbezeichnung">Kurzbezeichnung:</label>
+            <mat-form-field
+              appearance="outline"
+              class="field-input boreder"
+              [class.field-empty]="isFieldEmpty('kurzbezeichnung')"
+            >
+              <input
+                id="kurzbezeichnung"
+                matInput
+                formControlName="kurzbezeichnung"
+                placeholder="Kurzbezeichnung eingeben"
+                class="border"
+              />
+              <mat-error *ngIf="organisationseinheitForm.get('kurzbezeichnung')?.hasError('required')">
+                Kurzbezeichnung ist erforderlich
+              </mat-error>
+            </mat-form-field>
           </div>
 
-          <div class="form-row ">
-            <div class="form-field">
-              <div class="label-input-group">
-                <label class="field-label">Übergeordnete Org.Einheit:</label>
-                 <select formControlName="uebergeordneteEinheitId"  [compareWith]="compareOrganisationEinheit" >
-
-
-                <option [ngValue]="null" disabled>Bitte wählen</option>
-
-                <option *ngFor="let einheit of uebergeordneteEinheiten"
-                        [ngValue]="einheit">{{ einheit.kurzBezeichnung }}</option>
-              </select>
-
-
-
-
-              </div>
-            </div>
-            <div class="form-field">
-              <div class="label-input-group">
-
-              </div>
-            </div>
-
+          <div class="form-row">
+            <label class="field-label" for="uebergeordneteEinheitId">Übergeordnete Org.Einheit:</label>
+            <mat-form-field appearance="outline" class="field-input boreder">
+              <mat-select
+                id="uebergeordneteEinheitId"
+                formControlName="uebergeordneteEinheitId"
+                [compareWith]="compareOrganisationEinheit"
+                placeholder="< Übergeordnete Org.Einheit wählen >"
+                panelClass="drop-down"
+              >
+                <mat-option [value]="null">&lt; Übergeordnete Org.Einheit wählen &gt;</mat-option>
+                <mat-option *ngFor="let einheit of uebergeordneteEinheiten" [value]="einheit">
+                  {{ einheit.kurzBezeichnung }} - {{ einheit.bezeichnung }}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
           </div>
-          <div class="form-row ">
-            <div class="form-field">
-              <div class="label-input-group">
-                <div class="form-field">
-                  <div class="label-input-group">
-                    <label class="field-label">Leitung Org.Einheit:</label>
-                    <select formControlName="leitung"   [compareWith]="comparePerson" >
 
-                      <option [ngValue]="null" disabled>Bitte wählen</option>
-                      <option *ngFor="let person of leitungPersonen"
-                              [ngValue]="person">{{ person.nachname }} {{ person.vorname }} </option>
-                    </select>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="form-field">
-              <div class="label-input-group">
+          <div class="form-row">
+            <label class="field-label" for="leitung">Leitung Org.Einheit:</label>
+            <mat-form-field appearance="outline" class="field-input boreder">
+              <mat-select
+                id="leitung"
+                formControlName="leitung"
+                [compareWith]="comparePerson"
+                placeholder="< Leitung wählen >"
+                panelClass="drop-down"
 
-              </div>
-            </div>
+              >
+                <mat-option [value]="null">&lt; Leitung wählen &gt;</mat-option>
+                <mat-option *ngFor="let person of leitungPersonen" [value]="person">
+                  {{ person.nachname }} {{ person.vorname }}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
           </div>
         </div>
+
+        <div class="form-box right-box">
+          <div class="form-row date-row">
+            <label class="field-label required" for="gueltigVon">Gültig von:</label>
+            <mat-form-field
+              appearance="outline"
+              class="field-input date-input boreder"
+              [class.field-empty]="isFieldEmpty('gueltigVon')"
+            >
+              <input
+                id="gueltigVon"
+                matInput
+                appGermanDateInput
+                [matDatepicker]="startDatePicker"
+                formControlName="gueltigVon"
+                placeholder="TT.MM.JJJJ"
+                class="border"
+              />
+              <mat-datepicker-toggle matIconSuffix [for]="startDatePicker"></mat-datepicker-toggle>
+              <mat-datepicker #startDatePicker></mat-datepicker>
+              <mat-error *ngIf="organisationseinheitForm.get('gueltigVon')?.hasError('required')">
+                Gültig von ist erforderlich
+              </mat-error>
+            </mat-form-field>
+
+            <label class="field-label bis-label" for="gueltigBis">bis:</label>
+            <mat-form-field appearance="outline" class="field-input date-input boreder">
+              <input
+                id="gueltigBis"
+                matInput
+                appGermanDateInput
+                [matDatepicker]="endDatePicker"
+                formControlName="gueltigBis"
+                placeholder="TT.MM.JJJJ"
+                                class="border"
+
+              />
+              <mat-datepicker-toggle matIconSuffix [for]="endDatePicker"></mat-datepicker-toggle>
+              <mat-datepicker #endDatePicker></mat-datepicker>
+            </mat-form-field>
+          </div>
+
+          <div class="form-row">
+            <label class="field-label" for="email">Reporting Email:</label>
+            <mat-form-field
+              appearance="outline"
+              class="field-input boreder"
+              [class.field-empty]="isFieldEmpty('email')"
+            >
+              <input
+                id="email"
+                matInput
+                type="email"
+                formControlName="email"
+                placeholder="E-Mail-Adresse eingeben"
+                class="border"
+              />
+              <mat-error *ngIf="organisationseinheitForm.get('email')?.hasError('email')">
+                Bitte geben Sie eine gültige E-Mail-Adresse ein
+              </mat-error>
+            </mat-form-field>
+          </div>
+        </div>
+
       </div>
-
-
     </form>
   </div>
 </div>

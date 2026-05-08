@@ -1,726 +1,976 @@
-<!-- ======================= Vertrag Edit Form ======================= -->
 <div class="main-container">
-    <!-- Top Section: Vertrag Form -->
-    <div class="form-container">
-      <div class="form-header">
-        <div class="form-toolbar">
-          <div class="flex-gap">
-            <button type="button" class="cancel-btn  cancel-btn-header" (click)="onCancel()">
-              <mat-icon>arrow_back</mat-icon>
+  <!-- Top Section: Vertrag Form -->
+  <div class="form-container">
+    <div class="form-header">
+      <div class="form-toolbar">
+        <div class="flex-gap">
+          <button
+            type="button"
+            class="cancel-btn cancel-btn-header"
+            (click)="onCancel()"
+            matTooltip="Zurück"
+            matTooltipPosition="below"
+          >
+            <i class="mdi mdi-chevron-left mdi-24px" aria-hidden="true"></i>
+          </button>
+          <button
+            *ngIf="isFormEditable"
+            type="button"
+            mat-button
+            class="cancel-btn cancel-btn-header"
+            (click)="onCancel()"
+            [disabled]="saving"
+            matTooltip="Abbrechen"
+            matTooltipPosition="below"
+          >
+            <mat-icon>close</mat-icon>
+            Abbrechen
+          </button>
+          <button
+            [matMenuTriggerFor]="topMenu"
+            class="custom-menu menu-icon-right-top custom-menu-header"
+            *ngIf="!isFormEditable"
+            matTooltip="Optionen"
+            matTooltipPosition="below"
+          >
+            <i class="mdi mdi-menu mdi-24px" aria-hidden="true"></i>
+          </button>
+          <mat-menu #topMenu="matMenu" class="option-menu">
+            <button mat-menu-item>
+              <i class="mdi mdi-file-pdf-box mdi-24px" aria-hidden="true"></i>Plan-Ist Vergleich
+            </button>
+            <button mat-menu-item>
+              <i class="mdi mdi-file-document mdi-24px" aria-hidden="true"></i>Logbuch
+            </button>
+          </mat-menu>
+        </div>
+        <h2 class="form-title">Verträge</h2>
+        <div>
+          <button
+            type="button"
+            mat-raised-button
+            class="save-btn save-btn-header"
+            (click)="onEditOrSubmit()"
+            [disabled]="saving"
+            [matTooltip]="isFormEditable ? 'Speichern' : 'Bearbeiten'"
+            matTooltipPosition="below"
+          >
+            <i
+              class="mdi mdi-24px"
+              [class.mdi-check]="isFormEditable"
+              [class.mdi-lead-pencil]="!isFormEditable"
+              aria-hidden="true"
+            ></i>
+            {{ isFormEditable ? "Speichern" : "Bearbeiten" }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-content" *ngIf="!loading">
+      <form [formGroup]="vertragForm">
+        <div class="form-grid-container">
+          <!-- First Column -->
+          <div class="form-column">
+            <div class="field-row">
+              <mat-label class="required field-label">Vertragsname</mat-label>
+              <mat-form-field appearance="outline" class="flex-field"
+                [class.invalid-required]="vertragSubmitAttempted && vertragForm.get('vertragsname')?.invalid">
+                <input
+                  matInput
+                  formControlName="vertragsname"
+                  maxlength="30"
+                  class="input-height"
+                />
+              </mat-form-field>
+            </div>
+
+            <div class="field-row">
+              <mat-label class="field-label required">Vertragszusatz</mat-label>
+              <mat-form-field appearance="outline" class="flex-field"
+                [class.invalid-required]="vertragSubmitAttempted && vertragForm.get('vertragszusatz')?.invalid">
+                <input
+                  matInput
+                  formControlName="vertragszusatz"
+                  maxlength="30"
+                  class="input-height"
+                />
+              </mat-form-field>
+            </div>
+
+            <div class="field-row">
+              <mat-label class="field-label required">Vertragspartner</mat-label>
+              <mat-form-field appearance="outline" class="flex-field"
+                [class.invalid-required]="vertragSubmitAttempted && vertragForm.get('vertragspartner')?.invalid">
+                <input
+                  matInput
+                  formControlName="vertragspartner"
+                  maxlength="30"
+                  class="input-height"
+                />
+              </mat-form-field>
+            </div>
+
+            <div class="field-row">
+              <mat-label class="field-label required">Auftraggeber</mat-label>
+              <mat-form-field appearance="outline" class="flex-field"
+                [class.invalid-required]="vertragSubmitAttempted && vertragForm.get('auftraggeber')?.invalid">
+                <input
+                  matInput
+                  formControlName="auftraggeber"
+                  maxlength="30"
+                  class="input-height"
+                />
+              </mat-form-field>
+            </div>
+
+            <div class="field-row ">
+              <mat-label class="field-label"
+                >Vertragsverantwortlicher</mat-label
+              >
+              <mat-form-field
+                appearance="outline"
+                class="flex-field"
+                class="input-height  field-vertrag"
+              >
+                <mat-select
+                  formControlName="vertragsverantwortlicher"
+                  panelClass="drop-down"
+                >
+                  <mat-option
+                    *ngFor="let person of verantwortlicherOptions"
+                    [value]="person.id"
+                  >
+                    {{ person.fullName }}
+                  </mat-option>
+                </mat-select>
+              </mat-form-field>
+            </div>
+
+            <div class="field-row">
+              <mat-label class="field-label">Bezugsart</mat-label>
+              <mat-form-field appearance="outline" class="flex-field">
+                <mat-select
+                  formControlName="bezugsart"
+                  class="input-height"
+                  panelClass="drop-down"
+                >
+                  <mat-option
+                    *ngFor="let bez of bezugsartenOptions"
+                    [value]="bez"
+                  >
+                    {{ bez }}
+                  </mat-option>
+                </mat-select>
+              </mat-form-field>
+            </div>
+
+            <div class="field-row">
+              <mat-label class="field-label">Elak</mat-label>
+              <mat-form-field appearance="outline" class="flex-field">
+                <input matInput formControlName="elak" maxlength="30" class="input-height" />
+              </mat-form-field>
+            </div>
+
+            <div class="field-row">
+              <mat-label class="field-label">Beschaffungsnummer</mat-label>
+              <mat-form-field appearance="outline" class="flex-field">
+                <input
+                  matInput
+                  formControlName="beschaffungsnummer"
+                  maxlength="30"
+                  class="input-height"
+                />
+              </mat-form-field>
+            </div>
+
+            <div class="field-row checkbox-row">
+              <mat-label class="field-label field-label-aktiv"
+                >LK-Vertrag</mat-label
+              >
+              <mat-checkbox
+                formControlName="lkVertrag"
+                class="check-abov"
+              ></mat-checkbox>
+            </div>
+          </div>
+
+          <!-- Second Column -->
+          <div class="form-column form-column-container form-column-second">
+            <div class="field-row checkbox-row">
+              <mat-label
+                class="field-label field-label-position field-label-aktiv"
+                >Aktiv</mat-label
+              >
+              <mat-checkbox
+                formControlName="aktiv"
+                class="check-abov"
+              ></mat-checkbox>
+            </div>
+
+            <div class="field-row">
+              <mat-label class="field-label required">Erstellungsdatum</mat-label>
+              <mat-form-field appearance="outline" class="flex-field narrow-date"
+                [class.invalid-required]="vertragSubmitAttempted && vertragForm.get('erstellungsdatum')?.invalid">
+                <input
+                  matInput
+                  [matDatepicker]="erstellungsPicker"
+                  formControlName="erstellungsdatum"
+                  class="input-height"
+                />
+                <mat-datepicker-toggle
+                  matSuffix
+                  [for]="erstellungsPicker"
+                  class="date-abov-icon"
+                ></mat-datepicker-toggle>
+                <mat-datepicker #erstellungsPicker></mat-datepicker>
+              </mat-form-field>
+            </div>
+
+            <div class="field-row">
+              <div class="date-pair-container">
+                <mat-label class="field-label required">Gültig von</mat-label>
+                <mat-form-field
+                  appearance="outline"
+                  class="flex-field flex-field-start narrow-date"
+                  [class.invalid-required]="vertragSubmitAttempted && vertragForm.get('start')?.invalid"
+                >
+                  <input
+                    matInput
+                    [matDatepicker]="startPicker"
+                    formControlName="start"
+                    class="start-input start-date input-height Gültig-width"
+                  />
+                  <mat-datepicker-toggle
+                    matSuffix
+                    [for]="startPicker"
+                    class="start-icon-first"
+                  ></mat-datepicker-toggle>
+                  <mat-datepicker #startPicker></mat-datepicker>
+                </mat-form-field>
+                <mat-label class="field-label bis-date required">Bis</mat-label>
+                <mat-form-field appearance="outline" class="flex-field narrow-date"
+                  [class.invalid-required]="vertragSubmitAttempted && vertragForm.get('ende')?.invalid">
+                  <input
+                    matInput
+                    formControlName="ende"
+                    [matDatepicker]="endPicker"
+                    class="input-height Gültig-width"
+                  />
+                  <mat-datepicker-toggle
+                    matSuffix
+                    [for]="endPicker"
+                    class="start-icon"
+                  ></mat-datepicker-toggle>
+                  <mat-datepicker #endPicker></mat-datepicker>
+                </mat-form-field>
+              </div>
+            </div>
+
+            <div class="field-row">
+              <mat-label class="field-label required">Vertragssumme</mat-label>
+              <mat-form-field appearance="outline" class="flex-field"
+                [class.invalid-required]="vertragSubmitAttempted && vertragForm.get('vertragssumme')?.invalid">
+                <input
+                  matInput
+                  formControlName="vertragssumme"
+                  type="number"
+                  maxlength="30"
+                  class="input-height"
+                />
+              </mat-form-field>
+            </div>
+
+            <div class="field-row">
+              <mat-label class="field-label">Auftragsreferenz</mat-label>
+              <mat-form-field appearance="outline" class="flex-field">
+                <input
+                  matInput
+                  formControlName="auftragsreferenz"
+                  maxlength="30"
+                  class="input-height"
+                />
+              </mat-form-field>
+            </div>
+
+            <div class="field-row">
+              <mat-label class="field-label">Rahmenvertrag-GZ</mat-label>
+              <mat-form-field appearance="outline" class="flex-field">
+                <input
+                  matInput
+                  formControlName="rahmenvertragGZ"
+                  maxlength="30"
+                  class="input-height"
+                />
+              </mat-form-field>
+            </div>
+            <div class="field-row">
+              <mat-label class="field-label required">Vertragstyp</mat-label>
+              <mat-form-field appearance="outline" class="flex-field"
+                [class.invalid-required]="vertragSubmitAttempted && vertragForm.get('vertragstype')?.invalid">
+                <mat-select
+                  formControlName="vertragstype"
+                  panelClass="drop-down"
+                >
+                  <mat-option
+                    *ngFor="let vert of vertragsTypOptions"
+                    [value]="vert"
+                  >
+                    {{ vert }}
+                  </mat-option>
+                </mat-select>
+              </mat-form-field>
+            </div>
+
+            <div class="field-row">
+              <mat-label class="field-label">Anmerkung</mat-label>
+              <mat-form-field appearance="outline" class="flex-field">
+                <input
+                  matInput
+                  formControlName="anmerkung"
+                  maxlength="30"
+                  class="input-height"
+                  id="form-field-margin"
+                />
+              </mat-form-field>
+            </div>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ... -->
+
+  <!-- Bottom Section: Product Positions and Details -->
+  <div class="details-panes-container">
+    <!-- Left: Product Positions Tree -->
+    <div class="vertragspositionen-container">
+      <div class="positionen-header">
+        <button
+          [matMenuTriggerFor]="treeMenu"
+          class="custom-menu menu-icon-left"
+          matTooltip="Optionen"
+          matTooltipPosition="below"
+        >
+          <mat-icon>menu</mat-icon>
+        </button>
+        <mat-menu #treeMenu="matMenu" class="option-menu">
+          <button mat-menu-item>
+            <i class="mdi mdi-order-alphabetical-ascending mdi-24px" aria-hidden="true"></i>Verbraucher sortieren
+          </button>
+        </mat-menu>
+        <span class="header-title">Vertragspositionen</span>
+        <button
+          type="button"
+          class="add-buchungspunkt-btn"
+          matTooltip="Vertragsposition hinzufügen"
+          (click)="addVertragsposition()"
+        >
+          <i class="mdi mdi-map-marker-plus mdi-24px getit-TreeItem-Icon"></i>
+        </button>
+      </div>
+      <div class="positionen-list scrollable-container">
+        <ng-container
+          *ngTemplateOutlet="
+            renderNode;
+            context: { $implicit: vertragspositionen, level: 1 }
+          "
+        ></ng-container>
+
+        <ng-template #renderNode let-nodes let-level="level">
+          <div *ngFor="let node of nodes">
+            <!-- ======================= FIXED CODE ======================= -->
+            <div
+              class="position-item"
+              [style.padding-left.px]="10 + (level - 1) * 40"
+              (click)="selectPosition(node)"
+              (dblclick)="toggleExpand(node, $event)"
+              [ngClass]="{ 'selected-item': node === selectedPosition }"
+            >
+              <!-- Custom icons for each level with dynamic color -->
+              <i
+                *ngIf="node.level === 1"
+                class="mdi mdi-map-marker mdi-16px position-icon location-row-icon getit-TreeItem-Icon"
+                [ngClass]="{
+                  'icon-active': node.aktiv,
+                  'icon-inactive': !node.aktiv
+                }"
+              ></i>
+              <i
+                *ngIf="node.level === 2"
+                class="mdi mdi-account mdi-16px position-icon"
+                [ngClass]="{
+                  'icon-active': node.aktiv,
+                  'icon-inactive': !node.aktiv
+                }"
+              ></i>
+              <i
+                *ngIf="node.level === 3"
+                class="mdi mdi-alarm mdi-16px position-icon"
+                [ngClass]="{
+                  'icon-active': node.aktiv,
+                  'icon-inactive': !node.aktiv
+                }"
+              ></i>
+
+              <div class="position-info">
+                <div
+                  class="position-title"
+                  [class.position-title-l1]="node.level === 1"
+                >{{ node.name }}</div>
+
+                <!-- Level 1: Produktposition -->
+                <div
+                  class="position-extra"
+                  [style.margin-left.px]="0"
+                  *ngIf="node.level === 1 && node.volumenStunden && (node.aktiv || node.isExpanded)"
+                >
+                  <i class="mdi mdi-file-tree mdi-16px inline-icon"></i>
+                  <span
+                    >Volumen €: <strong>{{ node.volumenEuro | number: "1.2-2" }}</strong></span
+                  >
+                  <span class="volumen"
+                    >Volumen Std.: <strong>{{ node.volumenStunden }}</strong></span
+                  >
+                  <span class="geplant"
+                    >Geplant: <strong>{{ node.stundenGeplant }}</strong></span
+                  >
+                </div>
+
+                <!-- Level 2: Verbraucher -->
+                <div
+                  class="position-extra"
+                  [style.margin-left.px]="0"
+                  *ngIf="node.level === 2 && node.volumenStunden && (node.aktiv || node.isExpanded)"
+                >
+                  <i class="mdi mdi-file-tree mdi-16px inline-icon"></i>
+                  <span
+                    >Volumen €: <strong>{{ node.volumenEuro | number: "1.2-2" }}</strong></span
+                  >
+                  <!-- <mat-icon class="inline-icon">sum</mat-icon> -->
+                  <span class="volumen">Gesamt: <strong>{{ node.volumenStunden }}</strong></span>
+                  <span class="geplant"
+                    >Geplant: <strong>{{ node.stundenGeplant }}</strong></span
+                  >
+                </div>
+
+                <!-- Level 3: Buchungspunkt -->
+                <!-- Always rendered so the row height matches the 2-line state.
+                     When the node is collapsed and inactive we hide the line
+                     with visibility:hidden, which keeps the reserved height. -->
+                <div
+                  class="position-extra position-extra-l3"
+                  [class.extra-hidden]="!(node.aktiv || node.isExpanded)"
+                  [style.margin-left.px]="0"
+                  *ngIf="node.level === 3"
+                >
+                  <span class="geplant"
+                    >Geplant: <strong>{{ node.stundenGeplant }}</strong></span
+                  >
+                </div>
+
+                <!-- Show dates for Buchungspunkt (Level 3) -->
+                <!-- <div class="position-dates" *ngIf="node.level === 3 && node.start && node.ende">
+      <mat-icon class="inline-icon">event</mat-icon>
+      Start: {{ node.start | date : "dd.MM.yyyy" }} – Ende:
+      {{ node.ende | date : "dd.MM.yyyy" }}
+    </div> -->
+              </div>
+
+              <!-- Add Verbraucher button on Level 1 -->
+              <button
+                type="button"
+                *ngIf="node.level === 1"
+                class="add-buchungspunkt-btn"
+                [class.disabled-btn]="!canAddVerbraucher(node)"
+                matTooltip="Verbraucher hinzufügen"
+                (click)="addVerbraucher(node, $event)"
+              >
+                <i class="mdi mdi-account-plus mdi-flip-h mdi-24px"></i>
+              </button>
+
+              <!-- Add Buchungspunkt button on Level 2 -->
+              <button
+                type="button"
+                *ngIf="node.level === 2"
+                class="add-buchungspunkt-btn"
+                [class.disabled-btn]="!canAddBuchungspunkt(node)"
+                matTooltip="Buchungspunkt hinzufügen"
+                (click)="addBuchungspunkt(node, $event)"
+              >
+                <i class="mdi mdi-alarm mdi-24px"></i>
+              </button>
+
+              <!-- Nothing shows for Level 3 -->
+            </div>
+
+            <div *ngIf="node.isExpanded && node.children?.length">
+              <ng-container
+                *ngTemplateOutlet="
+                  renderNode;
+                  context: { $implicit: node.children, level: level + 1 }
+                "
+              ></ng-container>
+            </div>
+          </div>
+        </ng-template>
+      </div>
+    </div>
+
+    <!-- Right: Selected Position Details -->
+    <div class="position-details-container" *ngIf="selectedPosition">
+      <div class="position-details-header">
+        <mat-toolbar color="primary" class="header-container">
+          <!-- ----------------header left------------------------ -->
+          <div class="header-left">
+            <!-- Show delete only for child rows -->
+            <button
+              *ngIf="
+                selectedPosition &&
+                (!selectedPosition.children ||
+                  selectedPosition.children.length === 0) &&
+                !selectedPosition.isPendingCreation &&
+                !isPositionFormEditable &&
+                !isVerbraucherFormEditable &&
+                !isChildFormEditable
+              "
+              (click)="openDeleteDialog()"
+              class="header-btn btn-loeschen"
+              matTooltip="Löschen"
+              matTooltipPosition="below"
+            >
+              <i class="mdi mdi-delete-forever mdi-24px" aria-hidden="true"></i>
+              <span>Löschen</span>
             </button>
             <button
-              *ngIf="isFormEditable"
+              *ngIf="
+                !isPositionFormEditable &&
+                !isVerbraucherFormEditable &&
+                !isChildFormEditable
+              "
+              [matMenuTriggerFor]="detailMenu"
+              class="custom-menu menu-icon-left"
+              matTooltip="Optionen"
+              matTooltipPosition="below"
+            >
+              <i class="mdi mdi-menu mdi-24px" aria-hidden="true"></i>
+            </button>
+            <mat-menu #detailMenu="matMenu" class="option-menu">
+              <button
+                mat-menu-item
+                *ngIf="selectedPosition?.typ === 'Vertragsposition'"
+              >
+                <i class="mdi mdi-file-restore mdi-24px" aria-hidden="true"></i>Reset
+              </button>
+              <button
+                mat-menu-item
+                *ngIf="selectedPosition?.typ === 'Verbraucher'"
+                (click)="openStundensatzAenderungDialog()"
+              >
+                <i class="mdi mdi-currency-eur mdi-24px" aria-hidden="true"></i>Stundensatzänderung
+              </button>
+              <button mat-menu-item>
+                <i class="mdi mdi-file-document mdi-24px" aria-hidden="true"></i>Logbuch
+              </button>
+            </mat-menu>
+            <button
+              *ngIf="
+                isPositionFormEditable ||
+                isVerbraucherFormEditable ||
+                isChildFormEditable
+              "
               type="button"
               mat-button
-              class="cancel-btn cancel-btn-header"
-              (click)="onCancel()"
-              [disabled]="saving"
+              class="cancel-btn-bottom"
+              (click)="onCancelPositionOrChild()"
+              matTooltip="Abbrechen"
+              matTooltipPosition="below"
             >
               <mat-icon>close</mat-icon>
               Abbrechen
             </button>
-            <button
-              [matMenuTriggerFor]="menu"
-              class="custom-menu menu-icon-right-top custom-menu-header"
-              *ngIf="!isFormEditable"
+          </div>
+          <!-- -------------------header center----------------------- -->
+          <div class="header-center">
+            <!-- Display 'Vertragsposition' for Level 1 items -->
+            <span
+              class="title"
+              *ngIf="selectedPosition?.typ === 'Vertragsposition'"
+              >Vertragsposition</span
             >
-              <mat-icon>menu</mat-icon>
-            </button>
-            <mat-menu #menu="matMenu" class="option-menu">
-              <button mat-menu-item>
-                <mat-icon>picture_as_pdf</mat-icon>Plan-lst Vergleich
-              </button>
-              <button mat-menu-item><mat-icon>article</mat-icon>Logbuch</button>
-            </mat-menu>
-          </div>
-          <h2 class="form-title">Verträge</h2>
-          <div>
-            <button
-              type="button"
-              mat-raised-button
-              class="save-btn save-btn-header"
-              (click)="onEditOrSubmit()"
-              [disabled]="saving"
+            <span class="title" *ngIf="selectedPosition?.typ === 'Verbraucher'"
+              >Verbraucher</span
             >
-              <mat-icon>{{ isFormEditable ? "check" : "edit" }}</mat-icon>
-              {{ isFormEditable ? "Speichern" : "Bearbeiten" }}
-            </button>
+            <span
+              class="title"
+              *ngIf="selectedPosition?.typ === 'Dokumentation'"
+              >Dokumentation</span
+            >
+            <span
+              class="title"
+              *ngIf="selectedPosition?.typ === 'Buchungspunkt'"
+              >Stundenplanung</span
+            >
           </div>
-        </div>
-      </div>
-  
-      <div class="form-content" *ngIf="!loading">
-        <form [formGroup]="vertragForm">
-          <div class="form-grid-container">
-            <!-- First Column -->
-            <div class="form-column">
-              <div class="field-row">
-                <mat-label class="required field-label">Vertragsname</mat-label>
-                <mat-form-field appearance="outline" class="flex-field">
-                  <input
-                    matInput
-                    formControlName="vertragsname"
-                    class="input-height"
-                  />
-                </mat-form-field>
-              </div>
-  
-              <div class="field-row">
-                <mat-label class="field-label">Vertragszusatz</mat-label>
-                <mat-form-field appearance="outline" class="flex-field">
-                  <input matInput formControlName="vertragszusatz"  class="input-height"/>
-                </mat-form-field>
-              </div>
-  
-              <div class="field-row">
-                <mat-label class="field-label">Vertragspartner</mat-label>
-                <mat-form-field appearance="outline" class="flex-field">
-                  <input matInput formControlName="vertragspartner" class="input-height"/>
-                </mat-form-field>
-              </div>
-  
-              <div class="field-row">
-                <mat-label class="field-label">Auftraggeber</mat-label>
-                <mat-form-field appearance="outline" class="flex-field">
-                  <input matInput formControlName="auftraggeber" class="input-height"/>
-                </mat-form-field>
-              </div>
-  
-              <div class="field-row">
-                <mat-label class="field-label"
-                  >Vertragsverantwortlicher</mat-label
-                >
-                <mat-form-field appearance="outline" class="flex-field" class="input-height">
-                  <mat-select formControlName="vertragsverantwortlicher" >
-                    <mat-option
-                      *ngFor="let person of verantwortlicherOptions"
-                      value=""
-                    >
-                      {{ person }}
-                    </mat-option>
-                  </mat-select>
-                </mat-form-field>
-              </div>
-  
-              <div class="field-row">
-                <mat-label class="field-label">Bezugsart</mat-label>
-                <mat-form-field appearance="outline" class="flex-field">
-                  <mat-select formControlName="bezugsart" class="input-height">
-                    <mat-option *ngFor="let bez of bezugsartenArray" value="" class="input-height">{{
-                      bez
-                    }}</mat-option>
-                  </mat-select>
-                </mat-form-field>
-              </div>
-  
-              <div class="field-row">
-                <mat-label class="field-label">ELAK</mat-label>
-                <mat-form-field appearance="outline" class="flex-field">
-                  <input matInput formControlName="elak" class="input-height"/>
-                </mat-form-field>
-              </div>
-  
-              <div class="field-row">
-                <mat-label class="field-label">Beschaffungsnummer</mat-label>
-                <mat-form-field appearance="outline" class="flex-field">
-                  <input matInput formControlName="beschaffungsnummer" class="input-height"/>
-                </mat-form-field>
-              </div>
-  
-              <div class="field-row checkbox-row">
-                <mat-label class="field-label field-label-aktiv"
-                  >LK-Vertrag</mat-label
-                >
-                <mat-checkbox
-                  formControlName="lkVertrag"
-                  class="check-abov"
-                ></mat-checkbox>
-              </div>
-            </div>
-  
-            <!-- Second Column -->
-            <div class="form-column form-column-container form-column-second">
-              <div class="field-row checkbox-row">
-                <mat-label
-                  class="field-label field-label-position field-label-aktiv"
-                  >Aktiv</mat-label
-                >
-                <mat-checkbox
-                  formControlName="aktiv"
-                  class="check-abov"
-                ></mat-checkbox>
-              </div>
-  
-              <div class="field-row">
-                <mat-label class="field-label">Erstellungsdatum</mat-label>
-                <mat-form-field appearance="outline" class="flex-field">
-                  <input
-                    matInput
-                    [matDatepicker]="erstellungsPicker"
-                    formControlName="erstellungsdatum"
-                    class="input-height"
-                  />
-                  <mat-datepicker-toggle
-                    matSuffix
-                    [for]="erstellungsPicker"
-                    class="date-abov-icon "
-                  ></mat-datepicker-toggle>
-                  <mat-datepicker #erstellungsPicker></mat-datepicker>
-                </mat-form-field>
-              </div>
-  
-              <div class="field-row">
-                <div class="date-pair-container">
-                  <mat-label class="field-label">Gültig von</mat-label>
-                  <mat-form-field appearance="outline" class="flex-field flex-field-start">
-                    <input
-                      matInput
-                      [matDatepicker]="startPicker"
-                      formControlName="start"
-                      class="start-input start-date input-height"
-                    />
-                    <mat-datepicker-toggle
-                      matSuffix
-                      [for]="startPicker"
-                      class="start-icon-first"
-                    ></mat-datepicker-toggle>
-                    <mat-datepicker #startPicker></mat-datepicker>
-                  </mat-form-field>
-                  <mat-label class="field-label bis-date">Bis</mat-label>
-                  <mat-form-field appearance="outline" class="flex-field">
-                    <input
-                      matInput
-                      formControlName="ende"
-                      [matDatepicker]="endPicker"
-                        class="input-height"
-                    />
-                    <mat-datepicker-toggle
-                      matSuffix
-                      [for]="endPicker"
-                      class="start-icon"
-                    ></mat-datepicker-toggle>
-                    <mat-datepicker #endPicker></mat-datepicker>
-                  </mat-form-field>
-                </div>
-              </div>
-  
-              <div class="field-row">
-                <mat-label class="field-label">Vertragssumme</mat-label>
-                <mat-form-field appearance="outline" class="flex-field">
-                  <input matInput formControlName="vertragssumme" type="number"  class="input-height" />
-                </mat-form-field>
-              </div>
-  
-              <div class="field-row">
-                <mat-label class="field-label">Auftragsreferenz</mat-label>
-                <mat-form-field appearance="outline" class="flex-field">
-                  <input matInput formControlName="auftragsreferenz"  class="input-height"/>
-                </mat-form-field>
-              </div>
-  
-              <div class="field-row field-row-rahmen">
-                <mat-label class="field-label field-label2"
-                  >Rahmenvertrag-GZ</mat-label
-                >
-                <mat-form-field appearance="outline" class="flex-field">
-                  <input
-                    matInput
-                    formControlName="rahmenvertragGZ"
-                    id="flex-field-rahmen"
-                     class="input-height"
-                  />
-                </mat-form-field>
-              </div>
-  
-              <div class="field-row field-label-margin">
-                <mat-label class="field-label ">Vertragstyp</mat-label>
-  
-                <mat-form-field appearance="outline" class="flex-field select-height">
-                  <mat-select formControlName="vertragstype"   class="input-height">
-                    <mat-option *ngFor="let vert of vertragsArray" value=""   class="input-height">{{
-                      vert
-                    }}</mat-option>
-                  </mat-select>
-                </mat-form-field>
-              </div>
-              <div class="field-row">
-                <mat-label class="field-label">Anmerkung</mat-label>
-                <mat-form-field appearance="outline" class="flex-field ">
-                  <textarea
-                    matInput
-                    formControlName="anmerkung"
-                    rows="2"
-                    id="form-field-margin"
-  
-                  ></textarea>
-                </mat-form-field>
-              </div>
-            </div>
-          </div>
-        </form>
-      </div>
-    </div>
-  
-    <!-- ... -->
-  
-    <!-- Bottom Section: Product Positions and Details -->
-    <div class="details-panes-container">
-      <!-- Left: Product Positions Tree -->
-      <div class="vertragspositionen-container">
-        <div class="positionen-header">
-          <button [matMenuTriggerFor]="menu" class="custom-menu menu-icon-left">
-            <mat-icon>menu</mat-icon>
-          </button>
-          <mat-menu #menu="matMenu" class="option-menu">
-            <button mat-menu-item>
-              <mat-icon>picture_as_pdf</mat-icon>Plan-lst Vergleich
-            </button>
-            <button mat-menu-item><mat-icon>article</mat-icon>Logbuch</button>
-          </mat-menu>
-          <span class="header-title">Vertragspositionen</span>
-          <mat-icon class="add-icon" (click)="addVertragsposition()"
-            >add_location_alt</mat-icon
-          >
-        </div>
-        <div class="positionen-list scrollable-container">
-          <div class="positionen-list-inner">
-          <ng-container
-            *ngTemplateOutlet="
-              renderNode;
-              context: { $implicit: vertragspositionen, level: 1 }
-            "
-          ></ng-container>
-          <!-- Bottom spacer: guarantees the last tree row is scrollable into
-               full view regardless of viewport height. -->
-          <div class="tree-bottom-spacer" aria-hidden="true"></div>
-          </div>
-  
-          <ng-template #renderNode let-nodes let-level="level">
-            <div *ngFor="let node of nodes">
-              <div
-                class="position-item"
-                [ngClass]="[
-                  'level-' + node.level,
-                  node === selectedPosition ? 'selected-item' : ''
-                ]"
-                [style.padding-left.px]="10 + (level - 1) * 24"
-                (click)="selectPosition(node)"
-                (dblclick)="toggleExpand(node, $event)"
-              >
-                <!-- Level icon (mdi) — replaces keyboard_arrow + mat-icon -->
-                <i
-                  class="mdi tree-level-icon"
-                  [ngClass]="{
-                    'mdi-map-marker': node.level === 1,
-                    'mdi-account': node.level === 2,
-                    'mdi-alarm': node.level === 3,
-                    'icon-active': node.aktiv,
-                    'icon-inactive': !node.aktiv
-                  }"
-                ></i>
-  
-                <div class="position-info">
-                  <div class="position-title">{{ node.name }}</div>
-  
-                  <!-- Level 1: Produktposition -->
-                  <div
-                    class="position-extra"
-                    *ngIf="node.level === 1 && node.volumenStunden"
-                  >
-                    <i class="mdi mdi-file-tree detail-icon"></i>
-                    <span>Volumen €: <strong>{{ node.volumenEuro | number : "1.2-2" }}</strong></span>
-                    <span class="volumen">Volumen Std.: <strong>{{ node.volumenStunden }}</strong></span>
-                    <span class="geplant">Geplant: <strong>{{ node.stundenGeplant }}</strong></span>
-                  </div>
 
-                  <!-- Level 2: Verbraucher -->
-                  <div
-                    class="position-extra"
-                    *ngIf="node.level === 2 && node.volumenStunden"
-                  >
-                    <i class="mdi mdi-file-tree detail-icon"></i>
-                    <span>Volumen €: <strong>{{ node.volumenEuro | number : "1.2-2" }}</strong></span>
-                    <span class="volumen">Gesamt: <strong>{{ node.volumenStunden }}</strong></span>
-                    <span class="geplant">Geplant: <strong>{{ node.stundenGeplant }}</strong></span>
-                  </div>
-
-                  <!-- Level 3: Buchungspunkt -->
-                  <div class="position-extra" *ngIf="node.level === 3">
-                    <i class="mdi mdi-file-tree detail-icon"></i>
-                    <span class="geplant">Geplant: <strong>{{ node.stundenGeplant }}</strong></span>
-                  </div>
-  
-                  <!-- Show dates for Buchungspunkt (Level 3) -->
-                  <!-- <div class="position-dates" *ngIf="node.level === 3 && node.start && node.ende">
-        <mat-icon class="inline-icon">event</mat-icon>
-        Start: {{ node.start | date : "dd.MM.yyyy" }} – Ende:
-        {{ node.ende | date : "dd.MM.yyyy" }}
-      </div> -->
-                </div>
-  
-                <!-- Add verbraucher icon only for Level 1 (flipped horizontally) -->
-                <i
-                  class="mdi mdi-account-plus mdi-flip-h sync-icon"
-                  *ngIf="node.level === 1"
-                  [ngClass]="{ 'disabled-icon': !canAddVerbraucher(node) }"
-                  (click)="addVerbraucher(node, $event)"
-                ></i>
-
-                <!-- Add buchungspunkt icon only for Level 2 -->
-                <i
-                  class="mdi mdi-alarm-plus sync-icon"
-                  *ngIf="node.level === 2"
-                  [ngClass]="{ 'disabled-icon': !canAddBuchungspunkt(node) }"
-                  (click)="addBuchungspunkt(node, $event)"
-                ></i>
-              </div>
-  
-              <div *ngIf="node.isExpanded && node.children?.length">
-                <ng-container
-                  *ngTemplateOutlet="
-                    renderNode;
-                    context: { $implicit: node.children, level: level + 1 }
-                  "
-                ></ng-container>
-              </div>
-            </div>
-          </ng-template>
-        </div>
-      </div>
-  
-      <!-- Right: Selected Position Details -->
-      <div class="position-details-container" *ngIf="selectedPosition">
-        <div class="position-details-header">
-          <mat-toolbar color="primary" class="header-container">
-            <!-- ----------------header left------------------------ -->
-            <div class="header-left">
-              <!-- Show delete only for child rows -->
-         <button
-    *ngIf="
-      selectedPosition &&
-      (!selectedPosition.children || selectedPosition.children.length === 0) &&
-      !selectedPosition.isPendingCreation
-    "
-    (click)="openDeleteDialog()"
-    class="menu-icon-left"
-  >
-    <mat-icon class="child-icon">delete</mat-icon>
-  </button>
-              <button
-                [matMenuTriggerFor]="menu"
-                class="custom-menu menu-icon-left"
-              >
-                <mat-icon>menu</mat-icon>
-              </button>
-              <mat-menu #menu="matMenu" class="option-menu">
-                <button mat-menu-item>
-                  <mat-icon>picture_as_pdf</mat-icon>Plan-lst Vergleich
-                </button>
-                <button mat-menu-item><mat-icon>article</mat-icon>Logbuch</button>
-              </mat-menu>
-              <button
-      *ngIf="
-        isPositionFormEditable || isVerbraucherFormEditable || isChildFormEditable
-      "
-      type="button"
-      mat-button
-      class="cancel-btn-bottom"
-      (click)="onCancelPositionOrChild()"
-    >
-      <mat-icon>close</mat-icon>
-      Abbrechen
-    </button>
-  </div>
-            <!-- -------------------header center----------------------- -->
-            <div class="header-center">
-              <!-- Display 'Vertragsposition' for Level 1 items -->
-              <span
-                class="title"
-                *ngIf="selectedPosition?.typ === 'Vertragsposition'"
-                >Vertragsposition</span
-              >
-              <span class="title" *ngIf="selectedPosition?.typ === 'Verbraucher'"
-                >Verbraucher</span
-              >
-              <span
-                class="title"
-                *ngIf="selectedPosition?.typ === 'Dokumentation'"
-                >Dokumentation</span
-              >
-              <span
-                class="title"
-                *ngIf="selectedPosition?.typ === 'Buchungspunkt'"
-                >Buchungspunkt</span
-              >
-            </div>
-  
-            <!-- ----------------header right-------------------------- -->
-            <!-- In the position-details-header section, replace the header-right button -->
-            <div class="header-right">
-              <button
-                (click)="onEditOrSubmitPositionOrChild()"
-                id="menu-icon-right"
-                mat-button
-              >
-                <mat-icon>
-                  {{
-                    selectedPosition?.typ === "Vertragsposition"
-                      ? isPositionFormEditable
-                        ? "check"
-                        : "edit"
-                      : selectedPosition?.typ === "Verbraucher"
-                      ? isVerbraucherFormEditable
-                        ? "check"
-                        : "edit"
-                      : isChildFormEditable
-                      ? "check"
-                      : "edit"
-                  }}
-                </mat-icon>
-                {{
-                  selectedPosition?.typ === "Vertragsposition"
+          <!-- ----------------header right-------------------------- -->
+          <!-- In the position-details-header section, replace the header-right button -->
+          <div class="header-right">
+            <button
+              (click)="onEditOrSubmitPositionOrChild()"
+              id="menu-icon-right"
+              mat-button
+              [matTooltip]="
+                (selectedPosition?.typ === 'Vertragsposition'
+                  ? isPositionFormEditable
+                  : selectedPosition?.typ === 'Verbraucher'
+                    ? isVerbraucherFormEditable
+                    : isChildFormEditable)
+                  ? 'Speichern'
+                  : 'Bearbeiten'
+              "
+              matTooltipPosition="below"
+            >
+              <i
+                class="mdi mdi-24px"
+                [class.mdi-check]="
+                  selectedPosition?.typ === 'Vertragsposition'
                     ? isPositionFormEditable
-                      ? "Speichern"
-                      : "Bearbeiten"
-                    : selectedPosition?.typ === "Verbraucher"
+                    : selectedPosition?.typ === 'Verbraucher'
+                      ? isVerbraucherFormEditable
+                      : isChildFormEditable
+                "
+                [class.mdi-lead-pencil]="
+                  !(selectedPosition?.typ === 'Vertragsposition'
+                    ? isPositionFormEditable
+                    : selectedPosition?.typ === 'Verbraucher'
+                      ? isVerbraucherFormEditable
+                      : isChildFormEditable)
+                "
+                aria-hidden="true"
+              ></i>
+              {{
+                selectedPosition?.typ === "Vertragsposition"
+                  ? isPositionFormEditable
+                    ? "Speichern"
+                    : "Bearbeiten"
+                  : selectedPosition?.typ === "Verbraucher"
                     ? isVerbraucherFormEditable
                       ? "Speichern"
                       : "Bearbeiten"
                     : isChildFormEditable
-                    ? "Speichern"
-                    : "Bearbeiten"
-                }}
-              </button>
-            </div>
-          </mat-toolbar>
-        </div>
-        <!-- ======================= Form for Parent Row ======================= -->
-        <div
-          class="position-details-content position-details-container parent-container"
-          *ngIf="selectedPosition?.typ === 'Vertragsposition'"
-        >
-          <mat-card>
-            <mat-card-content>
-              <form
-                [formGroup]="positionDetailForm"
-                class="vertical-form Produktposition-margin"
+                      ? "Speichern"
+                      : "Bearbeiten"
+              }}
+            </button>
+          </div>
+        </mat-toolbar>
+      </div>
+      <!-- ======================= Form for Parent Row ======================= -->
+      <div
+        class="position-details-content position-details-container parent-container"
+        *ngIf="selectedPosition?.typ === 'Vertragsposition'"
+      >
+        <mat-card>
+          <mat-card-content>
+            <form
+              [formGroup]="positionDetailForm"
+              class="vertical-form Produktposition-margin"
+            >
+              <!-- First Line - Aktiv Checkbox -->
+              <div class="form-row checkbox-row-bottom">
+                <mat-label class="field-label field-label-aktiv"
+                  >Aktiv</mat-label
+                >
+
+                <mat-checkbox
+                  formControlName="aktiv"
+                  class="checkbox-level1"
+                ></mat-checkbox>
+              </div>
+
+              <!-- Second Line - Produkteposition Input -->
+              <div class="form-row">
+                <mat-label class="field-label required">Positionsbezeichnung</mat-label>
+                <mat-form-field appearance="outline" class="form-field"
+                  [class.invalid-required]="positionSubmitAttempted && positionDetailForm.get('positionsbezeichnung')?.invalid">
+                  <input matInput formControlName="positionsbezeichnung" maxlength="30" />
+                </mat-form-field>
+              </div>
+
+              <!-- Third Line - Position Type Input -->
+              <div class="form-row">
+                <mat-label class="field-label required">Planungsjahr</mat-label>
+                <mat-form-field appearance="outline" class="form-field"
+                  [class.invalid-required]="positionSubmitAttempted && positionDetailForm.get('planungsjahr')?.invalid">
+                  <input matInput formControlName="planungsjahr" maxlength="30" />
+                </mat-form-field>
+              </div>
+
+              <!-- Fourth Line - Position Type Input -->
+              <div class="form-row">
+                <mat-label class="field-label">Volumen [Stunden]</mat-label>
+                <mat-form-field appearance="outline" class="form-field">
+                  <input matInput formControlName="volumen" maxlength="30" />
+                </mat-form-field>
+              </div>
+
+              <!-- Fifth Line - Position Type Input -->
+              <div class="form-row">
+                <mat-label class="field-label required">Volumen [Euro]</mat-label>
+                <mat-form-field appearance="outline" class="form-field"
+                  [class.invalid-required]="positionSubmitAttempted && positionDetailForm.get('volumenEuro')?.invalid">
+                  <input matInput formControlName="volumenEuro" maxlength="30" />
+                </mat-form-field>
+              </div>
+              <!-- Sixth Line - Aktiv Checkbox -->
+              <div class="form-row checkbox-row-bottom jahr-filed">
+                <mat-label class="field-label field-label-aktiv"
+                  >Jahresübertrag</mat-label
+                >
+                <mat-checkbox
+                  formControlName="jahresuebertrag"
+                  class="checkbox-level1 jahr-check"
+                ></mat-checkbox>
+              </div>
+              <!-- seventh Line - Position Type Input -->
+              <!-- In positionDetailForm section -->
+              <div class="form-row">
+                <mat-label class="field-label"
+                  >Rollenbez.Rahmenvertrag</mat-label
+                >
+                <mat-form-field appearance="outline" class="form-field">
+                  <mat-select
+                    formControlName="rollenbezRahmenvertrag"
+                    panelClass="drop-down-bottom"
+                  >
+                    <mat-option
+                      *ngFor="let rolle of rollenbezeichnungOptions"
+                      [value]="rolle"
+                    >
+                      {{ rolle }}
+                    </mat-option>
+                  </mat-select>
+                </mat-form-field>
+              </div>
+
+              <!-- Ninth Line - Marking Input -->
+              <div class="form-row">
+                <mat-label class="field-label">Anmerkung</mat-label>
+                <mat-form-field appearance="outline">
+                  <input matInput formControlName="anmerkung" maxlength="30" />
+                </mat-form-field>
+              </div>
+            </form>
+          </mat-card-content>
+        </mat-card>
+      </div>
+      <!-- ======================= Form for Verbraucher (Level 2) ======================= -->
+      <div
+        class="position-details-content position-details-container"
+        *ngIf="selectedPosition?.typ === 'Verbraucher'"
+      >
+        <mat-card>
+          <mat-card-content>
+            <form
+              [formGroup]="verbraucherDetailForm"
+              class="vertical-form parent2-position"
+            >
+              <!-- Aktiv Checkbox -->
+              <div class="form-row">
+                <mat-label class="field-label width2">Aktiv</mat-label>
+                <div class="flex-field aktiv-bottom">
+                  <!-- <mat-label class="field-label-aktiv2">Aktiv</mat-label> -->
+
+                  <mat-checkbox formControlName="aktiv"></mat-checkbox>
+                </div>
+              </div>
+
+              <!-- Verbrauchertyp -->
+              <div class="form-row">
+                <mat-label class="field-label width required">Verbrauchertyp</mat-label>
+                <mat-form-field appearance="outline" class="form-field"
+                  [class.invalid-required]="verbraucherSubmitAttempted && verbraucherDetailForm.get('verbraucherTyp')?.invalid">
+                  <mat-select
+                    formControlName="verbraucherTyp"
+                    panelClass="drop-down-bottom"
+                  >
+                    <mat-option
+                      [value]="verb"
+                      *ngFor="let verb of verbraucherArray"
+                      >{{ verb }}</mat-option
+                    >
+                  </mat-select>
+                </mat-form-field>
+              </div>
+
+              <!-- Verbraucher (Sachmittel only) -->
+              <div
+                class="form-row"
+                *ngIf="verbraucherDetailForm.get('verbraucherTyp')?.value === 'Sachmittel'"
               >
-                <!-- First Line - Aktiv Checkbox -->
-                <div class="form-row checkbox-row">
-                  <mat-label class="field-label field-label-aktiv"
-                    >Aktiv</mat-label
+                <mat-label class="field-label width required">Verbraucher</mat-label>
+                <mat-form-field appearance="outline" class="form-field"
+                  [class.invalid-required]="verbraucherSubmitAttempted && verbraucherDetailForm.get('verbraucher')?.invalid">
+                  <input matInput formControlName="verbraucher" maxlength="30" />
+                </mat-form-field>
+              </div>
+
+              <!-- Person -->
+              <!-- Person field with arrow in same row -->
+              <div
+                class="form-row-arrow"
+                *ngIf="verbraucherDetailForm.get('verbraucherTyp')?.value === 'Personal'"
+              >
+                <div class="form-row person-field-container">
+                  <mat-label class="field-label width required">Person</mat-label>
+                  <mat-form-field
+                    appearance="outline"
+                    class="form-field person-width"
+                    [class.invalid-required]="verbraucherSubmitAttempted && verbraucherDetailForm.get('person')?.invalid"
                   >
-  
-                  <mat-checkbox formControlName="aktiv"  class="checkbox-level1 "></mat-checkbox>
-                </div>
-  
-                <!-- Second Line - Produkteposition Input -->
-                <div class="form-row">
-                  <mat-label class="field-label">Positionsbezeichnung</mat-label>
-                  <mat-form-field appearance="outline" class="form-field">
-                    <input matInput formControlName="positionsbezeichnung" />
-                  </mat-form-field>
-                </div>
-  
-                <!-- Third Line - Position Type Input -->
-                <div class="form-row">
-                  <mat-label class="field-label">Planungsjahr</mat-label>
-                  <mat-form-field appearance="outline" class="form-field">
-                    <input matInput formControlName="planungsjahr" />
-                  </mat-form-field>
-                </div>
-  
-                <!-- Fourth Line - Position Type Input -->
-                <div class="form-row form-row-volumen">
-                  <mat-label class="field-label width3"
-                    >Volumen [Stunden]</mat-label
-                  >
-                  <mat-form-field appearance="outline" class="form-field">
-                    <input matInput formControlName="volumen" />
-                  </mat-form-field>
-                </div>
-  
-                <!-- Fifth Line - Position Type Input -->
-                <div class="form-row">
-                  <mat-label class="field-label">Volumen [Euro]</mat-label>
-                  <mat-form-field appearance="outline" class="form-field">
-                    <input matInput formControlName="volumenEuro" />
-                  </mat-form-field>
-                </div>
-                <!-- Sixth Line - Aktiv Checkbox -->
-                <div class="form-row checkbox-row">
-                  <mat-label class="field-label field-label-aktiv"
-                    >Jahresübertrag</mat-label
-                  >
-                  <mat-checkbox formControlName="jahresuebertrag" class="checkbox-level1"></mat-checkbox>
-                </div>
-                <!-- seventh Line - Position Type Input -->
-                <div class="form-row">
-                  <mat-label class="field-label"
-                    >Rollenbez.Rahmenvertrag</mat-label
-                  >
-                  <mat-form-field appearance="outline" class="form-field">
-                    <input matInput formControlName="rollenbezRahmenvertrag" />
-                  </mat-form-field>
-                </div>
-  
-                <!-- Ninth Line - Marking Input -->
-                <div class="form-row">
-                  <mat-label class="field-label">Anmerkung</mat-label>
-                  <mat-form-field appearance="outline">
-                    <input matInput formControlName="anmerkung" />
-                  </mat-form-field>
-                </div>
-              </form>
-            </mat-card-content>
-          </mat-card>
-        </div>
-        <!-- ======================= Form for Verbraucher (Level 2) ======================= -->
-        <div
-          class="position-details-content position-details-container"
-          *ngIf="selectedPosition?.typ === 'Verbraucher'"
-        >
-          <mat-card>
-            <mat-card-content>
-              <form [formGroup]="verbraucherDetailForm" class="vertical-form parent2-position">
-                <!-- Aktiv Checkbox -->
-                <div class="form-row">
-                  <mat-label class="field-label width2 field-label-aktiv"
-                    >Aktiv</mat-label
-                  >
-                  <div class="flex-field">
-                    <!-- <mat-label class="field-label-aktiv2">Aktiv</mat-label> -->
-  
-                    <mat-checkbox formControlName="aktiv"></mat-checkbox>
-                  </div>
-                </div>
-  
-                <!-- Verbrauchertyp -->
-                <div class="form-row">
-                  <mat-label class="field-label width">Verbrauchertyp</mat-label>
-                  <mat-form-field appearance="outline" class="form-field">
-                    <mat-select formControlName="verbraucherTyp">
+                    <mat-select
+                      formControlName="person"
+                      panelClass="drop-down-bottom"
+                    >
                       <mat-option
-                        value=""
-                        *ngFor="let verb of verbraucherArray"
-                        >{{ verb }}</mat-option
+                        *ngFor="let person of verantwortlicherOptions"
+                        [value]="person.id"
                       >
+                        {{ person.fullName }}
+                      </mat-option>
                     </mat-select>
                   </mat-form-field>
                 </div>
-  
-                <!-- Person -->
-                <div class="form-row form-row-arrow">
-                  <mat-label class="field-label width">Person</mat-label>
-                  <mat-form-field appearance="outline" class="form-field">
-                    <input matInput formControlName="person" class="person-input" />
-                  </mat-form-field>
-  
-                  <button
-                    mat-icon-button
-                    color="primary"
-                    (click)="goToPersonPage()"
-                    id="pesonPageIcon"
-                  >
-                    <mat-icon>keyboard_double_arrow_right</mat-icon>
-                  </button>
-                </div>
-  
-                <!-- Stundensatz -->
-                <div class="form-row">
-                  <mat-label class="field-label width"
-                    >Stundensatz inkl. UST.</mat-label
-                  >
-                  <mat-form-field appearance="outline" class="form-field">
-                    <input matInput formControlName="stundensatz" type="number" />
-                  </mat-form-field>
-                </div>
-  
-                <!-- Stundenkontingent -->
-                <div class="form-row">
-                  <mat-label class="field-label width"
-                    >Stundenkontingent jährlich</mat-label
-                  >
-                  <mat-form-field appearance="outline" class="form-field">
-                    <input
-                      matInput
-                      formControlName="stundenkontingent"
-                      type="number"
-                    />
-                  </mat-form-field>
-                </div>
-  
-                <!-- Volumen Euro -->
-                <div class="form-row">
-                  <mat-label class="field-label width">Volumen [Euro]</mat-label>
-                  <mat-form-field appearance="outline" class="form-field">
-                    <input matInput formControlName="volumenEuro" type="number" />
-                  </mat-form-field>
-                </div>
-  
-                <!-- sundentsatz.Anderung -->
-                <div class="form-row stundensatz-row">
-                  <mat-label class="field-label width" id="form-field-margin"
-                    >Stundensatz-Änderung</mat-label
-                  >
-                  <mat-form-field appearance="outline" class="form-field">
-                    <textarea
-                      matInput
-                      formControlName="StundensatzAnderung"
-                      rows="2"
-                      [disabled]="!isEditing"
-                      id="form-field-margin2"
-                    >
-                    </textarea>
-                  </mat-form-field>
-                </div>
-                <div class="form-row">
-                  <mat-label class="field-label width margin">
-                    Anmerkung</mat-label
-                  >
-                  <mat-form-field appearance="outline" class="form-field margin">
-                    <input matInput formControlName="anmerkung" />
-                  </mat-form-field>
-                </div>
-              </form>
-            </mat-card-content>
-          </mat-card>
-        </div>
-        <!-- ======================= Form for Third level ======================= -->
-        <div
-          class="position-details-content position-details-container"
-          *ngIf="
-            selectedPosition?.typ === 'Dokumentation' ||
-            selectedPosition?.typ === 'Buchungspunkt'
-          "
-        >
-          <mat-card>
-            <form [formGroup]="childDetailForm" class="child-detail-form  parent-position3">
-              <div class="third-level-form">
+                <button
+                  mat-icon-button
+                  color="primary"
+                  (click)="goToPersonPage()"
+                  class="person-arrow-btn"
+                  matTooltip="Zur Person"
+                  matTooltipPosition="below"
+                >
+                  <mat-icon>keyboard_double_arrow_right</mat-icon>
+                </button>
+              </div>
+              <!-- Stundensatz -->
+              <div
+                class="form-row"
+                *ngIf="verbraucherDetailForm.get('verbraucherTyp')?.value === 'Personal'"
+              >
+                <mat-label class="field-label width required"
+                  >Stundensatz inkl. UST.</mat-label
+                >
+                <mat-form-field appearance="outline" class="form-field"
+                  [class.invalid-required]="verbraucherSubmitAttempted && verbraucherDetailForm.get('stundensatz')?.invalid">
+                  <input matInput formControlName="stundensatz" type="number" maxlength="30" />
+                </mat-form-field>
+              </div>
+
+              <!-- Stundenkontingent -->
+              <div
+                class="form-row"
+                *ngIf="verbraucherDetailForm.get('verbraucherTyp')?.value === 'Personal'"
+              >
+                <mat-label class="field-label width required"
+                  >Stundenkontingent jährlich</mat-label
+                >
+                <mat-form-field appearance="outline" class="form-field"
+                  [class.invalid-required]="verbraucherSubmitAttempted && verbraucherDetailForm.get('stundenkontingent')?.invalid">
+                  <input
+                    matInput
+                    formControlName="stundenkontingent"
+                    type="number"
+                    maxlength="30"
+                  />
+                </mat-form-field>
+              </div>
+
+              <!-- Volumen Euro -->
+              <div class="form-row">
+                <mat-label class="field-label width required">Volumen [Euro]</mat-label>
+                <mat-form-field appearance="outline" class="form-field"
+                  [class.invalid-required]="verbraucherSubmitAttempted && verbraucherDetailForm.get('volumenEuro')?.invalid">
+                  <input matInput formControlName="volumenEuro" type="number" maxlength="30" />
+                </mat-form-field>
+              </div>
+
+              <!-- Stundensatz-Änderung — only on saved records, never while creating -->
+              <div
+                class="form-row stundensatz-row"
+                *ngIf="!selectedPosition?.isNew && !selectedPosition?.isPendingCreation"
+              >
+                <mat-label class="field-label width">Stundensatz-Änderung</mat-label>
+                <mat-form-field appearance="outline" class="form-field">
+                  <textarea
+                    matInput
+                    formControlName="StundensatzAnderung"
+                    rows="2"
+                    maxlength="50"
+                  ></textarea>
+                </mat-form-field>
+              </div>
+
+              <div class="form-row">
+                <mat-label class="field-label width">
+                  Anmerkung</mat-label
+                >
+                <mat-form-field appearance="outline" class="form-field">
+                  <input matInput formControlName="anmerkung" maxlength="30" />
+                </mat-form-field>
+              </div>
+            </form>
+          </mat-card-content>
+        </mat-card>
+      </div>
+      <!-- ======================= Form for Third level ======================= -->
+      <div
+        class="position-details-content position-details-container"
+        *ngIf="
+          selectedPosition?.typ === 'Dokumentation' ||
+          selectedPosition?.typ === 'Buchungspunkt'
+        "
+      >
+        <mat-card>
+          <form
+            [formGroup]="childDetailForm"
+            class="child-detail-form parent-position3"
+          >
+            <div class="third-level-form">
               <!-- Checkbox Aktiv -->
-              <div class="form-row form-row-third checkbox-row" id="display-none">
+              <div
+                class="form-row form-row-third checkbox-row"
+                id="display-none"
+              >
                 <mat-checkbox formControlName="aktiv">Aktiv</mat-checkbox>
               </div>
-  
+
               <!-- Produkt -->
               <div class="form-row form-row-third">
-                <mat-label class="field-label">Produkt</mat-label>
+                <mat-label class="field-label produkt-label">Produkt</mat-label>
                 <mat-form-field appearance="outline">
-                  <mat-select formControlName="produkt" class="child-input">
+                  <mat-select
+                    formControlName="produkt"
+                    class="child-input"
+                    panelClass="drop-down-bottom"
+                  >
                     <mat-option *ngFor="let p of vertragList" [value]="p.id">
                       {{ p.produktname }}
                     </mat-option>
                   </mat-select>
                 </mat-form-field>
               </div>
-  
+
               <!-- Produktposition -->
               <div class="form-row form-row-third">
-                <mat-label class="field-label">Produktposition</mat-label>
-                <mat-form-field appearance="outline">
+                <mat-label class="field-label required">Produktposition</mat-label>
+                <mat-form-field appearance="outline"
+                  [class.invalid-required]="childSubmitAttempted && childDetailForm.get('produktposition')?.invalid">
                   <mat-select
                     formControlName="produktposition"
                     class="child-input"
+                    panelClass="drop-down-bottom"
                   >
                     <mat-option
                       *ngFor="let pos of vertragPositionTypenList"
@@ -731,36 +981,39 @@
                   </mat-select>
                 </mat-form-field>
               </div>
-  
+
               <!-- Stunden geplant -->
               <div class="form-row form-row-third">
-                <mat-label class="field-label">Stunden geplant</mat-label>
-                <mat-form-field appearance="outline">
+                <mat-label class="field-label required">Stunden geplant</mat-label>
+                <mat-form-field appearance="outline"
+                  [class.invalid-required]="childSubmitAttempted && childDetailForm.get('stundenGeplant')?.invalid">
                   <input
                     matInput
                     type="number"
                     formControlName="stundenGeplant"
+                    maxlength="30"
                     class="child-input"
                   />
                 </mat-form-field>
               </div>
-  
+
               <!-- Anmerkung -->
               <div class="form-row form-row-third">
-                <mat-label class="field-label">Anmerkung</mat-label>
+                <mat-label class="field-label anmerkung-label">Anmerkung</mat-label>
                 <mat-form-field appearance="outline">
                   <input
                     matInput
                     type="text"
                     formControlName="anmerkung"
+                    maxlength="30"
                     class="child-input"
                   />
                 </mat-form-field>
               </div>
-              </div>
-            </form>
-          </mat-card>
-        </div>
+            </div>
+          </form>
+        </mat-card>
       </div>
     </div>
   </div>
+</div>

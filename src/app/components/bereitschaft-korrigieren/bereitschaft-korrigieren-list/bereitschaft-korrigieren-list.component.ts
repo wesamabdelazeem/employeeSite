@@ -1,21 +1,20 @@
-import { AfterViewInit, Component, inject, Renderer2, ViewChild } from '@angular/core';
- import { LiveAnnouncer } from '@angular/cdk/a11y';
-import { MatSort, MatSortModule, Sort } from '@angular/material/sort';
-import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
+import { Component, ElementRef, OnDestroy, OnInit } from '@angular/core';
+import { MatSortModule } from '@angular/material/sort';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { CommonModule, DatePipe } from '@angular/common';
-import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { CommonModule } from '@angular/common';
+import { MatDialogModule } from '@angular/material/dialog';
 import { FlexLayoutModule } from '@angular/flex-layout';
 import { MatButtonModule } from '@angular/material/button';
 import { MatMenuModule } from '@angular/material/menu';
-import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { DummyService } from '../../../services/dummy.service';
+import { Subject, Subscription } from 'rxjs';
+import { debounceTime } from 'rxjs/operators';
 import { BereitschaftKorrigierenService } from '../../../services/bereitschaft-korrigieren.service';
+import { NavigationRefreshService } from '../../../services/navigation-refresh.service';
 import { ApiPerson } from '../../../models/ApiPerson';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 @Component({
@@ -37,7 +36,7 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
   templateUrl: './bereitschaft-korrigieren-list.component.html',
   styleUrl: './bereitschaft-korrigieren-list.component.scss'
 })
-export class BereitschaftKorrigierenListComponent {
+export class BereitschaftKorrigierenListComponent implements OnInit,OnDestroy{
 
   displayedColumns: string[] = [
     'icon',
@@ -54,78 +53,131 @@ export class BereitschaftKorrigierenListComponent {
   isLoading: boolean = false;
   errorMessage: string = '';
 
-  sortState: { [key: string]: 'asc' | 'desc' } = {
-    nachname: 'asc',
-    vorname: 'asc',
-    mitarbeiterart: 'asc'
-  };
+  activeSortColumn: string = '';
+  sortDirection: 'asc' | 'desc' = 'asc';
+  selectedRowId: string | null = null;
+
+  /**
+   * Persisted in sessionStorage so view state survives the detail round-trip
+   * AND a browser refresh of this tab. Cleared via the sidebar refresh service.
+   */
+  private static readonly STORAGE_KEY = 'bereitschaftkorrigieren-list-state';
+  private static readonly SEARCH_DEBOUNCE_MS = 250;
+  private refreshSub?: Subscription;
+  private searchSub?: Subscription;
+  private searchInput$ = new Subject<void>();
 
   constructor(
     private router: Router,
-    private dummyService: DummyService,
-    private bereitschaftKorrigierenService  : BereitschaftKorrigierenService
-  ) {}
+    private bereitschaftKorrigierenService: BereitschaftKorrigierenService,
+    private host: ElementRef<HTMLElement>,
+    private refreshService: NavigationRefreshService,
+  ) {
+    const saved = this.readSavedState();
+    if (saved) {
+      this.searchTerm = saved.searchTerm;
+      this.showInactive = saved.showInactive;
+      this.activeSortColumn = saved.activeSortColumn;
+      this.sortDirection = saved.sortDirection;
+      this.selectedRowId = saved.selectedRowId;
+    }
+
+    this.refreshSub = this.refreshService.refresh$.subscribe((route) => {
+      if (route === '/bereitschaftkorrigieren') {
+        this.resetAndReload();
+      }
+    });
+  }
+
+  private readSavedState(): {
+    searchTerm: string;
+    showInactive: boolean;
+    activeSortColumn: string;
+    sortDirection: 'asc' | 'desc';
+    selectedRowId: string | null;
+  } | null {
+    try {
+      const raw = sessionStorage.getItem(BereitschaftKorrigierenListComponent.STORAGE_KEY);
+      return raw ? JSON.parse(raw) : null;
+    } catch {
+      return null;
+    }
+  }
+
+  private writeSavedState(): void {
+    try {
+      sessionStorage.setItem(
+        BereitschaftKorrigierenListComponent.STORAGE_KEY,
+        JSON.stringify({
+          searchTerm: this.searchTerm,
+          showInactive: this.showInactive,
+          activeSortColumn: this.activeSortColumn,
+          sortDirection: this.sortDirection,
+          selectedRowId: this.selectedRowId,
+        }),
+      );
+    } catch {
+      // ignore quota / disabled-storage errors
+    }
+  }
 
   ngOnInit(): void {
-    //this.loadDataFromJson();
+    this.searchSub = this.searchInput$
+      .pipe(debounceTime(BereitschaftKorrigierenListComponent.SEARCH_DEBOUNCE_MS))
+      .subscribe(() => {
+        this.applyFilter();
+        this.writeSavedState();
+      });
+
     this.loadPersonenData();
   }
 
-  loadPersonenData(){
+  private resetAndReload(): void {
+    this.searchTerm = '';
+    this.showInactive = false;
+    this.activeSortColumn = '';
+    this.sortDirection = 'asc';
+    this.selectedRowId = null;
+    try {
+      sessionStorage.removeItem(BereitschaftKorrigierenListComponent.STORAGE_KEY);
+    } catch {
+      // ignore
+    }
+    this.loadPersonenData();
+  }
+
+  loadPersonenData(): void {
     this.isLoading = true;
     this.errorMessage = '';
 
     this.bereitschaftKorrigierenService.getPersonen().subscribe({
       next: (data) => {
-        console.log('DATA', data);
-        this.attendanceData = this.transformData(data);
+        this.attendanceData = data;
         this.applyFilter();
         this.isLoading = false;
+        this.scrollToSelectedRow();
       },
       error: (error) => {
-        console.error('Error loading data from JSON:', error);
+        console.error('Error loading personen:', error);
         this.errorMessage = 'Fehler beim Laden der Daten';
         this.isLoading = false;
       }
     });
   }
 
-  loadDataFromJson(): void {
-    this.isLoading = true;
-    this.errorMessage = '';
-
-    this.dummyService.getPersonen().subscribe({
-      next: (data) => {
-        this.attendanceData = this.transformData(data);
-        this.applyFilter();
-        this.isLoading = false;
-      },
-      error: (error) => {
-        console.error('Error loading data from JSON:', error);
-        this.errorMessage = 'Fehler beim Laden der Daten';
-        this.isLoading = false;
-      }
-    });
+  ngOnDestroy(): void {
+    this.writeSavedState();
+    this.refreshSub?.unsubscribe();
+    this.searchSub?.unsubscribe();
+    this.searchInput$.complete();
   }
-
- private transformData(data: ApiPerson[]): ApiPerson[] {
-  return data.map(item => ({
-    ...item,
-    vorname: item.vorname ?? undefined,
-    nachname: item.nachname ?? undefined,
-    mitarbeiterart: item.mitarbeiterart ?? undefined,
-    rolle: item.rolle ?? undefined
-  }));
-}
-
-
-  ngOnDestroy(): void {}
   onCheckboxChange(): void {
     this.applyFilter();
+    this.writeSavedState();
   }
 
   filterdata(): void {
-    this.applyFilter();
+    this.searchInput$.next();
   }
 
  applyFilter(): void {
@@ -148,31 +200,12 @@ export class BereitschaftKorrigierenListComponent {
     this.dataSource.data = this.filteredData;
   }
 private applySorting(data: ApiPerson[]): ApiPerson[] {
-  const sortedField = Object.keys(this.sortState).find(field =>
-    this.sortState[field] === 'asc' || this.sortState[field] === 'desc'
-  );
+  if (!this.activeSortColumn) return data;
 
-  if (!sortedField) return data;
-
-  const direction = this.sortState[sortedField];
+  const field = this.activeSortColumn;
+  const direction = this.sortDirection;
 
   return [...data].sort((a, b) => {
-    let valueA = this.getSortValue(a, sortedField);
-    let valueB = this.getSortValue(b, sortedField);
-
-    if (valueA < valueB) return direction === 'asc' ? -1 : 1;
-    if (valueA > valueB) return direction === 'asc' ? 1 : -1;
-    return 0;
-  });
-}
-  getRowClass(row: ApiPerson): string {
-    return row.aktiv === false ? 'inactive-row' : '';
-  }
- toggleSort(field: string) {
-  this.sortState[field] = this.sortState[field] === 'asc' ? 'desc' : 'asc';
-
-  const direction = this.sortState[field];
-  const sorted = [...this.filteredData].sort((a, b) => {
     let valueA = this.getSortValue(a, field);
     let valueB = this.getSortValue(b, field);
 
@@ -180,8 +213,17 @@ private applySorting(data: ApiPerson[]): ApiPerson[] {
     if (valueA > valueB) return direction === 'asc' ? 1 : -1;
     return 0;
   });
-  this.filteredData = sorted;
+}
+ toggleSort(field: string) {
+  if (this.activeSortColumn === field) {
+    this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
+  } else {
+    this.activeSortColumn = field;
+    this.sortDirection = 'asc';
+  }
+  this.filteredData = this.applySorting(this.filteredData);
   this.dataSource.data = this.filteredData;
+  this.writeSavedState();
 }
 
 
@@ -213,18 +255,28 @@ private applySorting(data: ApiPerson[]): ApiPerson[] {
 
 
  getSortIcon(column: string): string {
-    if (this.sortState[column] === 'asc') {
-      return 'keyboard_arrow_up';
-    } else if (this.sortState[column] === 'desc') {
-      return 'keyboard_arrow_down';
-    }
-    return 'swap_vert';
+    if (this.activeSortColumn !== column) return '';
+    return this.sortDirection === 'asc' ? 'keyboard_arrow_up' : 'keyboard_arrow_down';
+  }
+
+  selectRow(row: ApiPerson): void {
+    this.selectedRowId = row.id ?? null;
   }
 
   goToDetails(row: ApiPerson): void {
-   // uiIndex is used because backend does not provide a unique identifier
-  console.log('Navigate to details:', row);
-
+    this.selectedRowId = row.id ?? null;
     this.router.navigate(['/bereitschaftkorrigieren', row.id]);
-}
+  }
+
+  private scrollToSelectedRow(): void {
+    if (!this.selectedRowId) return;
+    const id = this.selectedRowId;
+    setTimeout(() => {
+      const container = this.host.nativeElement.querySelector('.table-container') as HTMLElement | null;
+      const row = this.host.nativeElement.querySelector(`[data-row-id="${id}"]`) as HTMLElement | null;
+      if (!container || !row) return;
+      const targetTop = row.offsetTop - (container.clientHeight - row.clientHeight) / 2;
+      container.scrollTop = Math.max(0, targetTop);
+    });
+  }
 }

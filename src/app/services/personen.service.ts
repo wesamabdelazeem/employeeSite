@@ -11,7 +11,6 @@ import {ApiStempelzeit} from '../models/ApiStempelzeit';
 import {GetitRest3Service} from './getit-rest-3.service';
 import {map} from 'rxjs/operators';
 import {PersonHistoryEntry} from '../models/PersonHistoryEntry';
-import {MOCK_STEMPELZEIT_PERSONS} from '../mock/stempelzeit-list-2.mock';
 
 @Injectable({
   providedIn: 'root'
@@ -210,18 +209,6 @@ export class PersonenService {
                   nurNamen?: string): Observable<HttpResponse<ApiPerson[]>> {
     if(berechneteStunden === 'false' && nurNamen ==='false'){
       if (!this.cachedPersonsFalseBerechneteStundenFalseNurName$) {
-        // Inline mock — see src/app/mock/stempelzeit-list-2.mock.ts.
-        // Replace this block with the commented REST call below to
-        // re-enable the real backend.
-        this.cachedPersonsFalseBerechneteStundenFalseNurName$ = of(
-          new HttpResponse<ApiPerson[]>({
-            body: [...MOCK_STEMPELZEIT_PERSONS],
-            status: 200,
-            statusText: 'OK (mock)'
-          })
-        ).pipe(shareReplay(1));
-
-        /*
         this.cachedPersonsFalseBerechneteStundenFalseNurName$ = this.getitRestService.getPersonen(berechneteStunden,  nurNamen).pipe(
           map(persons => new HttpResponse<ApiPerson[]>({   // ← wrap in HttpResponse
             body: persons,
@@ -230,7 +217,6 @@ export class PersonenService {
           })),
           shareReplay(1)
         );
-        */
       }else {
         console.log('########### LOAD cachedPersonsFalseBerechneteStundenFalseNurName$ FROM CACHE', this.cachedPersonsFalseBerechneteStundenFalseNurName$);
       }

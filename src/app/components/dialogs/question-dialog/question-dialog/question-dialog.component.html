@@ -1,0 +1,21 @@
+<h2 mat-dialog-title class="custom-dialog-title">{{ data.title || 'Buchungslimit' }}</h2>
+<mat-dialog-content>
+  <div class="content-wrapper">
+    <p class="message-text">{{ data.message }}</p>
+    <label class="reason-label">{{ data.label || 'Begründung:' }}</label>
+    <textarea
+      class="reason-textarea"
+      [(ngModel)]="reason"
+      rows="4"
+      maxlength="500"
+    ></textarea>
+  </div>
+</mat-dialog-content>
+<mat-dialog-actions class="dialog-actions">
+  <button mat-button class="confirm-button" [disabled]="!reason.trim()" (click)="confirm()">
+    {{ data.confirmText || 'Buchen' }}
+  </button>
+  <button mat-button class="cancel-button" (click)="cancel()">
+    {{ data.cancelText || 'Abbrechen' }}
+  </button>
+</mat-dialog-actions>

@@ -1,0 +1,39 @@
+mat-dialog-content {
+  font-size: 16px;
+}
+
+mat-dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 4px;
+}
+
+.custom-dialog-title {
+  background-color: #2E4155;
+  color: white;
+  padding: 8px;
+  margin: 0;
+  font-size: 1.1rem;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  height: 48px;
+}
+
+.button-nein {
+  background-color: #2E4155 !important;
+  color: white !important;
+}
+
+.button-ja {
+  background-color: #338E9C !important;
+  color: white !important;
+}
+
+.content-main {
+  color: #000;
+  padding-top: 10px;
+  margin-top: 20px;
+}

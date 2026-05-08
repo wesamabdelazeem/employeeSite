@@ -105,8 +105,7 @@ export const QueryConst = {
 
 import { Inject } from '@angular/core';
 // Adjust path as needed
-import { Observable, from, of } from 'rxjs'
-import { MOCK_VERTRAG_STUNDENPLANUNG } from '../mock/vertrag-stundenplanung.mock';
+import { Observable, from } from 'rxjs'
 
 
 import { ApiPerson } from '../models/ApiPerson';
@@ -579,22 +578,10 @@ export class GetitRest3Service {
   }
 
   getVertragPositionVerbraucherStundenplanung(id: string): Observable<HttpResponse<ApiStundenplanung[]>> {
-    // Mocked — see src/app/mock/vertrag-stundenplanung.mock.ts.
-    // Replace with the commented REST call below to re-enable the
-    // real backend.
-    console.log('getVertragPositionVerbraucherStundenplanung mock for id', id);
-    const body = JSON.parse(JSON.stringify(MOCK_VERTRAG_STUNDENPLANUNG)) as any;
-    return of(new HttpResponse<ApiStundenplanung[]>({
-      body,
-      status: 200,
-      statusText: 'OK (mock)',
-    }));
-    /*
     return this.http.get<ApiStundenplanung[]>(`vertrag-position-verbraucher/${id}`, {
       observe: 'response',
       responseType: 'json'
     });
-    */
   }
 
 

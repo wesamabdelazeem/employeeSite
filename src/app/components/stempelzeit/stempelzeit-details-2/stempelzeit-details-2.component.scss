@@ -125,87 +125,84 @@
 }
 
 
-/* ------------------------------------------------------------------
-   Form layout — single grid column for labels, one for inputs, so
-   every label sits at the same right edge and every field starts at
-   the same left edge. Keeps the full form centered in the panel.
-   ------------------------------------------------------------------ */
-/* Label column has to be wide enough to hold the longest text without
-   wrapping — "Anmeldezeit[Stunde]:" is the long one (~165px). */
-$label-col-width: 180px;
-$form-row-gap: 12px;
-$form-col-gap: 14px;
-
 .stempelzeit-form {
   display: flex;
   flex-direction: column;
-  gap: $form-row-gap;
-  width: 100%;
-  max-width: 720px;
-  margin: 0 auto;
-  padding: 0 16px;
-  box-sizing: border-box;
+  gap: 8px;
+  width: 60%!important;
+  padding-left: 20px;
+  margin-left:45px ;
 }
-
 .icon-del{
   color: white;
   cursor: pointer!important;
 }
-
 .form-field-group {
-  display: grid;
-  grid-template-columns: $label-col-width 1fr;
+  display: flex;
   align-items: center;
-  column-gap: $form-col-gap;
-  width: 100%;
+  // gap: 20px;
+  position: relative;
+  left: 16%;
 }
-
-.full-width,
-.field-input {
-  width: 100% !important;
+@media(min-width: 1920px){
+  .form-field-group {
+    left: 12%;
+  }
+  .width{
+    width: 67%!important;
+  }
+  .time-section{
+    margin-left:0!important}
+  .date-picker-toggle{
+    position: relative!important;
+    right: 19px!important;
+  }
+  .anmerkung{
+    width:80%!important;
+  }
 }
-
+.full-width {
+  width: 70%!important;
+}
 .field-label {
   font-family: "Roboto", sans-serif;
   font-weight: 500;
   color: #333;
+  min-width: 100px;
   text-align: right;
   font-size: 14px;
-  padding-right: 4px;
 }
+.field-input {
+  flex: 1;
+}
+
 
 .time-section {
   display: flex;
   flex-direction: column;
-  gap: $form-row-gap;
-  margin: 0;
+  gap: 7px;
+  margin-left: 6px;
+
 }
 
 .time-group {
-  display: grid;
-  grid-template-columns: $label-col-width 1fr;
-  align-items: center;
-  column-gap: $form-col-gap;
-  width: 100%;
+  display: flex;
+  align-items: flex-start;
+  gap: 20px;
 }
 
 .time-label {
   font-family: "Roboto", sans-serif;
   font-weight: 500;
   color: #333;
+  min-width: 100px;
   text-align: right;
-  font-size: 14px;
-  padding-right: 4px;
-  margin-top: 0;
+  margin-top: 5px;
 }
 .time-inputs-horizontal {
   display: flex;
   gap: 30px;
   flex: 1;
-  /* Material outlined form fields put ~16px of internal padding before
-     the input text. Push the time-box row by the same amount so its
-     hour input lines up with the other field inputs. */
-  padding-left: 16px;
 }
 .time-column {
   display: flex;
@@ -442,6 +439,7 @@ mat-tree-node {
 
   &.selected {
     background-color: #e3f2fd;
+    border-left: 4px solid #2E4155;
   }
 }
 
@@ -467,38 +465,41 @@ mat-tree-node {
   background-color: #338E9C;
 
 }
-/* Wide-screen tweaks — keep the form centered and a touch wider, but
-   no per-field horizontal offsets (the grid handles alignment). */
-@media (min-width: 1920px) {
-  .stempelzeit-form { max-width: 820px; }
-}
 @media (min-width: 2560px) {
-  .stempelzeit-form { max-width: 920px; }
+  .form-field-group{
+    left: 8.5%;
+  }
+  .width{
+    width: 48%!important;
+  }
+  .datum{
+    width:290px!important
+  }
+  .date-picker-toggle{
+    position: relative!important;
+    right: 30px!important;
+  }
+  .anmerkung{
+    width:70%!important;
+  }
 }
-
-/* Tablet & phone — stack each row so the label sits ABOVE its input.
-   Using `grid-template-columns: 1fr` collapses both grid cells to a
-   single column without losing any of the existing field markup. */
 @media (max-width: 768px) {
-  .stempelzeit-form {
-    max-width: 100%;
-    padding: 0 12px;
+  .time-section{
+    margin-left: 44px;
   }
-  .form-field-group,
-  .time-group {
-    grid-template-columns: 1fr;
-    align-items: stretch;
-    row-gap: 4px;
+  .time-label{
+    font-size: 12px;
+    position: relative;
+    right: 25px;
   }
-  .field-label,
-  .time-label {
-    text-align: left;
-    font-size: 13px;
-    padding-right: 0;
+  .field-label{
+    font-size: 12px;
   }
-  .time-inputs-horizontal {
-    flex-wrap: wrap;
-    gap: 12px;
+  .form-field-group{
+    width: 400px;
+  }
+  .width{
+    width: 62%!important;
   }
 }
 .alarm-btn mat-icon {
@@ -606,21 +607,14 @@ div.mat-mdc-select-panel {
 .time-value:has(input:disabled) {
   opacity: 0.6;
 }
-/* Zeittyp dropdown — fixed trigger width so it doesn't grow with the
-   browser. Wide enough for the longest option text. The left edge
-   still aligns with every other field via the grid input column. */
-.zeit-width {
-  width: 480px;
-  max-width: 100%;
-  flex-shrink: 0;
+.zeit-width{
+  width: 298px;
 }
 
-/* Date field — same idea: keep the outline narrow around the actual
-   date input + calendar toggle, while the left edge still aligns
-   with the other rows. */
+
+/////////////////
 .date-form-field {
-  width: 200px !important;
-  max-width: 100%;
+  width: 200px !important;  // ← fixed width keeps input + icon together
   flex-shrink: 0;
 }
 

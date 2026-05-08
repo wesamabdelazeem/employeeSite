@@ -1,0 +1,99 @@
+.time-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+font-family: Roboto, sans-serif!important;
+
+}
+
+.time-box-disabled {
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+.time-step {
+  font-family: Roboto, sans-serif!important;
+  color: #9aa3ad;
+  font-size: 11px;
+  font-weight: bold;
+  border: 1px solid #ccc;
+  border-radius: 2px;
+  background-color: #f9f9f9;
+  width: 40px;
+  height: 30px;
+  box-sizing: border-box;
+  padding: 0;
+  text-align: center;
+  cursor: pointer;
+  font-family: inherit;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.15s ease, color 0.15s ease;
+
+  &:hover:not(:disabled) {
+    background-color: #e0e0e0;
+  }
+
+  &:focus {
+    outline: none;
+    border-color: #aaa;
+  }
+
+  &:disabled {
+    cursor: default;
+    color: #9aa3ad;
+    background-color: #f9f9f9;
+    border-color: #ccc;
+  }
+}
+
+.time-value {
+  border: 1px solid #999;
+  border-radius: 2px;
+  background-color: #fff;
+  width: 40px;
+  height: 30px;
+  box-sizing: border-box;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.time-input {
+  border: none;
+  background: transparent;
+  text-align: center;
+  font-size: 14px;
+  font-weight: bold;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  margin: 0;
+  -moz-appearance: textfield;
+
+  &::-webkit-outer-spin-button,
+  &::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  &:focus {
+    outline: none !important;
+    border: none !important;
+    box-shadow: none !important;
+  }
+
+  &:focus-visible {
+    outline: none !important;
+  }
+
+  &:read-only,
+  &:disabled {
+    color: #333;
+  }
+}

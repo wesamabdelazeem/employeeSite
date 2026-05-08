@@ -30,8 +30,6 @@ import {VertragList2Component} from './components/vertrag-2/vertrag-list-2/vertr
 import {VertragDetail2Component} from './components/vertrag-2/vertrag-detail-2/vertrag-detail-2.component';
 import {PersonenListComponent} from './components/personen/personen-list/personen-list.component';
 import {PersonenDetailComponent} from './components/personen/personen-detail/personen-detail.component';
-import {Personen2ListComponent} from './components/personen-2/personen-2-list/personen-2-list.component';
-import {Personen2DetailComponent} from './components/personen-2/personen-2-detail/personen-2-detail.component';
 import {ProdukteListComponent} from './components/produkte/produkte-list/produkte-list.component';
 import {ProdukteDetailsComponent} from './components/produkte/produkte-details/produkte-details.component';
 import {
@@ -48,9 +46,11 @@ import {
 } from './components/organisationeinheiten/organisationeinheiten-details/organisationeinheiten-details.component';
 
 import { refreshGuard } from './guards/refresh.guard';
-import { TaetigkeitenKorrigierenComponent } from './components/taetigkeiten-korrigieren/taetigkeiten-korrigieren.component';
 import { TaetigkeitenBuchenComponent } from './components/taetigkeiten-buchen/taetigkeiten-buchen.component';
-import { TaetigkeitenHistorischComponent } from './components/taetigkeiten-historisch/taetigkeiten-historisch.component';
+import { TatigkeitenHistorischListComponent } from './components/taetigkeiten-historisch/taetigkeiten-historisch-list/taetigkeiten-historisch-list.component';
+import { TaetigkeitenHistorischDetailsComponent } from './components/taetigkeiten-historisch/taetigkeiten-historisch-details/taetigkeiten-historisch-details.component';
+import { TaetigkeitenKorrigierenListComponent } from './components/taetigkeiten-korrigieren/taetigkeiten-korrigieren-list/taetigkeiten-korrigieren-list.component';
+import { TaetigkeitenKorrigierenDetailsComponent } from './components/taetigkeiten-korrigieren/taetigkeiten-korrigieren-details/taetigkeiten-korrigieren-details.component';
 import { NachverrechnungComponent } from './components/nachverrechnung/nachverrechnung.component';
 import { AuswertungenComponent } from './components/auswertungen/auswertungen.component';
 import { ExitComponent } from './components/exit/exit.component';
@@ -77,13 +77,10 @@ export const routes: Routes = [
   { path: 'personen', component: PersonenListComponent },
   { path: 'personen/:id', component: PersonenDetailComponent,  canActivate: [refreshGuard] },
   { path: 'personen/neu', component: PersonenDetailComponent,  canActivate: [refreshGuard] },
-  { path: 'personen-2', component: Personen2ListComponent },
-  { path: 'personen-2/:id', component: Personen2DetailComponent, canActivate: [refreshGuard] },
-  { path: 'personen-2/neu', component: Personen2DetailComponent, canActivate: [refreshGuard] },
 
   { path: 'produkte', component: ProdukteListComponent },
-  { path: 'produkte/:id', component: ProdukteDetailsComponent,  canActivate: [refreshGuard] },
   { path: 'produkte/neu', component: ProdukteDetailsComponent },
+  { path: 'produkte/:id', component: ProdukteDetailsComponent },
 
 
   { path: 'abwesenheit-korrigieren', component: AbwesenheitKorrigierenListComponent },
@@ -93,9 +90,11 @@ export const routes: Routes = [
   { path: 'organisationseinheiten/:id', component: OrganisationeinheitenDetailsComponent,  canActivate: [refreshGuard] },
 
 
-  { path: 'edit-activities', component: TaetigkeitenKorrigierenComponent },
+  { path: 'edit-activities', component: TaetigkeitenKorrigierenListComponent },
+  { path: 'edit-activities/:id', component: TaetigkeitenKorrigierenDetailsComponent, canActivate: [refreshGuard] },
   { path: 'taetigkeitebuchen', component: TaetigkeitenBuchenComponent },
-  { path: 'taetigkeitenhistorischlist', component: TaetigkeitenHistorischComponent },
+  { path: 'taetigkeitenhistorischlist', component: TatigkeitenHistorischListComponent },
+  { path: 'taetigkeitenhistorischlist/:id', component: TaetigkeitenHistorischDetailsComponent, canActivate: [refreshGuard] },
   { path: 'calculation', component: NachverrechnungComponent },
   { path: 'reports', component: AuswertungenComponent },
   { path: 'exit', component: ExitComponent },

@@ -1,0 +1,240 @@
+<div class="form-header" *ngIf="showHeader">
+  <button mat-button class="header-btn" (click)="onLeftHeaderClick()">
+    <mat-icon [class.delete-icon]="!isEditing && !isCreatingNew && !isNewlyCreated">
+      {{ isEditing || isCreatingNew || isNewlyCreated ? 'close' : 'delete' }}
+    </mat-icon>
+    <span>{{ isEditing || isCreatingNew || isNewlyCreated ? 'Abbrechen' : 'Löschen' }}</span>
+  </button>
+
+  <h2 class="right-header">{{ title }}</h2>
+
+  <button
+    mat-button
+    *ngIf="isNewlyCreated || isCreatingNew"
+    (click)="save.emit()"
+    class="header-btn primary"
+  >
+    <mat-icon>check</mat-icon>
+    <span>Speichern</span>
+  </button>
+
+  <button
+    mat-button
+    *ngIf="!isNewlyCreated && !isCreatingNew && !isSelectedDayLocked"
+    (click)="onEditOrSave()"
+    class="header-btn"
+    [class.primary]="isEditing"
+  >
+    <ng-container *ngIf="isEditing; else editIcon">
+      <mat-icon>check</mat-icon>
+      <span>Speichern</span>
+    </ng-container>
+    <ng-template #editIcon>
+      <i class="mdi mdi-lead-pencil"></i>
+      <span>Bearbeiten</span>
+    </ng-template>
+  </button>
+</div>
+
+<form [formGroup]="formGroup" class="taetigkeit-form">
+  <div class="form-field-group">
+    <label class="field-label">Buchungsart</label>
+    <mat-form-field appearance="outline" class="field-input">
+      <mat-select
+        formControlName="buchungsart"
+        [compareWith]="compareBuchungsart"
+        [disabled]="!isEditing || isHeaderCreated || (!isCreatingNew && !isNewlyCreated)"
+        panelClass="drop-down"
+      >
+        <mat-option *ngFor="let art of buchungsartOptions" [value]="art">
+          {{ getBuchungsartDisplay(art) }}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+  </div>
+
+  <div class="form-field-group">
+    <label class="field-label">Produkt</label>
+    <mat-form-field appearance="outline" class="field-input">
+      <mat-select
+        formControlName="produkt"
+        [compareWith]="compareString"
+        [disabled]="!isEditing"
+        panelClass="drop-down"
+      >
+        <mat-option *ngFor="let produkt of produktOptions" [value]="produkt.kurzName">
+          {{ produkt.kurzName }} - {{ produkt.produktname }}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+  </div>
+
+  <div class="form-field-group">
+    <label class="field-label">Produktposition</label>
+    <mat-form-field appearance="outline" class="field-input">
+      <mat-select
+        formControlName="produktposition"
+        [compareWith]="comparePosition"
+        [disabled]="!isEditing"
+        panelClass="drop-down"
+      >
+        <mat-option *ngFor="let position of produktpositionOptions" [value]="position">
+          {{ position.produktPositionname }}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+  </div>
+
+  <div class="form-field-group">
+    <label class="field-label">Buchungspunkt</label>
+    <mat-form-field appearance="outline" class="field-input"
+      [class.field-empty]="isFieldEmpty('buchungspunkt') && saveAttempted">
+      <mat-select
+        formControlName="buchungspunkt"
+        [compareWith]="compareBuchungspunkt"
+        [disabled]="!isEditing"
+        panelClass="drop-down"
+      >
+        <mat-option *ngFor="let punkt of buchungspunktOptions" [value]="punkt">
+          {{ punkt.buchungspunkt }}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+  </div>
+
+  <div class="form-field-group">
+    <label class="field-label">Tätigkeit</label>
+    <mat-form-field appearance="outline" class="field-input"
+      [class.field-empty]="isFieldEmpty('taetigkeit') && saveAttempted">
+      <mat-select
+        formControlName="taetigkeit"
+        [compareWith]="compareTaetigkeit"
+        [disabled]="!isEditing"
+        panelClass="drop-down"
+      >
+        <mat-option *ngFor="let taetigkeit of taetigkeitOptions" [value]="taetigkeit">
+          {{ taetigkeit }}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+  </div>
+
+  <div class="form-field-group">
+    <label class="field-label">Datum</label>
+    <mat-form-field appearance="outline" class="field-input date-field"
+      [class.field-empty]="isFieldEmpty('datum') && saveAttempted">
+      <input
+        matInput
+        [matDatepicker]="picker"
+        formControlName="datum"
+        class="form-input"
+        [disabled]="!isEditing"
+      />
+      <mat-datepicker-toggle
+        matSuffix
+        [for]="picker"
+        class="date-picker-toggle"
+        [disabled]="!isEditing"
+      ></mat-datepicker-toggle>
+      <mat-datepicker
+        #picker
+        panelClass="drop-down-date"
+        yPosition="below"
+        xPosition="end"
+      ></mat-datepicker>
+    </mat-form-field>
+  </div>
+
+  <div class="time-section"
+    [class.time-section-locked]="!canEditTimeSection"
+    [class.time-section-empty]="isTimeEmpty && saveAttempted">
+    <div class="time-group">
+      <label class="time-label">Anmeldezeit[Stunde]</label>
+      <div class="time-inputs-horizontal">
+        <div class="time-column">
+          <app-taetigkeiten-time-box
+            [value]="formGroup.get('anmeldezeitStunde')?.value || 0"
+            [max]="24"
+            [disabled]="!canEditTimeSection"
+            (valueChange)="onTimeChange('anmeldezeitStunde', $event, 'anmeldezeit')"
+          />
+        </div>
+        <div class="time-column">
+          <div class="mint"><span class="time-unit">[Minuten]</span></div>
+          <app-taetigkeiten-time-box
+            [value]="formGroup.get('anmeldezeitMinuten')?.value || 0"
+            [max]="59"
+            [disabled]="!canEditTimeSection || getHour('anmeldezeit') === 24"
+            (valueChange)="onTimeChange('anmeldezeitMinuten', $event, 'anmeldezeit')"
+          />
+        </div>
+      </div>
+    </div>
+
+    <div class="time-group">
+      <label class="time-label">Abmeldezeit[Stunde]</label>
+      <div class="time-inputs-horizontal">
+        <div class="time-column">
+          <app-taetigkeiten-time-box
+            [value]="formGroup.get('abmeldezeitStunde')?.value || 0"
+            [max]="24"
+            [disabled]="!canEditTimeSection"
+            (valueChange)="onTimeChange('abmeldezeitStunde', $event, 'abmeldezeit')"
+          />
+        </div>
+        <div class="time-column">
+          <div class="mint"><span class="time-unit">[Minuten]</span></div>
+          <app-taetigkeiten-time-box
+            [value]="formGroup.get('abmeldezeitMinuten')?.value || 0"
+            [max]="59"
+            [disabled]="!canEditTimeSection || getHour('abmeldezeit') === 24"
+            (valueChange)="onTimeChange('abmeldezeitMinuten', $event, 'abmeldezeit')"
+          />
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="form-field-group">
+    <label class="field-label">Anmerkung</label>
+    <mat-form-field
+      appearance="outline"
+      class="field-input full-width"
+      [class.anmerkung-empty]="isAnmerkungEmpty && saveAttempted"
+    >
+      <textarea
+        matInput
+        formControlName="anmerkung"
+        placeholder="Anmerkung eingeben"
+        class="anmerkung-textarea-field"
+        rows="3"
+        maxlength="50"
+        cdkTextareaAutosize
+        cdkAutosizeMinRows="3"
+        cdkAutosizeMaxRows="8"
+      ></textarea>
+    </mat-form-field>
+  </div>
+
+  <div class="form-field-group">
+    <label class="field-label">Jira-Ticket Nr.:</label>
+    <mat-form-field
+      appearance="outline"
+      class="field-input"
+      [class.jira-invalid]="isJiraTicketInvalid"
+    >
+      <input
+        matInput
+        formControlName="jiraTicket"
+        [readonly]="!isEditing"
+        placeholder="PGETIT-..."
+        class="gebucht-third datum"
+        maxlength="30"
+        (input)="onJiraInput($event)"
+      />
+      <mat-error *ngIf="isJiraTicketInvalid">
+        {{ jiraTicketErrorMessage() }}
+      </mat-error>
+    </mat-form-field>
+  </div>
+</form>

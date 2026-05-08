@@ -48,26 +48,20 @@ import {TimeInputDirective} from '../../directives/time-input-directive';
       align-items: center;
     }
     .time-btn {
-      border: 1px solid #bdbdbd;
+      border: 1px solid #ccc;
       border-radius: 2px;
-      background-color: #f0f0f0;
+      background-color: #f9f9f9;
       width: 40px;
       height: 28px;
       display: flex;
       align-items: center;
       justify-content: center;
       cursor: pointer;
-      color: #555;
-      font-size: 8px;
-      font-weight: 500;
-      transition: background-color 0.15s ease, border-color 0.15s ease;
+      color: #292929;
+      font-size: 10px;
       &:hover:not(:disabled) {
-        background-color: #e0e0e0;
+        background-color: #e9e9e9;
         border-color: #999;
-        color: #333;
-      }
-      &:active:not(:disabled) {
-        background-color: #d0d0d0;
       }
       &:disabled {
         opacity: 0.4;

@@ -3,23 +3,27 @@
     <div class="dialog-header">
       <h2 class="dialog-title">{{ data.title }}</h2>
     </div>
-  
+
     <div class="dialog-content">
       <p class="dialog-message">{{ data.message }}</p>
-  
+
       <div class="dialog-actions">
-        <button mat-button class="cancel-btn-dialog" (click)="onCancel()">
-          Nein
+        <button
+          *ngIf="data.cancelText !== ''"
+          mat-button
+          class="cancel-btn-dialog"
+          (click)="onCancel()"
+        >
+          {{ data.cancelText || 'Nein' }}
         </button>
-  
+
         <button
           mat-raised-button
           class="confirm-btn-dialog"
           (click)="onConfirm()"
         >
-          Ja
+          {{ data.confirmText || 'Ja' }}
         </button>
       </div>
     </div>
   </div>
-  

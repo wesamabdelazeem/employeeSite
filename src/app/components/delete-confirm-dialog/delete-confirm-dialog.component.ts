@@ -14,7 +14,7 @@ export class DeleteConfirmDialogComponent {
 
   constructor(
     public dialogRef: MatDialogRef<DeleteConfirmDialogComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: { row: StempelzeitDto }
+    @Inject(MAT_DIALOG_DATA) public data: { row?: StempelzeitDto; title?: string; message?: string }
   ) {}
 
   confirmDelete(): void {

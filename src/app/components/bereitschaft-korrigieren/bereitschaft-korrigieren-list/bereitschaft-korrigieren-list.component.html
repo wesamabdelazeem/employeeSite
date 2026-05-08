@@ -54,10 +54,10 @@
 
         <th mat-header-cell *matHeaderCellDef >
           <div class="sort-header" (click)="toggleSort('nachname')">
-          Familienname
+              Familienname
               <mat-icon class="sort-arrow" *ngIf="getSortIcon('nachname')">{{ getSortIcon('nachname') }}</mat-icon>
-</div>
- </th>
+          </div>
+        </th>
 
 
         <td mat-cell *matCellDef="let element">{{ element.nachname || "" }}</td>

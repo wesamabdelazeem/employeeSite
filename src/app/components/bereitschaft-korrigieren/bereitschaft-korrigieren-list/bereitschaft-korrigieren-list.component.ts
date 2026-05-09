@@ -10,9 +10,9 @@ import { MatDialogModule } from '@angular/material/dialog';
 import { FlexLayoutModule } from '@angular/flex-layout';
 import { MatButtonModule } from '@angular/material/button';
 import { MatMenuModule } from '@angular/material/menu';
-import { Router } from '@angular/router';
+import { NavigationEnd, Router } from '@angular/router';
 import { Subject, Subscription } from 'rxjs';
-import { debounceTime } from 'rxjs/operators';
+import { debounceTime, filter } from 'rxjs/operators';
 import { BereitschaftKorrigierenService } from '../../../services/bereitschaft-korrigieren.service';
 import { NavigationRefreshService } from '../../../services/navigation-refresh.service';
 import { ApiPerson } from '../../../models/ApiPerson';
@@ -58,10 +58,20 @@ export class BereitschaftKorrigierenListComponent implements OnInit,OnDestroy{
   selectedRowId: string | null = null;
 
   /**
-   * Persisted in sessionStorage so view state survives the detail round-trip
-   * AND a browser refresh of this tab. Cleared via the sidebar refresh service.
+   * In-memory state that survives detail-back navigation but NOT a round-trip
+   * to a different component. Static so it persists across this component's
+   * own destroy/recreate cycle when navigating to /bereitschaftkorrigieren/:id and back.
+   * Cleared via Router events (nav away from /bereitschaftkorrigieren) and via the
+   * NavigationRefreshService (sidebar click).
    */
-  private static readonly STORAGE_KEY = 'bereitschaftkorrigieren-list-state';
+  private static savedState: {
+    searchTerm: string;
+    showInactive: boolean;
+    activeSortColumn: string;
+    sortDirection: 'asc' | 'desc';
+    selectedRowId: string | null;
+  } | null = null;
+  private static routerSubInstalled = false;
   private static readonly SEARCH_DEBOUNCE_MS = 250;
   private refreshSub?: Subscription;
   private searchSub?: Subscription;
@@ -73,7 +83,19 @@ export class BereitschaftKorrigierenListComponent implements OnInit,OnDestroy{
     private host: ElementRef<HTMLElement>,
     private refreshService: NavigationRefreshService,
   ) {
-    const saved = this.readSavedState();
+    if (!BereitschaftKorrigierenListComponent.routerSubInstalled) {
+      BereitschaftKorrigierenListComponent.routerSubInstalled = true;
+      this.router.events
+        .pipe(filter((e): e is NavigationEnd => e instanceof NavigationEnd))
+        .subscribe((e) => {
+          if (!/^\/bereitschaftkorrigieren(?:\/|$)/.test(e.urlAfterRedirects)) {
+            BereitschaftKorrigierenListComponent.savedState = null;
+          }
+        });
+    }
+
+    // Restore state from the previous instance (back-arrow from detail).
+    const saved = BereitschaftKorrigierenListComponent.savedState;
     if (saved) {
       this.searchTerm = saved.searchTerm;
       this.showInactive = saved.showInactive;
@@ -89,44 +111,11 @@ export class BereitschaftKorrigierenListComponent implements OnInit,OnDestroy{
     });
   }
 
-  private readSavedState(): {
-    searchTerm: string;
-    showInactive: boolean;
-    activeSortColumn: string;
-    sortDirection: 'asc' | 'desc';
-    selectedRowId: string | null;
-  } | null {
-    try {
-      const raw = sessionStorage.getItem(BereitschaftKorrigierenListComponent.STORAGE_KEY);
-      return raw ? JSON.parse(raw) : null;
-    } catch {
-      return null;
-    }
-  }
-
-  private writeSavedState(): void {
-    try {
-      sessionStorage.setItem(
-        BereitschaftKorrigierenListComponent.STORAGE_KEY,
-        JSON.stringify({
-          searchTerm: this.searchTerm,
-          showInactive: this.showInactive,
-          activeSortColumn: this.activeSortColumn,
-          sortDirection: this.sortDirection,
-          selectedRowId: this.selectedRowId,
-        }),
-      );
-    } catch {
-      // ignore quota / disabled-storage errors
-    }
-  }
-
   ngOnInit(): void {
     this.searchSub = this.searchInput$
       .pipe(debounceTime(BereitschaftKorrigierenListComponent.SEARCH_DEBOUNCE_MS))
       .subscribe(() => {
         this.applyFilter();
-        this.writeSavedState();
       });
 
     this.loadPersonenData();
@@ -138,11 +127,7 @@ export class BereitschaftKorrigierenListComponent implements OnInit,OnDestroy{
     this.activeSortColumn = '';
     this.sortDirection = 'asc';
     this.selectedRowId = null;
-    try {
-      sessionStorage.removeItem(BereitschaftKorrigierenListComponent.STORAGE_KEY);
-    } catch {
-      // ignore
-    }
+    BereitschaftKorrigierenListComponent.savedState = null;
     this.loadPersonenData();
   }
 
@@ -166,14 +151,19 @@ export class BereitschaftKorrigierenListComponent implements OnInit,OnDestroy{
   }
 
   ngOnDestroy(): void {
-    this.writeSavedState();
+    BereitschaftKorrigierenListComponent.savedState = {
+      searchTerm: this.searchTerm,
+      showInactive: this.showInactive,
+      activeSortColumn: this.activeSortColumn,
+      sortDirection: this.sortDirection,
+      selectedRowId: this.selectedRowId,
+    };
     this.refreshSub?.unsubscribe();
     this.searchSub?.unsubscribe();
     this.searchInput$.complete();
   }
   onCheckboxChange(): void {
     this.applyFilter();
-    this.writeSavedState();
   }
 
   filterdata(): void {
@@ -223,7 +213,6 @@ private applySorting(data: ApiPerson[]): ApiPerson[] {
   }
   this.filteredData = this.applySorting(this.filteredData);
   this.dataSource.data = this.filteredData;
-  this.writeSavedState();
 }
 
 
@@ -231,6 +220,9 @@ private applySorting(data: ApiPerson[]): ApiPerson[] {
   let value = '';
 
   switch (field) {
+    case 'aktiv':
+      value = item.aktiv ? '0' : '1';
+      break;
     case 'nachname':
       value = (item.nachname || '').toString();
       break;

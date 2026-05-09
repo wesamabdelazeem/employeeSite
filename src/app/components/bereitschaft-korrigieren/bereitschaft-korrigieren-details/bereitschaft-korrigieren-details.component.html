@@ -3,7 +3,7 @@
 
   <div class="left-panel">
     <div class="left-panel-header">
-      <button>
+      <button matTooltip="Zurück" matTooltipPosition="below">
         <mat-icon class="icon-header" (click)="goBackToList()"
           >arrow_back</mat-icon
         >
@@ -11,7 +11,7 @@
 
       <h1 class="title">Bereitschaftskorrektur- {{ personName }}</h1>
 
-      <button (click)="addTimeEntryFromHeader()">
+      <button (click)="addTimeEntryFromHeader()" matTooltip="Neue Bereitschaft" matTooltipPosition="below">
         <mat-icon class="icon-header">alarm</mat-icon>
       </button>
     </div>
@@ -115,6 +115,8 @@
         mat-button
         class="header-btn cancel-btn"
         (click)="cancelNewThirdLevel()"
+        matTooltip="Abbrechen"
+        matTooltipPosition="below"
       >
         <mat-icon>close</mat-icon>
 
@@ -127,6 +129,8 @@
         mat-button
         class="header-btn approve-btn"
         (click)="approveNewThirdLevel()"
+        matTooltip="Speichern"
+        matTooltipPosition="below"
       >
         <mat-icon>check</mat-icon>
 
@@ -159,59 +163,22 @@
       </div>
       <div class="form-row-date">
         <label class="field-label start-label">Start [Stunde]</label>
-        <div class="time-box">
-          <button
-            type="button"
-            class="time-btn minus dash"
-            (click)="adjustTime('start', 'hour', -1)"
-          >
-            <mat-icon>remove</mat-icon>
-          </button>
-          <div class="time-value">
-            <input
-              type="number"
-              formControlName="startStunde"
-              class="time-input"
-              min="0"
-              max="24"
-            />
-          </div>
-          <button
-            type="button"
-            class="time-btn plus dash"
-            (click)="adjustTime('start', 'hour', 1)"
-          >
-            <mat-icon>add</mat-icon>
-          </button>
-        </div>
+        <app-time-box
+          field="alarmStartStunde"
+          [value]="alarmForm.get('startStunde')?.value || 0"
+          [max]="24"
+          (valueChange)="alarmForm.get('startStunde')?.patchValue($event); alarmForm.updateValueAndValidity()"
+        />
 
         <div class="minute-wrapper">
           <label class="inner-label">[Minuten]</label>
-          <div class="time-box">
-            <button
-              type="button"
-              class="time-btn minus dash"
-              (click)="adjustTime('start', 'minute', -1)"
-            >
-              <mat-icon>remove</mat-icon>
-            </button>
-            <div class="time-value">
-              <input
-                type="number"
-                formControlName="startMinuten"
-                class="time-input"
-                min="0"
-                max="59"
-              />
-            </div>
-            <button
-              type="button"
-              class="time-btn plus dash"
-              (click)="adjustTime('start', 'minute', 1)"
-            >
-              <mat-icon>add</mat-icon>
-            </button>
-          </div>
+          <app-time-box
+            field="alarmStartMinuten"
+            [value]="alarmForm.get('startMinuten')?.value || 0"
+            [max]="59"
+            [disabled]="alarmForm.get('startStunde')?.value === 24"
+            (valueChange)="alarmForm.get('startMinuten')?.patchValue($event); alarmForm.updateValueAndValidity()"
+          />
         </div>
       </div>
       <div class="form-row">
@@ -238,59 +205,22 @@
       <!-- Ende fields for alarm form - no [disabled] binding -->
       <div class="form-row-date">
         <label class="field-label start-label">Ende [Stunde]</label>
-        <div class="time-box">
-          <button
-            type="button"
-            class="time-btn minus dash"
-            (click)="adjustTime('end', 'hour', -1)"
-          >
-            <mat-icon>remove</mat-icon>
-          </button>
-          <div class="time-value">
-            <input
-              type="number"
-              formControlName="endeStunde"
-              class="time-input"
-              min="0"
-              max="24"
-            />
-          </div>
-          <button
-            type="button"
-            class="time-btn plus dash"
-            (click)="adjustTime('end', 'hour', 1)"
-          >
-            <mat-icon>add</mat-icon>
-          </button>
-        </div>
+        <app-time-box
+          field="alarmEndeStunde"
+          [value]="alarmForm.get('endeStunde')?.value || 0"
+          [max]="24"
+          (valueChange)="alarmForm.get('endeStunde')?.patchValue($event); alarmForm.updateValueAndValidity()"
+        />
 
         <div class="minute-wrapper">
           <label class="inner-label">[Minuten]</label>
-          <div class="time-box">
-            <button
-              type="button"
-              class="time-btn minus dash"
-              (click)="adjustTime('end', 'minute', -1)"
-            >
-              <mat-icon>remove</mat-icon>
-            </button>
-            <div class="time-value">
-              <input
-                type="number"
-                formControlName="endeMinuten"
-                class="time-input"
-                min="0"
-                max="59"
-              />
-            </div>
-            <button
-              type="button"
-              class="time-btn plus dash"
-              (click)="adjustTime('end', 'minute', 1)"
-            >
-              <mat-icon>add</mat-icon>
-            </button>
-          </div>
+          <app-time-box
+            field="alarmEndeMinuten"
+            [value]="alarmForm.get('endeMinuten')?.value || 0"
+            [max]="59"
+            [disabled]="alarmForm.get('endeStunde')?.value === 24"
+            (valueChange)="alarmForm.get('endeMinuten')?.patchValue($event); alarmForm.updateValueAndValidity()"
+          />
         </div>
       </div>
 
@@ -335,6 +265,8 @@
               ? cancelFormChanges()
               : deleteEntry()
         "
+        [matTooltip]="isEditing || isCreatingNew || isNewlyCreated ? 'Abbrechen' : 'Löschen'"
+        matTooltipPosition="below"
       >
         <mat-icon
           [class.delete-icon]="!isEditing && !isCreatingNew && !isNewlyCreated"
@@ -356,6 +288,8 @@
         *ngIf="isNewlyCreated || isCreatingNew"
         (click)="saveBereitschaft()"
         class="header-btn primary"
+        matTooltip="Speichern"
+        matTooltipPosition="below"
       >
         <mat-icon>check</mat-icon>
 
@@ -392,63 +326,23 @@
 
       <div class="form-row-date">
         <label class="field-label start-label">Start [Stunde]</label>
-        <div class="time-box">
-          <button
-            type="button"
-            class="time-btn minus dash"
-            (click)="adjustTime('start', 'hour', -1)"
-            [disabled]="!isEditing && !isCreatingNew && !isNewlyCreated"
-          >
-            <mat-icon>remove</mat-icon>
-          </button>
-          <div class="time-value">
-            <input
-              type="number"
-              formControlName="startStunde"
-              class="time-input"
-              min="0"
-              max="24"
-            />
-          </div>
-          <button
-            type="button"
-            class="time-btn plus dash"
-            (click)="adjustTime('start', 'hour', 1)"
-            [disabled]="!isEditing && !isCreatingNew && !isNewlyCreated"
-          >
-            <mat-icon>add</mat-icon>
-          </button>
-        </div>
+        <app-time-box
+          field="startStunde"
+          [value]="bereitschaftForm.get('startStunde')?.value || 0"
+          [max]="24"
+          [disabled]="!isEditing && !isCreatingNew && !isNewlyCreated"
+          (valueChange)="bereitschaftForm.get('startStunde')?.patchValue($event); bereitschaftForm.updateValueAndValidity()"
+        />
 
         <div class="minute-wrapper">
           <label class="inner-label">[Minuten]</label>
-          <div class="time-box">
-            <button
-              type="button"
-              class="time-btn minus dash"
-              (click)="adjustTime('start', 'minute', -1)"
-              [disabled]="!isEditing && !isCreatingNew && !isNewlyCreated"
-            >
-              <mat-icon>remove</mat-icon>
-            </button>
-            <div class="time-value">
-              <input
-                type="number"
-                formControlName="startMinuten"
-                class="time-input"
-                min="0"
-                max="59"
-              />
-            </div>
-            <button
-              type="button"
-              class="time-btn plus dash"
-              (click)="adjustTime('start', 'minute', 1)"
-              [disabled]="!isEditing && !isCreatingNew && !isNewlyCreated"
-            >
-              <mat-icon>add</mat-icon>
-            </button>
-          </div>
+          <app-time-box
+            field="startMinuten"
+            [value]="bereitschaftForm.get('startMinuten')?.value || 0"
+            [max]="59"
+            [disabled]="(!isEditing && !isCreatingNew && !isNewlyCreated) || bereitschaftForm.get('startStunde')?.value === 24"
+            (valueChange)="bereitschaftForm.get('startMinuten')?.patchValue($event); bereitschaftForm.updateValueAndValidity()"
+          />
         </div>
       </div>
 
@@ -475,77 +369,38 @@
 
       <div class="form-row-date">
         <label class="field-label start-label">Ende [Stunde]</label>
-
-        <div class="time-box">
-          <button
-            type="button"
-            class="time-btn minus dash"
-            (click)="adjustTime('end', 'hour', -1)"
-            [disabled]="!isEditing && !isCreatingNew && !isNewlyCreated"
-          >
-            <mat-icon>remove</mat-icon>
-          </button>
-          <div class="time-value">
-            <input
-              type="number"
-              formControlName="endeStunde"
-              class="time-input"
-              min="0"
-              max="24"
-            />
-          </div>
-          <button
-            type="button"
-            class="time-btn plus dash"
-            (click)="adjustTime('end', 'hour', 1)"
-            [disabled]="!isEditing && !isCreatingNew && !isNewlyCreated"
-          >
-            <mat-icon>add</mat-icon>
-          </button>
-        </div>
+        <app-time-box
+          field="endeStunde"
+          [value]="bereitschaftForm.get('endeStunde')?.value || 0"
+          [max]="24"
+          [disabled]="!isEditing && !isCreatingNew && !isNewlyCreated"
+          (valueChange)="bereitschaftForm.get('endeStunde')?.patchValue($event); bereitschaftForm.updateValueAndValidity()"
+        />
 
         <div class="minute-wrapper">
           <label class="inner-label">[Minuten]</label>
-          <div class="time-box">
-            <button
-              type="button"
-              class="time-btn minus dash"
-              (click)="adjustTime('end', 'minute', -1)"
-              [disabled]="!isEditing && !isCreatingNew && !isNewlyCreated"
-            >
-              <mat-icon>remove</mat-icon>
-            </button>
-            <div class="time-value">
-              <input
-                type="number"
-                formControlName="endeMinuten"
-                class="time-input"
-                min="0"
-                max="59"
-              />
-            </div>
-            <button
-              type="button"
-              class="time-btn plus dash"
-              (click)="adjustTime('end', 'minute', 1)"
-              [disabled]="!isEditing && !isCreatingNew && !isNewlyCreated"
-            >
-              <mat-icon>add</mat-icon>
-            </button>
-          </div>
+          <app-time-box
+            field="endeMinuten"
+            [value]="bereitschaftForm.get('endeMinuten')?.value || 0"
+            [max]="59"
+            [disabled]="(!isEditing && !isCreatingNew && !isNewlyCreated) || bereitschaftForm.get('endeStunde')?.value === 24"
+            (valueChange)="bereitschaftForm.get('endeMinuten')?.patchValue($event); bereitschaftForm.updateValueAndValidity()"
+          />
         </div>
       </div>
 
-      <div class="form-row-custom">
-        <label class="field-label">Anmerkung</label>
-        <mat-form-field appearance="outline" class="full-field">
-          <input
-            matInput
-            formControlName="anmerkung"
-            placeholder="Anmerkung eingeben"
-            class="form-input"
-          />
-        </mat-form-field>
+      <div class="form-row align-top">
+        <div class="form-row-custom">
+          <label class="field-label">Anmerkung</label>
+          <mat-form-field appearance="outline" class="full-field">
+            <input
+              matInput
+              formControlName="anmerkung"
+              placeholder="Anmerkung eingeben"
+              class="form-input"
+            />
+          </mat-form-field>
+        </div>
       </div>
     </form>
   </div>

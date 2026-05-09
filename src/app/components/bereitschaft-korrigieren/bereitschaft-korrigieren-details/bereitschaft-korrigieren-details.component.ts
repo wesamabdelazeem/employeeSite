@@ -33,12 +33,27 @@ import { DateUtilsService } from '../../../services/utils/date-utils.service';
 import { FlatNode } from '../../../models/Flat-node';
 import { TreeBuilderService } from '../../../services/utils/tree-builder.service';
 import { ApiAbschlussInfo } from '../../../models/ApiAbschlussInfo';
-import { MatNativeDateModule } from '@angular/material/core';
+import { MatNativeDateModule, MAT_DATE_FORMATS, DateAdapter, MAT_DATE_LOCALE } from '@angular/material/core';
 import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { TreeNodeManagementService } from '../../../services/utils/tree-node-management.service';
 import { GetitRest2Service } from '../../../services/getit-rest-2.service';
 import {PersonenService} from '../../../services/personen.service';
+import { CustomDateAdapter } from '../../../services/custom-date-adapter.service';
+import { TimeBoxComponent } from '../../../shared/components/time-box/time-box.component';
 //import {PersonService} from '../../../services/person.service';
+
+export const DATE_FORMATS = {
+  parse: {
+    dateInput: 'DD.MM.YYYY',
+  },
+  display: {
+    dateInput: 'DD.MM.YYYY',
+    monthYearLabel: 'MMMM YYYY',
+    dateA11yLabel: 'LL',
+    monthYearA11yLabel: 'MMMM YYYY',
+  },
+};
 
 @Component({
   selector: 'app-bereitschaft-korrigieren-details',
@@ -49,7 +64,14 @@ import {PersonenService} from '../../../services/personen.service';
     ReactiveFormsModule, CommonModule,
 
     MatDatepickerModule,
-    MatNativeDateModule
+    MatNativeDateModule,
+    MatTooltipModule,
+    TimeBoxComponent
+  ],
+  providers: [
+    { provide: MAT_DATE_LOCALE, useValue: 'de-DE' },
+    { provide: DateAdapter, useClass: CustomDateAdapter },
+    { provide: MAT_DATE_FORMATS, useValue: DATE_FORMATS }
   ],
   templateUrl: './bereitschaft-korrigieren-details.component.html',
   styleUrl: './bereitschaft-korrigieren-details.component.scss'

@@ -44,7 +44,8 @@ $tablet: 900px;
   overflow-x: auto;
   margin: 0;
   height: calc(100vh - 40px);
-  overflow-y: auto;
+  overflow-y: scroll;
+  scrollbar-gutter: stable;
   cursor: pointer;
   box-sizing: border-box;
 
@@ -56,9 +57,11 @@ $tablet: 900px;
   }
 
 
-  .mat-table {
+  .mat-table,
+  .fixed-table {
     width: 100%;
     min-width: 600px;
+    table-layout: fixed;
   }
 
   ::ng-deep .mat-mdc-header-cell {
@@ -71,6 +74,10 @@ $tablet: 900px;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
   }
 
+  ::ng-deep .mat-mdc-cell {
+    font-size: 14px !important;
+  }
+
   ::ng-deep .mat-mdc-row {
     height: 40px !important;
     background-color: white;
@@ -78,6 +85,36 @@ $tablet: 900px;
     &:hover {
       background-color: #f0f0f0;
     }
+  }
+}
+
+/* Fixed column widths so the layout doesn't shift while filtering/searching. */
+::ng-deep .fixed-table {
+  th.col-nachname,
+  td.col-nachname {
+    width: 90px !important;
+    min-width: 90px !important;
+    max-width: 90px !important;
+    padding-right: 30px !important;
+  }
+  th.col-vorname,
+  td.col-vorname {
+    width: 130.47px !important;
+    min-width: 130.47px !important;
+    max-width: 130.47px !important;
+  }
+  th.col-mitarbeiterart,
+  td.col-mitarbeiterart {
+    width: 212.33px !important;
+    padding-right: 20px !important;
+  }
+
+  td.col-nachname,
+  td.col-vorname,
+  td.col-mitarbeiterart {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 }
 
@@ -114,9 +151,44 @@ $tablet: 900px;
   animation: fadeIn 0.5s ease-in;
 }
 
+.sort-header {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
+  font-weight: 700;
+  font-size: 14px;
+  min-height: 24px;
+}
+
+.sort-header-center {
+  justify-content: center;
+  width: 100%;
+}
+
+/* Keep mat-table cell padding identical across all rows so the header/body
+   text doesn't drift left or right while the user types in the search box. */
+::ng-deep .fixed-table .mat-mdc-header-cell,
+::ng-deep .fixed-table .mat-mdc-cell {
+  box-sizing: border-box;
+}
+::ng-deep .fixed-table .mat-mdc-header-cell:first-of-type,
+::ng-deep .fixed-table .mat-mdc-cell:first-of-type {
+  padding-left: 0 !important;
+}
+::ng-deep .fixed-table .mat-mdc-header-cell:last-of-type,
+::ng-deep .fixed-table .mat-mdc-cell:last-of-type {
+  padding-right: 24px !important;
+}
+
+
 .sort-arrow {
-  position: relative;
-  top: 8px;
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .list-row {
@@ -142,24 +214,59 @@ $tablet: 900px;
 }
 
 .check-icon {
-  padding-right: 75px;
+  padding-right: 0px;
   color: #15803d;
 }
 
 .close-icon {
-  padding-right: 75px;
+  padding-right: 0px;
   color:  #b91c1c ;
 }
 
-.first-column {
-  width: 30px !important;
-}
 
-.inkle-inactive {
-  color: white !important;
+// ::ng-deep .fixed-table th.first-column,
+// ::ng-deep .fixed-table td.first-column{
+//   width: 70px !important;
+//   min-width: 70px !important;
+//   max-width: 70px !important;
+// }
 
-  ::ng-deep .mdc-label,
-  ::ng-deep .mdc-form-field > label {
-    color: white !important;
+
+::ng-deep .fixed-table {
+  th.first-column,
+  td.first-column {
+    width: 70px !important;
+    min-width: 70px !important;
+    max-width: 70px !important;
+    text-align: center !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
   }
 }
+  
+
+.checkbox-container {
+  display: flex;
+  cursor: pointer;
+
+  mat-checkbox {
+    color: white !important;
+
+    ::ng-deep {
+      .mdc-checkbox .mdc-checkbox__native-control {
+        width: 18px !important;
+        height: 18px !important;
+      }
+      .mdc-checkbox__background {
+        border-color: white !important;
+      }
+      .mdc-label {
+        color: white !important;
+        font-size: 14px;
+        white-space: nowrap;
+      }
+    }
+  }
+}
+
+.inkl { color: white; }

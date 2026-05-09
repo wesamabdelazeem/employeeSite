@@ -131,6 +131,28 @@ overflow: hidden;
   color: #2E4155;
 }
 
+.taetigkeit-form,
+.taetigkeit-form .field-label,
+.taetigkeit-form .inner-label,
+.taetigkeit-form .form-input,
+.taetigkeit-form .form-input-date,
+.taetigkeit-form .time-input {
+  font-size: 14px !important;
+}
+
+.taetigkeit-form .inner-label{
+  margin: 0 5px 0 5px !important;
+}
+
+
+.left-panel .month-name,
+.left-panel .day-name,
+.left-panel .activity-product,
+.left-panel .level2-sub-info,
+.left-panel .selected-node-title {
+  font-size: 14px !important;
+}
+
 .abgeschlossen-badge {
   color: #b91c1c;
   font-weight: 500;
@@ -732,7 +754,7 @@ margin-top: 5px!important;
   margin: 0 0 0 15px;
 }
 .start-label{
-  margin-top: 5px;
+  margin-top: 5px !important;
 }
 
 .date-field {
@@ -765,6 +787,10 @@ margin-top: 5px!important;
   margin-left: 18px;
 }
 .right-header-third{font-weight: bold;}
+
+:host ::ng-deep .mat-mdc-text-field-wrapper {
+  padding-left: 0 !important;
+}
 .dash {
   color: #292929;
   border: 1px solid #ccc;
@@ -778,7 +804,7 @@ margin-top: 5px!important;
   cursor: pointer;
    margin: auto !important;
   padding: 0;
-font-size: 16px;
+  font-size: 16px;
 font-weight: bold;
   mat-icon {
       font-size: 16px;
@@ -831,7 +857,7 @@ position: relative;
 
 .form-row-custom{display: flex;align-items: start!important;align-items: center!important;}
 
-.date-picker-toggle{position:relative;left: 130px;}
+.date-picker-toggle{position:relative;left: -18px !important;}
 .form-row-date{display: flex;
   flex-direction: row;
   min-height: 50px;}

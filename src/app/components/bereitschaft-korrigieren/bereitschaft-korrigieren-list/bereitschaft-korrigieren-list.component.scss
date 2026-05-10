@@ -162,7 +162,8 @@ $tablet: 900px;
 }
 
 .sort-header-center {
-  justify-content: center;
+  justify-content: start;
+  padding-left: 14px;
   width: 100%;
 }
 
@@ -214,7 +215,8 @@ $tablet: 900px;
 }
 
 .check-icon {
-  padding-right: 0px;
+  padding-left: 14px;
+  justify-content: start;
   color: #15803d;
 }
 

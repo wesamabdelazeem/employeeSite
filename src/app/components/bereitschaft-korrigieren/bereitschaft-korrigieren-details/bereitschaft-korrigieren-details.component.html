@@ -167,7 +167,7 @@
           field="alarmStartStunde"
           [value]="alarmForm.get('startStunde')?.value || 0"
           [max]="24"
-          (valueChange)="alarmForm.get('startStunde')?.patchValue($event); alarmForm.updateValueAndValidity()"
+          (valueChange)="onTimeBoxChange(alarmForm, 'startStunde', $event)"
         />
 
         <div class="minute-wrapper">
@@ -177,7 +177,7 @@
             [value]="alarmForm.get('startMinuten')?.value || 0"
             [max]="59"
             [disabled]="alarmForm.get('startStunde')?.value === 24"
-            (valueChange)="alarmForm.get('startMinuten')?.patchValue($event); alarmForm.updateValueAndValidity()"
+            (valueChange)="onTimeBoxChange(alarmForm, 'startMinuten', $event)"
           />
         </div>
       </div>
@@ -209,7 +209,7 @@
           field="alarmEndeStunde"
           [value]="alarmForm.get('endeStunde')?.value || 0"
           [max]="24"
-          (valueChange)="alarmForm.get('endeStunde')?.patchValue($event); alarmForm.updateValueAndValidity()"
+          (valueChange)="onTimeBoxChange(alarmForm, 'endeStunde', $event)"
         />
 
         <div class="minute-wrapper">
@@ -219,7 +219,7 @@
             [value]="alarmForm.get('endeMinuten')?.value || 0"
             [max]="59"
             [disabled]="alarmForm.get('endeStunde')?.value === 24"
-            (valueChange)="alarmForm.get('endeMinuten')?.patchValue($event); alarmForm.updateValueAndValidity()"
+            (valueChange)="onTimeBoxChange(alarmForm, 'endeMinuten', $event)"
           />
         </div>
       </div>
@@ -331,7 +331,7 @@
           [value]="bereitschaftForm.get('startStunde')?.value || 0"
           [max]="24"
           [disabled]="!isEditing && !isCreatingNew && !isNewlyCreated"
-          (valueChange)="bereitschaftForm.get('startStunde')?.patchValue($event); bereitschaftForm.updateValueAndValidity()"
+          (valueChange)="onTimeBoxChange(bereitschaftForm, 'startStunde', $event)"
         />
 
         <div class="minute-wrapper">
@@ -341,7 +341,7 @@
             [value]="bereitschaftForm.get('startMinuten')?.value || 0"
             [max]="59"
             [disabled]="(!isEditing && !isCreatingNew && !isNewlyCreated) || bereitschaftForm.get('startStunde')?.value === 24"
-            (valueChange)="bereitschaftForm.get('startMinuten')?.patchValue($event); bereitschaftForm.updateValueAndValidity()"
+            (valueChange)="onTimeBoxChange(bereitschaftForm, 'startMinuten', $event)"
           />
         </div>
       </div>
@@ -374,7 +374,7 @@
           [value]="bereitschaftForm.get('endeStunde')?.value || 0"
           [max]="24"
           [disabled]="!isEditing && !isCreatingNew && !isNewlyCreated"
-          (valueChange)="bereitschaftForm.get('endeStunde')?.patchValue($event); bereitschaftForm.updateValueAndValidity()"
+          (valueChange)="onTimeBoxChange(bereitschaftForm, 'endeStunde', $event)"
         />
 
         <div class="minute-wrapper">
@@ -384,7 +384,7 @@
             [value]="bereitschaftForm.get('endeMinuten')?.value || 0"
             [max]="59"
             [disabled]="(!isEditing && !isCreatingNew && !isNewlyCreated) || bereitschaftForm.get('endeStunde')?.value === 24"
-            (valueChange)="bereitschaftForm.get('endeMinuten')?.patchValue($event); bereitschaftForm.updateValueAndValidity()"
+            (valueChange)="onTimeBoxChange(bereitschaftForm, 'endeMinuten', $event)"
           />
         </div>
       </div>

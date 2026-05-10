@@ -17,7 +17,6 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
 import { MatCheckboxChange } from "@angular/material/checkbox";
 
-import { DummyService } from '../../../services/dummy.service';
 import { FormValidationService } from '../../../services/utils/form-validation.service';
 import { TimeUtilityService } from '../../../services/utils/time-utility.service';
 import { TreeNodeService } from '../../../services/utils/tree-node.service';
@@ -27,6 +26,10 @@ import { DateParserService } from '../../../services/utils/date-parser.service';
 import { ApiStempelzeit } from '../../../models/ApiStempelzeit';
 import { ApiZeitTyp } from '../../../models/ApiZeitTyp';
 import { ConfirmationDialogComponent } from '../../confirmation-dialog/confirmation-dialog/confirmation-dialog.component';
+import { InfoDialogComponent } from '../../dialogs/info-dialog/info-dialog.component';
+import { ErrorDialogComponent } from '../../dialogs/error-dialog/error-dialog.component';
+import { StatusPanelService } from '../../../services/utils/status-panel-status.service';
+import { AppConstants } from '../../../models/app-constants';
 import { TaetigkeitNode } from '../../../models/taetigkeit-node';
 import { BereitschaftKorrigierenService } from '../../../services/bereitschaft-korrigieren.service';
 import { DateUtilsService } from '../../../services/utils/date-utils.service';
@@ -38,7 +41,7 @@ import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { TreeNodeManagementService } from '../../../services/utils/tree-node-management.service';
 import { GetitRest2Service } from '../../../services/getit-rest-2.service';
-import {PersonenService} from '../../../services/personen.service';
+import { MOCK_LOGGED_IN_PERSON } from '../../../mock/mock-data';
 import { CustomDateAdapter } from '../../../services/custom-date-adapter.service';
 import { TimeBoxComponent } from '../../../shared/components/time-box/time-box.component';
 //import {PersonService} from '../../../services/person.service';
@@ -148,9 +151,7 @@ export class BereitschaftKorrigierenDetailsComponent {
     private cdr: ChangeDetectorRef,
     private dialog: MatDialog,
 
-    private dummyService: DummyService,
-    // private dummyService1:BereitschaftKorrigierenService,
-    private personenService : PersonenService,
+   
     private bereitschaftKorrigierenService: BereitschaftKorrigierenService,
 private getItRestService : GetitRest2Service,
     private formValidationService: FormValidationService,
@@ -161,14 +162,15 @@ private getItRestService : GetitRest2Service,
     private dateParserService: DateParserService,
     private treeNodeManagementService: TreeNodeManagementService,
     private treeBuilderService:TreeBuilderService,
-    private dateUtilsService:DateUtilsService
+    private dateUtilsService:DateUtilsService,
+    private statusPanelService: StatusPanelService
   ) {
     this.bereitschaftForm = this.createBereitschaftForm();
     this.alarmForm = this.createAlarmForm();
   }
 
 ngOnInit() {
-  this.personId  = this.personenService.getCurrentUser()?.id!;
+  this.personId  = MOCK_LOGGED_IN_PERSON.id!;
   this.loadData(this.personId );
 }
 
@@ -272,30 +274,32 @@ loadData_2(personId: string) {
      const startDate = `${currentYear}-01-01`;
      const endDate = `${currentYear}-12-31`;
 
-     this.dummyService.getPerson( personId,
-
-    this.personRequest.detail,this.personRequest.berechneteStunden,this.personRequest.addVertraege).subscribe({
-
+     this.bereitschaftKorrigierenService.getPerson(
+       personId,
+       this.personRequest.detail,
+       this.personRequest.berechneteStunden,
+       this.personRequest.addVertraege
+     ).subscribe({
        next: (person) => {
          this.personName = `${person.vorname} ${person.nachname}`;
-        this.dummyService.getPersonStempelzeitenNoAbwesenheit(personId, startDate, endDate).subscribe({
-    next: (stempelzeiten) => {
-      const filtered = stempelzeiten;// .filter((s: any) => s.zeitTyp === 'BEREITSCHAFT');
-      const baseTreeData = this.treeExpansionService.generateCurrentAndPreviousMonth();
-      const mergedTreeData = this.mergeApiDataIntoTree(baseTreeData, filtered);
+         this.bereitschaftKorrigierenService.getPersonStempelzeitenNoAbwesenheit(personId, startDate, endDate).subscribe({
+           next: (stempelzeiten) => {
+             const filtered = stempelzeiten;
+             const baseTreeData = this.treeExpansionService.generateCurrentAndPreviousMonth();
+             const mergedTreeData = this.mergeApiDataIntoTree(baseTreeData, filtered);
 
-      this.dataSource.data = mergedTreeData;
-      this.isLoading = false;
+             this.dataSource.data = mergedTreeData;
+             this.isLoading = false;
 
-      this.treeExpansionService.expandCurrentAndLastMonth(this.treeControl);
-    },
-    error: () => this.isLoading = false
-  });
-  this.dummyService.getPersonAbschlussInfo(personId).subscribe({
-    next: (info) => {
-      this.abschlussInfo = info;
-    }
-  });
+             this.treeExpansionService.expandCurrentAndLastMonth(this.treeControl);
+           },
+           error: () => this.isLoading = false
+         });
+         this.bereitschaftKorrigierenService.getPersonAbschlussInfo(personId).subscribe({
+           next: (info) => {
+             this.abschlussInfo = info;
+           }
+         });
        },
        error: () => this.isLoading = false
      });
@@ -471,8 +475,7 @@ const endDate: Date = formValue.endeDatum;
   const gestempeltTime = this.timeUtilityService.calculateGestempelt(loginDate, logoffDate);
   const timeRange = `${this.timeUtilityService.formatTime(loginDate)} - ${this.timeUtilityService.formatTime(logoffDate)}`;
 
-  const newStempelzeitData: ApiStempelzeit = {
-    id: `new-${Date.now()}`,                // temporary until backend confirms
+  const dto: ApiStempelzeit = {
     login: loginDate.toISOString(),
     logoff: logoffDate.toISOString(),
     zeitTyp: ApiZeitTyp.BEREITSCHAFT,
@@ -481,39 +484,64 @@ const endDate: Date = formValue.endeDatum;
 
   const newActivityData = { ...formValue };
 
+  const startTime = Date.now();
+  this.bereitschaftKorrigierenService.createBereitschaft(this.personId, dto).subscribe({
+    next: (response) => {
+      const duration = Date.now() - startTime;
+      this.statusPanelService.addMessageRequest(
+        AppConstants.MSG_BEREITSCHAFTEN_CREATED_SUCCESS,
+        'POST',
+        duration,
+        response
+      );
 
+      const savedEntries = response.body ?? [];
+      const savedEntry = savedEntries.find(
+        e => e.login === dto.login && e.logoff === dto.logoff
+      ) || savedEntries[savedEntries.length - 1];
 
-  const monthYear = this.timeUtilityService.getMonthYearString(startDate);
-  const monthNode=this.treeNodeManagementService.findOrCreateMonthNode(
-    this.dataSource.data,monthYear,
-    (monthYear)=>this.timeUtilityService.parseMonthYearString(monthYear)
-  )
-  const dayKey = this.timeUtilityService.formatDayName(startDate);
-const dayNode=this.treeNodeManagementService.findOrCreateDayNode(monthNode,dayKey,startDate,(str)=>this.dateParserService.getDateFromFormattedDay(str))
+      const monthYear = this.timeUtilityService.getMonthYearString(startDate);
+      const monthNode = this.treeNodeManagementService.findOrCreateMonthNode(
+        this.dataSource.data, monthYear,
+        (my) => this.timeUtilityService.parseMonthYearString(my)
+      );
+      const dayKey = this.timeUtilityService.formatDayName(startDate);
+      const dayNode = this.treeNodeManagementService.findOrCreateDayNode(
+        monthNode, dayKey, startDate,
+        (str) => this.dateParserService.getDateFromFormattedDay(str)
+      );
 
-  this.addActivityToDay(dayNode, newActivityData, timeRange, gestempeltTime, newStempelzeitData);
+      this.addActivityToDay(dayNode, newActivityData, timeRange, gestempeltTime, savedEntry);
 
-  this.dataSource.data = [...this.dataSource.data];
-  this.treeNodeManagementService.expandParentNodesForNewEntry(this.treeControl,monthYear, dayKey);
+      this.dataSource.data = [...this.dataSource.data];
+      this.treeNodeManagementService.expandParentNodesForNewEntry(this.treeControl, monthYear, dayKey);
 
-  setTimeout(() => {
-    const newNode = this.treeControl.dataNodes.find(node =>
-      node.level === 2 &&
-      node.formData &&
-      node.formData.startDatum === formValue.startDatum &&
-      node.timeRange === timeRange
-    );
+      setTimeout(() => {
+        const newNode = this.treeControl.dataNodes.find(node =>
+          node.level === 2 &&
+          node.formData &&
+          node.formData.startDatum === formValue.startDatum &&
+          node.timeRange === timeRange
+        );
+        if (newNode) {
+          this.finalizeNewEntry(newNode);
+        }
+      }, 150);
 
-    if (newNode) {
-      this.finalizeNewEntry(newNode);
+      this.showInfoDialog('Neue Bereitschaft erfolgreich erstellt!');
+      this.resetAlarmState();
+    },
+    error: (err) => {
+      const duration = Date.now() - startTime;
+      this.statusPanelService.addMessageRequest(
+        AppConstants.MSG_BEREITSCHAFTEN_CREATED_ERROR,
+        'POST',
+        duration,
+        err
+      );
+      this.showErrorDialog('Fehler beim Speichern der Bereitschaft.');
     }
-  }, 150);
-
-  this.snackBar.open('Neue Bereitschaft erfolgreich erstellt!', 'Schließen', {
-    duration: 3000,
-    verticalPosition: 'top'
   });
-  this.resetAlarmState();
 }
 
 
@@ -638,22 +666,13 @@ if (this.abschlussInfo && this.abschlussInfo.naechsterBuchbarerTag) {
 
   if (!validationResult.isValid) {
     this.snackBar.open(validationResult.errorMessage!, 'Schließen', {
-      duration: 5000,
-      verticalPosition: 'top'
-    });
+      duration: 5000,    });
     return;
   }
 
   if (this.isCreatingNew || this.isNewlyCreated) {
     this.saveNewEntry(formValue);
   }
-
-  this.snackBar.open('Änderungen gespeichert!', 'Schließen', {
-    duration: 3000,
-    verticalPosition: 'top'
-  });
-
-
 
   this.isEditing = false;
   this.isCreatingNew = false;
@@ -684,11 +703,19 @@ private saveNewEntry(formValue: any): void {
     anmerkung: formValue.anmerkung || ''
   };
 
-
-  this.dummyService
+  const startTime = Date.now();
+  this.bereitschaftKorrigierenService
     .createBereitschaft(this.personId, dto)
     .subscribe({
-      next: (savedEntries) => {
+      next: (response) => {
+        const duration = Date.now() - startTime;
+        this.statusPanelService.addMessageRequest(
+          AppConstants.MSG_BEREITSCHAFTEN_CREATED_SUCCESS,
+          'POST',
+          duration,
+          response
+        );
+        const savedEntries = response.body ?? [];
         const savedEntry = savedEntries.find(
           e => e.login === dto.login && e.logoff === dto.logoff
         ) || savedEntries[savedEntries.length - 1];
@@ -722,9 +749,18 @@ private saveNewEntry(formValue: any): void {
             this.cdr.detectChanges();
           }
         }, 150);
+
+        this.showInfoDialog('Bereitschaft erfolgreich gespeichert!');
       },
-      error: err => {
-        console.error('Create Bereitschaft failed', err);
+      error: (err) => {
+        const duration = Date.now() - startTime;
+        this.statusPanelService.addMessageRequest(
+          AppConstants.MSG_BEREITSCHAFTEN_CREATED_ERROR,
+          'POST',
+          duration,
+          err
+        );
+        this.showErrorDialog('Fehler beim Speichern der Bereitschaft.');
       }
     });
 }
@@ -744,25 +780,47 @@ async deleteEntry() {
   if (!confirmed) return;
 
   const id = this.selectedNode.stempelzeitData?.id;
-  if (!id) return;
+  if (!id || id.startsWith('new-')) {
+    this.treeNodeService.deleteNodeFromTree(this.dataSource.data, this.selectedNode);
+    this.dataSource.data = [...this.dataSource.data];
+    this.selectedNode = null;
+    this.isEditing = false;
+    this.bereitschaftForm.reset();
+    return;
+  }
 
-  this.dummyService.deleteBereitschaft(id).subscribe({
-    next: () => {
+  const startTime = Date.now();
+  this.bereitschaftKorrigierenService.deleteBereitschaft(id).subscribe({
+    next: (response) => {
+      const duration = Date.now() - startTime;
+      this.statusPanelService.addMessageRequest(
+        AppConstants.MSG_BEREITSCHAFTEN_DELETED_SUCCESS,
+        'DELETE',
+        duration,
+        response
+      );
+
       this.treeNodeService.deleteNodeFromTree(
         this.dataSource.data,
         this.selectedNode!
       );
 
       this.dataSource.data = [...this.dataSource.data];
-      this.snackBar.open('Eintrag gelöscht!', 'Schließen', { duration: 3000 });
+      this.showInfoDialog('Bereitschaft erfolgreich gelöscht!');
 
       this.selectedNode = null;
       this.isEditing = false;
       this.bereitschaftForm.reset();
     },
-    error: err => {
-      console.error('Delete failed', err);
-      this.snackBar.open('Fehler beim Löschen', 'Schließen', { duration: 3000 });
+    error: (err) => {
+      const duration = Date.now() - startTime;
+      this.statusPanelService.addMessageRequest(
+        AppConstants.MSG_BEREITSCHAFTEN_DELETED_ERROR,
+        'DELETE',
+        duration,
+        err
+      );
+      this.showErrorDialog('Fehler beim Löschen der Bereitschaft.');
     }
   });
 }
@@ -822,6 +880,35 @@ adjustTime(type: 'start' | 'end', unit: 'hour' | 'minute', amount: number) {
     form.get(controlNameHour)?.setValue(result.hour);
     form.get(controlNameMinute)?.setValue(result.minute);
   }
+}
+
+onTimeBoxChange(
+  form: FormGroup,
+  field: 'startStunde' | 'startMinuten' | 'endeStunde' | 'endeMinuten',
+  value: number
+): void {
+  form.get(field)?.patchValue(value);
+  if (field === 'startStunde' && value === 24) {
+    form.get('startMinuten')?.patchValue(0, { emitEvent: false });
+  }
+  if (field === 'endeStunde' && value === 24) {
+    form.get('endeMinuten')?.patchValue(0, { emitEvent: false });
+  }
+  form.updateValueAndValidity();
+}
+
+private showInfoDialog(detail: string, title: string = 'Erfolgreich'): void {
+  this.dialog.open(InfoDialogComponent, {
+    data: { title, detail },
+    panelClass: 'custom-dialog-width'
+  });
+}
+
+private showErrorDialog(detail: string, title: string = 'Fehler'): void {
+  this.dialog.open(ErrorDialogComponent, {
+    data: { title, detail },
+    panelClass: 'custom-dialog-width'
+  });
 }
 
 private finalizeNewEntry(newNode: FlatNode): void {

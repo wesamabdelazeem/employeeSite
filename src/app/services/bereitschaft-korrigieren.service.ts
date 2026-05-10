@@ -1,10 +1,12 @@
 import { Injectable } from '@angular/core';
 import { Observable, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
-import { GetitRestService } from './getit-rest.service';
+import { HttpResponse } from '@angular/common/http';
 import { ApiStempelzeit } from '../models/ApiStempelzeit';
 import { ApiPerson } from '../models/ApiPerson';
+import { ApiAbschlussInfo } from '../models/ApiAbschlussInfo';
 import { GetitRest2Service } from './getit-rest-2.service';
+import { GetitRest3Service } from './getit-rest-3.service';
 import { MOCK_PERSONEN } from '../mock/mock-data';
 
 @Injectable({
@@ -13,25 +15,45 @@ import { MOCK_PERSONEN } from '../mock/mock-data';
 export class BereitschaftKorrigierenService {
 
   constructor(
-    //private getitRestService: GetitRestService,
     private getitRestService: GetitRest2Service,
+    private getitRestService3: GetitRest3Service,
   ) {}
 
 
-  // CREATE
+  // CREATE — returns full HttpResponse so callers can log via StatusPanelService
   createBereitschaft(
     personId: string,
     dto: ApiStempelzeit
-  ): Observable<ApiStempelzeit[]> {
-
-    console.log('createBereitschaft', dto);
-
-    return this.getitRestService.createBereitschaft(dto, personId);
+  ): Observable<HttpResponse<ApiStempelzeit[]>> {
+    return this.getitRestService3.createBereitschaft(dto, personId);
   }
 
-  // DELETE
-  deleteBereitschaft(id: string): Observable<void> {
-    return this.getitRestService.deleteBereitschaft(id);
+  // DELETE — returns full HttpResponse so callers can log via StatusPanelService
+  deleteBereitschaft(id: string): Observable<HttpResponse<void>> {
+    return this.getitRestService3.deleteBereitschaft(id);
+  }
+
+
+  // ── Loads (body-only is enough for these) ───────────────────────────────
+  getPerson(
+    id: string,
+    persondetail?: string,
+    berechneteStunden?: boolean,
+    addVertraege?: boolean
+  ): Observable<ApiPerson> {
+    return this.getitRestService.getPerson(id, persondetail, berechneteStunden, addVertraege);
+  }
+
+  getPersonStempelzeitenNoAbwesenheit(
+    personIdStr: string,
+    loginAb?: string,
+    loginBis?: string
+  ): Observable<ApiStempelzeit[]> {
+    return this.getitRestService.getPersonStempelzeitenNoAbwesenheit(personIdStr, loginAb, loginBis);
+  }
+
+  getPersonAbschlussInfo(personIdStr: string): Observable<ApiAbschlussInfo> {
+    return this.getitRestService.getPersonAbschlussInfo(personIdStr);
   }
 
 
@@ -47,20 +69,5 @@ export class BereitschaftKorrigierenService {
         return of(MOCK_PERSONEN);
       }),
     );
-  }
-
-  /* getPersonen__(berechneteStunden: boolean = false, nurNamen: boolean = false): Observable<ApiPerson[] | null> {
-      return null; //this.getitRestService.getPersonen(berechneteStunden, nurNamen);
-   }
-
-*/
-   getPersonStempelzeitenNoAbwesenheit (
-    personIdStr: string,
-    loginAb?: string,
-    loginBis?: string
-  ): Observable<ApiStempelzeit[]> {
-    console.log('Loading stempelzeiten for person:', personIdStr);
-    console.log('parameters:', { loginAb, loginBis });
-    return this.getitRestService.getPersonStempelzeitenNoAbwesenheit(personIdStr, loginAb, loginBis);
   }
 }

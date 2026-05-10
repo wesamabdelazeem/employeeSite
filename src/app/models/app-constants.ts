@@ -75,6 +75,11 @@ export class AppConstants {
   static readonly MSG_TAETIGKEITEN_DELETED_SUCCESS = 'Die Tätigkeitsbuchung wurde erfolgreich gelöscht';
   static readonly MSG_TAETIGKEITEN_DELETED_ERROR = 'Die Tätigkeitsbuchung wurde nicht gelöscht';
 
+  static readonly MSG_BEREITSCHAFTEN_CREATED_SUCCESS = 'Die Bereitschaft wurde erfolgreich erzeugt';
+  static readonly MSG_BEREITSCHAFTEN_CREATED_ERROR = 'Die Bereitschaft wurde nicht erzeugt';
+  static readonly MSG_BEREITSCHAFTEN_DELETED_SUCCESS = 'Die Bereitschaft wurde erfolgreich gelöscht';
+  static readonly MSG_BEREITSCHAFTEN_DELETED_ERROR = 'Die Bereitschaft wurde nicht gelöscht';
+
   static getFunctionValue(label: string): string {
         const item = PERSON_FUNCTION_TYPEN.find(item => item.label === label);
         return item ? item.value : label; // fallback to value if not found

@@ -760,7 +760,8 @@ private mergeApiDataIntoTree(baseTree: TaetigkeitNode[], apiData: ApiStempelzeit
 
     this.bereitschaftKorrigierenService.createBereitschaft(this.personId, dto)
     .subscribe({
-      next: (savedEntries) => {
+      next: (response) => {
+        const savedEntries = response.body ?? [];
         const savedEntry = savedEntries.find(
           e => e.login === dto.login && e.logoff === dto.logoff
         ) || savedEntries[savedEntries.length - 1];

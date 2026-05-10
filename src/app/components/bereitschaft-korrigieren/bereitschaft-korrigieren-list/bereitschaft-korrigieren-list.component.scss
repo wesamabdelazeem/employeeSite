@@ -214,16 +214,18 @@ $tablet: 900px;
   color: #b91c1c  !important;
 }
 
-.check-icon {
-  padding-left: 14px;
+.check-icon,
+.close-icon {
+  display: flex;
+  align-items: center;
   justify-content: start;
-  color: #15803d;
+  padding-left: 14px;
+  padding-right: 0;
+  width: 100%;
 }
 
-.close-icon {
-  padding-right: 0px;
-  color:  #b91c1c ;
-}
+.check-icon { color: #15803d; }
+.close-icon { color: #b91c1c; }
 
 
 // ::ng-deep .fixed-table th.first-column,

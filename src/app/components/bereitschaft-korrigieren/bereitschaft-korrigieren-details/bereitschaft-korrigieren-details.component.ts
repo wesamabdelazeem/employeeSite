@@ -475,7 +475,8 @@ const endDate: Date = formValue.endeDatum;
   const gestempeltTime = this.timeUtilityService.calculateGestempelt(loginDate, logoffDate);
   const timeRange = `${this.timeUtilityService.formatTime(loginDate)} - ${this.timeUtilityService.formatTime(logoffDate)}`;
 
-  const dto: ApiStempelzeit = {
+  const newStempelzeitData: ApiStempelzeit = {
+    id: `new-${Date.now()}`,
     login: loginDate.toISOString(),
     logoff: logoffDate.toISOString(),
     zeitTyp: ApiZeitTyp.BEREITSCHAFT,
@@ -484,64 +485,39 @@ const endDate: Date = formValue.endeDatum;
 
   const newActivityData = { ...formValue };
 
-  const startTime = Date.now();
-  this.bereitschaftKorrigierenService.createBereitschaft(this.personId, dto).subscribe({
-    next: (response) => {
-      const duration = Date.now() - startTime;
-      this.statusPanelService.addMessageRequest(
-        AppConstants.MSG_BEREITSCHAFTEN_CREATED_SUCCESS,
-        'POST',
-        duration,
-        response
-      );
+  const monthYear = this.timeUtilityService.getMonthYearString(startDate);
+  const monthNode = this.treeNodeManagementService.findOrCreateMonthNode(
+    this.dataSource.data, monthYear,
+    (my) => this.timeUtilityService.parseMonthYearString(my)
+  );
+  const dayKey = this.timeUtilityService.formatDayName(startDate);
+  const dayNode = this.treeNodeManagementService.findOrCreateDayNode(
+    monthNode, dayKey, startDate,
+    (str) => this.dateParserService.getDateFromFormattedDay(str)
+  );
 
-      const savedEntries = response.body ?? [];
-      const savedEntry = savedEntries.find(
-        e => e.login === dto.login && e.logoff === dto.logoff
-      ) || savedEntries[savedEntries.length - 1];
+  this.addActivityToDay(dayNode, newActivityData, timeRange, gestempeltTime, newStempelzeitData);
 
-      const monthYear = this.timeUtilityService.getMonthYearString(startDate);
-      const monthNode = this.treeNodeManagementService.findOrCreateMonthNode(
-        this.dataSource.data, monthYear,
-        (my) => this.timeUtilityService.parseMonthYearString(my)
-      );
-      const dayKey = this.timeUtilityService.formatDayName(startDate);
-      const dayNode = this.treeNodeManagementService.findOrCreateDayNode(
-        monthNode, dayKey, startDate,
-        (str) => this.dateParserService.getDateFromFormattedDay(str)
-      );
+  this.dataSource.data = [...this.dataSource.data];
+  this.treeNodeManagementService.expandParentNodesForNewEntry(this.treeControl, monthYear, dayKey);
 
-      this.addActivityToDay(dayNode, newActivityData, timeRange, gestempeltTime, savedEntry);
-
-      this.dataSource.data = [...this.dataSource.data];
-      this.treeNodeManagementService.expandParentNodesForNewEntry(this.treeControl, monthYear, dayKey);
-
-      setTimeout(() => {
-        const newNode = this.treeControl.dataNodes.find(node =>
-          node.level === 2 &&
-          node.formData &&
-          node.formData.startDatum === formValue.startDatum &&
-          node.timeRange === timeRange
-        );
-        if (newNode) {
-          this.finalizeNewEntry(newNode);
-        }
-      }, 150);
-
-      this.showInfoDialog('Neue Bereitschaft erfolgreich erstellt!');
-      this.resetAlarmState();
-    },
-    error: (err) => {
-      const duration = Date.now() - startTime;
-      this.statusPanelService.addMessageRequest(
-        AppConstants.MSG_BEREITSCHAFTEN_CREATED_ERROR,
-        'POST',
-        duration,
-        err
-      );
-      this.showErrorDialog('Fehler beim Speichern der Bereitschaft.');
+  setTimeout(() => {
+    const newNode = this.treeControl.dataNodes.find(node =>
+      node.level === 2 &&
+      node.formData &&
+      node.formData.startDatum === formValue.startDatum &&
+      node.timeRange === timeRange
+    );
+    if (newNode) {
+      this.finalizeNewEntry(newNode);
     }
+  }, 150);
+
+  this.snackBar.open('Neue Bereitschaft erfolgreich erstellt!', 'Schließen', {
+    duration: 3000,
+    verticalPosition: 'top'
   });
+  this.resetAlarmState();
 }
 
 
@@ -666,13 +642,20 @@ if (this.abschlussInfo && this.abschlussInfo.naechsterBuchbarerTag) {
 
   if (!validationResult.isValid) {
     this.snackBar.open(validationResult.errorMessage!, 'Schließen', {
-      duration: 5000,    });
+      duration: 5000,
+      verticalPosition: 'top'
+    });
     return;
   }
 
   if (this.isCreatingNew || this.isNewlyCreated) {
     this.saveNewEntry(formValue);
   }
+
+  this.snackBar.open('Änderungen gespeichert!', 'Schließen', {
+    duration: 3000,
+    verticalPosition: 'top'
+  });
 
   this.isEditing = false;
   this.isCreatingNew = false;
@@ -703,18 +686,10 @@ private saveNewEntry(formValue: any): void {
     anmerkung: formValue.anmerkung || ''
   };
 
-  const startTime = Date.now();
   this.bereitschaftKorrigierenService
     .createBereitschaft(this.personId, dto)
     .subscribe({
       next: (response) => {
-        const duration = Date.now() - startTime;
-        this.statusPanelService.addMessageRequest(
-          AppConstants.MSG_BEREITSCHAFTEN_CREATED_SUCCESS,
-          'POST',
-          duration,
-          response
-        );
         const savedEntries = response.body ?? [];
         const savedEntry = savedEntries.find(
           e => e.login === dto.login && e.logoff === dto.logoff
@@ -749,18 +724,9 @@ private saveNewEntry(formValue: any): void {
             this.cdr.detectChanges();
           }
         }, 150);
-
-        this.showInfoDialog('Bereitschaft erfolgreich gespeichert!');
       },
-      error: (err) => {
-        const duration = Date.now() - startTime;
-        this.statusPanelService.addMessageRequest(
-          AppConstants.MSG_BEREITSCHAFTEN_CREATED_ERROR,
-          'POST',
-          duration,
-          err
-        );
-        this.showErrorDialog('Fehler beim Speichern der Bereitschaft.');
+      error: err => {
+        console.error('Create Bereitschaft failed', err);
       }
     });
 }

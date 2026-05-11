@@ -40,7 +40,6 @@ import { MatNativeDateModule, MAT_DATE_FORMATS, DateAdapter, MAT_DATE_LOCALE } f
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { TreeNodeManagementService } from '../../../services/utils/tree-node-management.service';
-import { GetitRest2Service } from '../../../services/getit-rest-2.service';
 import { MOCK_LOGGED_IN_PERSON } from '../../../mock/mock-data';
 import { CustomDateAdapter } from '../../../services/custom-date-adapter.service';
 import { TimeBoxComponent } from '../../../shared/components/time-box/time-box.component';
@@ -153,7 +152,6 @@ export class BereitschaftKorrigierenDetailsComponent {
 
    
     private bereitschaftKorrigierenService: BereitschaftKorrigierenService,
-    private getItRestService : GetitRest2Service,
     private formValidationService: FormValidationService,
     private timeUtilityService: TimeUtilityService,
     private treeNodeService: TreeNodeService,
@@ -239,30 +237,32 @@ loadData(personId: string) {
   const endDate = `${currentYear}-12-31`;
   let firstDayOfLastMonth = DateUtilsService.getFirstDayOfLastMonth();
 
-  this.getItRestService.getPerson( personId,
-
- this.personRequest.detail,this.personRequest.berechneteStunden,this.personRequest.addVertraege).subscribe({
-
+  this.bereitschaftKorrigierenService.getPerson(
+    personId,
+    this.personRequest.detail,
+    this.personRequest.berechneteStunden,
+    this.personRequest.addVertraege
+  ).subscribe({
     next: (person) => {
       this.personName = `${person.vorname} ${person.nachname}`;
-     this.getItRestService.getPersonStempelzeitenNoAbwesenheit(personId, startDate, endDate).subscribe({
- next: (stempelzeiten) => {
-   const filtered = stempelzeiten;// .filter((s: any) => s.zeitTyp === 'BEREITSCHAFT');
-   const baseTreeData = this.treeExpansionService.generateCurrentAndPreviousMonth();
-   const mergedTreeData = this.mergeApiDataIntoTree(baseTreeData, filtered);
+      this.bereitschaftKorrigierenService.getPersonStempelzeitenNoAbwesenheit(personId, startDate, endDate).subscribe({
+        next: (stempelzeiten) => {
+          const filtered = stempelzeiten;
+          const baseTreeData = this.treeExpansionService.generateCurrentAndPreviousMonth();
+          const mergedTreeData = this.mergeApiDataIntoTree(baseTreeData, filtered);
 
-   this.dataSource.data = mergedTreeData;
-   this.isLoading = false;
+          this.dataSource.data = mergedTreeData;
+          this.isLoading = false;
 
-   this.treeExpansionService.expandCurrentAndLastMonth(this.treeControl);
- },
- error: () => this.isLoading = false
-});
-this.getItRestService.getPersonAbschlussInfo(personId).subscribe({
- next: (info) => {
-   this.abschlussInfo = info;
- }
-});
+          this.treeExpansionService.expandCurrentAndLastMonth(this.treeControl);
+        },
+        error: () => this.isLoading = false
+      });
+      this.bereitschaftKorrigierenService.getPersonAbschlussInfo(personId).subscribe({
+        next: (info) => {
+          this.abschlussInfo = info;
+        }
+      });
     },
     error: () => this.isLoading = false
   });

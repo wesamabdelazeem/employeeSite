@@ -17,7 +17,6 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
 import { MatCheckbox, MatCheckboxChange } from "@angular/material/checkbox";
 import{ BereitschaftszeitenService} from '../../../services/bereitschaftszeiten.service';
-import { DummyService } from '../../../services/dummy.service';
  import { FormValidationService } from '../../../services/utils/form-validation.service';
 import { TimeUtilityService } from '../../../services/utils/time-utility.service';
 import { TreeNodeService } from '../../../services/utils/tree-node.service';
@@ -36,10 +35,12 @@ import { ApiAbschlussInfo } from '../../../models/ApiAbschlussInfo';
  import { FlatNode } from '../../../models/Flat-node';
 import { TaetigkeitNode } from '../../../models/taetigkeit-node';
 import { ConfirmationDialogComponent } from '../../confirmation-dialog/confirmation-dialog/confirmation-dialog.component';
-import { BereitschaftKorrigierenService } from '../../../services/bereitschaft-korrigieren.service';
-import { GetitRest2Service } from '../../../services/getit-rest-2.service';
 import { TreeNodeManagementService } from '../../../services/utils/tree-node-management.service';
-import {PersonenService} from '../../../services/personen.service';
+import { PersonenService } from '../../../services/personen.service';
+import { StatusPanelService } from '../../../services/utils/status-panel-status.service';
+import { AppConstants } from '../../../models/app-constants';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { TimeBoxComponent } from '../../../shared/components/time-box/time-box.component';
 //import {PersonService} from '../../../services/person.service';
 export const DATE_FORMATS = {
   parse: {
@@ -60,7 +61,9 @@ export const DATE_FORMATS = {
     MatProgressSpinnerModule, MatTreeModule, MatIconModule, MatButtonModule,
     MatFormFieldModule, MatInputModule, MatSelectModule, MatSnackBarModule,
     ReactiveFormsModule, CommonModule, MatDatepickerModule,
-  MatNativeDateModule
+    MatNativeDateModule,
+    MatTooltipModule,
+    TimeBoxComponent
   ],
 providers: [
   { provide: MAT_DATE_LOCALE, useValue: 'de-DE' },
@@ -141,14 +144,9 @@ export class BereitschaftszeitenDetailsComponent {
     private router: Router,
     private cdr: ChangeDetectorRef,
     private dialog: MatDialog,
-
-
-    private personService : PersonenService,
-    private getitRest2Service: GetitRest2Service,
-
-
-    private dummyService: DummyService,
-    private bereitschaftKorrigierenService: BereitschaftKorrigierenService,
+    private personService: PersonenService,
+    private bereitschaftszeitenService: BereitschaftszeitenService,
+    private statusPanelService: StatusPanelService,
     private formValidationService: FormValidationService,
     private timeUtilityService: TimeUtilityService,
     private treeNodeService: TreeNodeService,
@@ -199,7 +197,7 @@ export class BereitschaftszeitenDetailsComponent {
 
     const endDate = `${currentYear}-12-31`;
 
-    this.bereitschaftKorrigierenService.getPersonStempelzeitenNoAbwesenheit(personId, firstDayOfLastMonth, endDate ).subscribe({
+    this.bereitschaftszeitenService.getPersonStempelzeitenNoAbwesenheit(personId, firstDayOfLastMonth, endDate ).subscribe({
       next: (stempelzeiten) => {
         console.log('stempelzeiten', stempelzeiten);
         console.log('stempelzeiten-length', stempelzeiten.length);
@@ -215,7 +213,7 @@ export class BereitschaftszeitenDetailsComponent {
       error: () => this.isLoading = false
     });
 
-    this.getitRest2Service.getPersonAbschlussInfo(personId).subscribe({
+    this.bereitschaftszeitenService.getPersonAbschlussInfo(personId).subscribe({
       next: (info) => {
         this.abschlussInfo = info;
       }
@@ -228,7 +226,7 @@ loadData_(personId: string) {
   const startDate = `${currentYear}-01-01`;
   const endDate = `${currentYear}-12-31`;
 
-  this.dummyService.getPersonStempelzeitenNoAbwesenheit(personId, startDate, endDate).subscribe({
+  this.bereitschaftszeitenService.getPersonStempelzeitenNoAbwesenheit(personId, startDate, endDate).subscribe({
     next: (stempelzeiten) => {
       const filtered = stempelzeiten.filter((s: ApiStempelzeit) =>
         s.zeitTyp && s.zeitTyp.toUpperCase() === ApiZeitTyp.BEREITSCHAFT.toUpperCase()
@@ -244,7 +242,7 @@ loadData_(personId: string) {
     error: () => this.isLoading = false
   });
 
-  this.dummyService.getPersonAbschlussInfo(personId).subscribe({
+  this.bereitschaftszeitenService.getPersonAbschlussInfo(personId).subscribe({
     next: (info) => {
       this.abschlussInfo = info;
     }
@@ -430,23 +428,24 @@ private mergeApiDataIntoTree(baseTree: TaetigkeitNode[], apiData: ApiStempelzeit
       anmerkung: formValue.anmerkung || ''
     };
 
-// TODO: BEGIN OF MY CODE TO SAVE
-    this.bereitschaftKorrigierenService.createBereitschaft(this.personId, newStempelzeitData)
+    this.bereitschaftszeitenService.createBereitschaft(this.personId, newStempelzeitData)
     .subscribe({
-      next: (savedEntries) => {
+      next: (savedEntries: ApiStempelzeit[]) => {
+        const savedEntry = savedEntries.find(
+          (e: ApiStempelzeit) => e.login === newStempelzeitData.login && e.logoff === newStempelzeitData.logoff
+        ) || savedEntries[savedEntries.length - 1] || newStempelzeitData;
+
         const newActivityData = { ...formValue };
-
-
 
         const monthYear = this.timeUtilityService.getMonthYearString(startDate);
         const monthNode = this.treeNodeManagementService.findOrCreateMonthNode(
           this.dataSource.data, monthYear,
           (monthYear) => this.timeUtilityService.parseMonthYearString(monthYear)
-        )
+        );
         const dayKey = this.timeUtilityService.formatDayName(startDate);
-        const dayNode = this.treeNodeManagementService.findOrCreateDayNode(monthNode, dayKey, startDate, (str) => this.dateParserService.getDateFromFormattedDay(str))
+        const dayNode = this.treeNodeManagementService.findOrCreateDayNode(monthNode, dayKey, startDate, (str) => this.dateParserService.getDateFromFormattedDay(str));
 
-        this.addActivityToDay(dayNode, newActivityData, timeRange, gestempeltTime, newStempelzeitData);
+        this.addActivityToDay(dayNode, newActivityData, timeRange, gestempeltTime, savedEntry);
 
         this.dataSource.data = [...this.dataSource.data];
         this.treeNodeManagementService.expandParentNodesForNewEntry(this.treeControl, monthYear, dayKey);
@@ -468,14 +467,30 @@ private mergeApiDataIntoTree(baseTree: TaetigkeitNode[], apiData: ApiStempelzeit
           duration: 3000,
           verticalPosition: 'top'
         });
+        this.statusPanelService.addMessage(
+          'success',
+          'POST',
+          'personen/bereitschaft',
+          '200',
+          0,
+          AppConstants.MSG_BEREITSCHAFTEN_CREATED_SUCCESS,
+          'unknown'
+        );
         this.resetAlarmState();
       },
-      error: err => {
+      error: (err: any) => {
         console.error('Create Bereitschaft failed', err);
+        this.statusPanelService.addMessage(
+          'error',
+          'POST',
+          'personen/bereitschaft',
+          '500',
+          0,
+          AppConstants.MSG_BEREITSCHAFTEN_CREATED_ERROR,
+          'unknown'
+        );
       }
     });
-
-    // TODO: END OF MY CODE TO SAVE
 
   }
 
@@ -539,7 +554,7 @@ private mergeApiDataIntoTree(baseTree: TaetigkeitNode[], apiData: ApiStempelzeit
     };
 
 // TODO: BEGIN OF MY CODE TO SAVE
-    this.bereitschaftKorrigierenService.createBereitschaft(this.personId, newStempelzeitData)
+    this.bereitschaftszeitenService.createBereitschaft(this.personId, newStempelzeitData)
     .subscribe({
       next: (savedEntries) => {
 
@@ -719,18 +734,6 @@ private mergeApiDataIntoTree(baseTree: TaetigkeitNode[], apiData: ApiStempelzeit
     if (this.isCreatingNew || this.isNewlyCreated) {
       this.saveNewEntry(formValue);
     }
-
-    this.snackBar.open('Änderungen gespeichert!', 'Schließen', {
-      duration: 3000,
-      verticalPosition: 'top'
-    });
-
-
-
-    this.isEditing = false;
-    this.isCreatingNew = false;
-    this.isNewlyCreated = false;
-    this.disableAllFormControls();
   }
 
 
@@ -758,13 +761,12 @@ private mergeApiDataIntoTree(baseTree: TaetigkeitNode[], apiData: ApiStempelzeit
       anmerkung: formValue.anmerkung || ''
     };
 
-    this.bereitschaftKorrigierenService.createBereitschaft(this.personId, dto)
+    this.bereitschaftszeitenService.createBereitschaft(this.personId, dto)
     .subscribe({
-      next: (response) => {
-        const savedEntries = response.body ?? [];
+      next: (savedEntries: ApiStempelzeit[]) => {
         const savedEntry = savedEntries.find(
-          e => e.login === dto.login && e.logoff === dto.logoff
-        ) || savedEntries[savedEntries.length - 1];
+          (e: ApiStempelzeit) => e.login === dto.login && e.logoff === dto.logoff
+        ) || savedEntries[savedEntries.length - 1] || dto;
 
         const monthYear = this.timeUtilityService.getMonthYearString(startDate);
         const monthNode = this.treeNodeManagementService.findOrCreateMonthNode(
@@ -795,15 +797,42 @@ private mergeApiDataIntoTree(baseTree: TaetigkeitNode[], apiData: ApiStempelzeit
             this.cdr.detectChanges();
           }
         }, 150);
+
+        this.snackBar.open('Änderungen gespeichert!', 'Schließen', {
+          duration: 3000,
+          verticalPosition: 'top'
+        });
+        this.statusPanelService.addMessage(
+          'success',
+          'POST',
+          'personen/bereitschaft',
+          '200',
+          0,
+          AppConstants.MSG_BEREITSCHAFTEN_CREATED_SUCCESS,
+          'unknown'
+        );
+        this.isEditing = false;
+        this.isCreatingNew = false;
+        this.isNewlyCreated = false;
+        this.disableAllFormControls();
       },
-      error: err => {
+      error: (err: any) => {
         console.error('Create Bereitschaft failed', err);
+        this.statusPanelService.addMessage(
+          'error',
+          'POST',
+          'personen/bereitschaft',
+          '500',
+          0,
+          AppConstants.MSG_BEREITSCHAFTEN_CREATED_ERROR,
+          'unknown'
+        );
       }
     });
 
 
     /*
-    this.dummyService
+    this.bereitschaftszeitenService
       .createBereitschaft(this.personId, dto)
       .subscribe({
         next: (savedEntries) => {
@@ -867,7 +896,7 @@ private mergeApiDataIntoTree(baseTree: TaetigkeitNode[], apiData: ApiStempelzeit
 
     console.log('deleting-id', id);
 
-    this.bereitschaftKorrigierenService.deleteBereitschaft(id).subscribe({
+    this.bereitschaftszeitenService.deleteBereitschaft(id).subscribe({
       next: () => {
         this.treeNodeService.deleteNodeFromTree(
           this.dataSource.data,
@@ -876,19 +905,37 @@ private mergeApiDataIntoTree(baseTree: TaetigkeitNode[], apiData: ApiStempelzeit
 
         this.dataSource.data = [...this.dataSource.data];
         this.snackBar.open('Eintrag gelöscht!', 'Schließen', { duration: 3000 });
+        this.statusPanelService.addMessage(
+          'success',
+          'DELETE',
+          'personen/bereitschaft',
+          '200',
+          0,
+          AppConstants.MSG_BEREITSCHAFTEN_DELETED_SUCCESS,
+          'unknown'
+        );
 
         this.selectedNode = null;
         this.isEditing = false;
         this.bereitschaftForm.reset();
       },
-      error: err => {
+      error: (err: any) => {
         console.error('Delete failed', err);
         this.snackBar.open('Fehler beim Löschen', 'Schließen', { duration: 3000 });
+        this.statusPanelService.addMessage(
+          'error',
+          'DELETE',
+          'personen/bereitschaft',
+          '500',
+          0,
+          AppConstants.MSG_BEREITSCHAFTEN_DELETED_ERROR,
+          'unknown'
+        );
       }
     });
 
 /*
-    this.dummyService.deleteBereitschaft(id).subscribe({
+    this.bereitschaftszeitenService.deleteBereitschaft(id).subscribe({
       next: () => {
         this.treeNodeService.deleteNodeFromTree(
           this.dataSource.data,
@@ -965,6 +1012,21 @@ private mergeApiDataIntoTree(baseTree: TaetigkeitNode[], apiData: ApiStempelzeit
       form.get(controlNameHour)?.setValue(result.hour);
       form.get(controlNameMinute)?.setValue(result.minute);
     }
+  }
+
+  onTimeBoxChange(
+    form: FormGroup,
+    field: 'startStunde' | 'startMinuten' | 'endeStunde' | 'endeMinuten',
+    value: number
+  ): void {
+    form.get(field)?.patchValue(value);
+    if (field === 'startStunde' && value === 24) {
+      form.get('startMinuten')?.patchValue(0, { emitEvent: false });
+    }
+    if (field === 'endeStunde' && value === 24) {
+      form.get('endeMinuten')?.patchValue(0, { emitEvent: false });
+    }
+    form.updateValueAndValidity();
   }
 
   private finalizeNewEntry(newNode: FlatNode): void {

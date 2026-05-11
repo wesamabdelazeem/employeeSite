@@ -53,8 +53,9 @@ export class BereitschaftKorrigierenListComponent implements OnInit,OnDestroy{
   isLoading: boolean = false;
   errorMessage: string = '';
 
-  activeSortColumn: string = '';
+  activeSortColumn: string = 'nachname';
   sortDirection: 'asc' | 'desc' = 'asc';
+  sortInteracted: boolean = false;
   selectedRowId: string | null = null;
 
   /**
@@ -69,6 +70,7 @@ export class BereitschaftKorrigierenListComponent implements OnInit,OnDestroy{
     showInactive: boolean;
     activeSortColumn: string;
     sortDirection: 'asc' | 'desc';
+    sortInteracted: boolean;
     selectedRowId: string | null;
   } | null = null;
   private static routerSubInstalled = false;
@@ -101,6 +103,7 @@ export class BereitschaftKorrigierenListComponent implements OnInit,OnDestroy{
       this.showInactive = saved.showInactive;
       this.activeSortColumn = saved.activeSortColumn;
       this.sortDirection = saved.sortDirection;
+      this.sortInteracted = saved.sortInteracted;
       this.selectedRowId = saved.selectedRowId;
     }
 
@@ -124,8 +127,9 @@ export class BereitschaftKorrigierenListComponent implements OnInit,OnDestroy{
   private resetAndReload(): void {
     this.searchTerm = '';
     this.showInactive = false;
-    this.activeSortColumn = '';
+    this.activeSortColumn = 'nachname';
     this.sortDirection = 'asc';
+    this.sortInteracted = false;
     this.selectedRowId = null;
     BereitschaftKorrigierenListComponent.savedState = null;
     this.loadPersonenData();
@@ -156,6 +160,7 @@ export class BereitschaftKorrigierenListComponent implements OnInit,OnDestroy{
       showInactive: this.showInactive,
       activeSortColumn: this.activeSortColumn,
       sortDirection: this.sortDirection,
+      sortInteracted: this.sortInteracted,
       selectedRowId: this.selectedRowId,
     };
     this.refreshSub?.unsubscribe();
@@ -196,8 +201,14 @@ private applySorting(data: ApiPerson[]): ApiPerson[] {
   const direction = this.sortDirection;
 
   return [...data].sort((a, b) => {
-    let valueA = this.getSortValue(a, field);
-    let valueB = this.getSortValue(b, field);
+    if (field !== 'aktiv') {
+      const aktivA = a.aktiv ? 0 : 1;
+      const aktivB = b.aktiv ? 0 : 1;
+      if (aktivA !== aktivB) return aktivA - aktivB;
+    }
+
+    const valueA = this.getSortValue(a, field);
+    const valueB = this.getSortValue(b, field);
 
     if (valueA < valueB) return direction === 'asc' ? -1 : 1;
     if (valueA > valueB) return direction === 'asc' ? 1 : -1;
@@ -211,6 +222,7 @@ private applySorting(data: ApiPerson[]): ApiPerson[] {
     this.activeSortColumn = field;
     this.sortDirection = 'asc';
   }
+  this.sortInteracted = true;
   this.filteredData = this.applySorting(this.filteredData);
   this.dataSource.data = this.filteredData;
 }
@@ -248,6 +260,7 @@ private applySorting(data: ApiPerson[]): ApiPerson[] {
 
  getSortIcon(column: string): string {
     if (this.activeSortColumn !== column) return '';
+    if (column === 'nachname' && !this.sortInteracted) return '';
     return this.sortDirection === 'asc' ? 'keyboard_arrow_up' : 'keyboard_arrow_down';
   }
 

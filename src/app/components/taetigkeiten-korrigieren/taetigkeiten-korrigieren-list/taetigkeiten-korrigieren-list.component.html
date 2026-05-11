@@ -40,7 +40,7 @@
     <table
       mat-table
       [dataSource]="dataSource"
-      class="mat-elevation-z8"
+      class="mat-elevation-z8 "
       *ngIf="dataSource?.data?.length">
 
       <ng-container matColumnDef="icon"  >
@@ -59,8 +59,8 @@
           <div class="sort-header" (click)="toggleSort('nachname')">
           Familienname
               <mat-icon class="sort-arrow" *ngIf="activeSortColumn === 'nachname'">{{ getSortIcon('nachname') }}</mat-icon>
-</div>
- </th>
+          </div>
+        </th>
 
 
         <td mat-cell *matCellDef="let element">{{ element.nachname || "" }}</td>
@@ -74,7 +74,7 @@
 
               <mat-icon class="sort-arrow" *ngIf="activeSortColumn === 'vorname'">{{ getSortIcon('vorname') }}</mat-icon>
               </div>
- </th>
+        </th>
         <td mat-cell *matCellDef="let element">{{ element.vorname || "" }}</td>
       </ng-container>
 

@@ -30,14 +30,26 @@ overflow: hidden;
   z-index: 10;
 }
 .tree-container {
-  flex: 1;
-  overflow-y: auto;
+  flex: 1 1 auto;
+  min-height: 0;
+  height: calc(100vh - 90px);
+  overflow-y: scroll;
   overflow-x: hidden;
+  scrollbar-gutter: stable;
+  box-sizing: border-box;
+
+  @media (max-width: 780px) {
+    height: calc(100vh - 220px);
+  }
+  @media (min-width: 1920px) {
+    height: calc(100vh - 70px);
+  }
 }
 
 .mat-tree {
   background-color: transparent;
-  min-height: 0; /* Important for flex children */
+  display: block;
+  min-height: 0;
 }
 
 .left-panel-header button {
@@ -73,7 +85,7 @@ overflow: hidden;
   flex: 1;
   background-color: white;
 }
-.gebucht-icon{font-size: 15px;}
+
 .title {
   color: white;
   margin-top: 10px;
@@ -199,9 +211,14 @@ overflow: hidden;
   justify-content: space-between;
   align-items: center;
   min-height: 35px;
+
+  &:has(.level2-sub-info:not([style*="hidden"])) {
+    padding: 6px 0;
+    min-height: 50px;
+  }
 }
 .mat-tree-node:has(.expandable-node-level2) {
-  height: 35px !important;
+  height: auto !important;
   min-height: 35px !important;
 }
 .level2-container {
@@ -217,16 +234,34 @@ overflow: hidden;
   }
 
   .day-name {
-    grid-row: 2;
+    grid-row: 1;
     grid-column: 2;
-    margin: 2px 0 2px;
+    margin: 0 0 2px 0;
+    align-self: end;
   }
 
   .level2-sub-info {
     grid-row: 2;
     grid-column: 2;
     margin-left: 0;
+    align-self: start;
   }
+
+  &:has(.level2-sub-info[style*="hidden"]) {
+    .level2-sub-info {
+      display: none;
+    }
+    .event-icon {
+      grid-row: 1;
+      align-self: center;
+    }
+    .day-name {
+      grid-row: 1;
+      align-self: center;
+      margin: 0;
+    }
+  }
+  .gebucht-icon{font-size: 15px;}
 }
 .level2-container-bottom {
   display: flex;
@@ -1000,9 +1035,10 @@ position: relative;
 .third-container-top {
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: start;
   gap: 5px;
   height: 35px !important;
+  margin-left: 22px !important;
 }
 
 

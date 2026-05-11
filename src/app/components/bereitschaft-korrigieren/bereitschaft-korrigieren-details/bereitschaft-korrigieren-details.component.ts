@@ -153,7 +153,7 @@ export class BereitschaftKorrigierenDetailsComponent {
 
    
     private bereitschaftKorrigierenService: BereitschaftKorrigierenService,
-private getItRestService : GetitRest2Service,
+    private getItRestService : GetitRest2Service,
     private formValidationService: FormValidationService,
     private timeUtilityService: TimeUtilityService,
     private treeNodeService: TreeNodeService,
@@ -517,6 +517,15 @@ const endDate: Date = formValue.endeDatum;
     duration: 3000,
     verticalPosition: 'top'
   });
+  this.statusPanelService.addMessage(
+    'success',
+    'POST',
+    'personen/bereitschaft',
+    '200',
+    0,
+    AppConstants.MSG_BEREITSCHAFTEN_CREATED_SUCCESS,
+    'unknown'
+  );
   this.resetAlarmState();
 }
 
@@ -612,10 +621,21 @@ const endDate: Date = formValue.endeDatum;
       this.isEditing = false;
     }
   }
+
+  /////save message
 saveBereitschaft() {
   this.formValidationService.validateAllFields(this.bereitschaftForm);
   if (!this.bereitschaftForm.valid) {
     this.showValidationErrors();
+    this.statusPanelService.addMessage(
+      'error',
+      'POST',
+      'personen/bereitschaft',
+      '400',
+      0,
+      AppConstants.MSG_BEREITSCHAFTEN_CREATED_ERROR,
+      'unknown'
+    );
     return;
   }
 
@@ -629,6 +649,15 @@ if (this.abschlussInfo && this.abschlussInfo.naechsterBuchbarerTag) {
         `Dieser Zeitraum ist bereits abgeschlossen. Frühestens ab ${this.abschlussInfo.naechsterBuchbarerTag} buchbar.`,
         'Schließen',
         { duration: 5000, verticalPosition: 'top' }
+      );
+      this.statusPanelService.addMessage(
+        'error',
+        'POST',
+        'personen/bereitschaft',
+        '400',
+        0,
+        AppConstants.MSG_BEREITSCHAFTEN_CREATED_ERROR,
+        'unknown'
       );
       return;
     }
@@ -645,6 +674,15 @@ if (this.abschlussInfo && this.abschlussInfo.naechsterBuchbarerTag) {
       duration: 5000,
       verticalPosition: 'top'
     });
+    this.statusPanelService.addMessage(
+      'error',
+      'POST',
+      'personen/bereitschaft',
+      '400',
+      0,
+      AppConstants.MSG_BEREITSCHAFTEN_CREATED_ERROR,
+      'unknown'
+    );
     return;
   }
 
@@ -656,6 +694,15 @@ if (this.abschlussInfo && this.abschlussInfo.naechsterBuchbarerTag) {
     duration: 3000,
     verticalPosition: 'top'
   });
+  this.statusPanelService.addMessage(
+    'success',
+    'POST',
+    'personen/bereitschaft',
+    '200',
+    0,
+    AppConstants.MSG_BEREITSCHAFTEN_CREATED_SUCCESS,
+    'unknown'
+  );
 
   this.isEditing = false;
   this.isCreatingNew = false;
@@ -752,6 +799,15 @@ async deleteEntry() {
     this.selectedNode = null;
     this.isEditing = false;
     this.bereitschaftForm.reset();
+    this.statusPanelService.addMessage(
+      'success',
+      'DELETE',
+      'personen/bereitschaft',
+      '200',
+      0,
+      AppConstants.MSG_BEREITSCHAFTEN_DELETED_SUCCESS,
+      'unknown'
+    );
     return;
   }
 

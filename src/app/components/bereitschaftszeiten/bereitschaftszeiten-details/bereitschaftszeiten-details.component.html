@@ -86,7 +86,7 @@
                 class="level2-sub-info"
                 [style.visibility]="node.hasEntries ? 'visible' : 'hidden'"
               >
-                <mat-icon class="gebucht-icon">drag_indicator</mat-icon>
+                <i class="mdi mdi-file-tree gebucht-icon"></i>
                 <span>Bereitschaft: {{ node.gestempelt }}</span>
               </div>
             </div>
@@ -270,12 +270,12 @@
         matTooltipPosition="below"
       >
         <mat-icon
-          [class.delete-icon]="!isEditing && !isCreatingNew && !isNewlyCreated"
-        >
-          {{
-            isEditing || isCreatingNew || isNewlyCreated ? "close" : "delete"
-          }}
-        </mat-icon>
+          *ngIf="isEditing || isCreatingNew || isNewlyCreated"
+        >close</mat-icon>
+        <i
+          *ngIf="!(isEditing || isCreatingNew || isNewlyCreated)"
+          class="mdi mdi-delete-forever delete-icon"
+        ></i>
 
         <span>{{
           isEditing || isCreatingNew || isNewlyCreated ? "Abbrechen" : "Löschen"

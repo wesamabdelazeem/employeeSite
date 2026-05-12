@@ -16,6 +16,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { ActivatedRoute, Router } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
 import { MatCheckbox, MatCheckboxChange } from "@angular/material/checkbox";
+import { HttpErrorResponse, HttpResponse } from '@angular/common/http';
 import{ BereitschaftszeitenService} from '../../../services/bereitschaftszeiten.service';
  import { FormValidationService } from '../../../services/utils/form-validation.service';
 import { TimeUtilityService } from '../../../services/utils/time-utility.service';
@@ -35,6 +36,8 @@ import { ApiAbschlussInfo } from '../../../models/ApiAbschlussInfo';
  import { FlatNode } from '../../../models/Flat-node';
 import { TaetigkeitNode } from '../../../models/taetigkeit-node';
 import { ConfirmationDialogComponent } from '../../confirmation-dialog/confirmation-dialog/confirmation-dialog.component';
+import { InfoDialogComponent } from '../../dialogs/info-dialog/info-dialog.component';
+import { ErrorDialogComponent } from '../../dialogs/error-dialog/error-dialog.component';
 import { TreeNodeManagementService } from '../../../services/utils/tree-node-management.service';
 import { PersonenService } from '../../../services/personen.service';
 import { StatusPanelService } from '../../../services/utils/status-panel-status.service';
@@ -201,7 +204,9 @@ export class BereitschaftszeitenDetailsComponent {
       next: (stempelzeiten) => {
         console.log('stempelzeiten', stempelzeiten);
         console.log('stempelzeiten-length', stempelzeiten.length);
-        const filtered = stempelzeiten; //.filter((s: any) => s.zeitTyp === 'BEREITSCHAFT');
+        const filtered = stempelzeiten.filter((s: ApiStempelzeit) =>
+          s.zeitTyp && s.zeitTyp.toUpperCase() === ApiZeitTyp.BEREITSCHAFT.toUpperCase()
+        );
         const baseTreeData = this.treeExpansionService.generateCurrentAndPreviousMonth();
         const mergedTreeData = this.mergeApiDataIntoTree(baseTreeData, filtered);
 
@@ -388,10 +393,8 @@ private mergeApiDataIntoTree(baseTree: TaetigkeitNode[], apiData: ApiStempelzeit
       const naechsterBuchbarerTag = new Date(this.abschlussInfo.naechsterBuchbarerTag);
 
       if (startDatum < naechsterBuchbarerTag) {
-        this.snackBar.open(
-          `Dieser Zeitraum ist bereits abgeschlossen. Frühestens ab ${this.abschlussInfo.naechsterBuchbarerTag} buchbar.`,
-          'Schließen',
-          { duration: 5000, verticalPosition: 'top' }
+        this.showErrorDialog(
+          `Dieser Zeitraum ist bereits abgeschlossen. Frühestens ab ${this.abschlussInfo.naechsterBuchbarerTag} buchbar.`
         );
         return;
       }
@@ -403,10 +406,13 @@ private mergeApiDataIntoTree(baseTree: TaetigkeitNode[], apiData: ApiStempelzeit
     );
 
     if (!validationResult.isValid) {
-      this.snackBar.open(validationResult.errorMessage!, 'Schließen', {
-        duration: 5000,
-        verticalPosition: 'top'
-      });
+      this.showErrorDialog(validationResult.errorMessage!);
+      this.statusPanelService.addMessageRequest(
+        AppConstants.MSG_BEREITSCHAFTEN_CREATED_ERROR,
+        'POST',
+        0,
+        this.fakeErrorResponse('personen/bereitschaft', 400)
+      );
       return;
     }
     const startDate: Date = formValue.startDatum;
@@ -463,31 +469,22 @@ private mergeApiDataIntoTree(baseTree: TaetigkeitNode[], apiData: ApiStempelzeit
           }
         }, 150);
 
-        this.snackBar.open('Neue Bereitschaft erfolgreich erstellt!', 'Schließen', {
-          duration: 3000,
-          verticalPosition: 'top'
-        });
-        this.statusPanelService.addMessage(
-          'success',
-          'POST',
-          'personen/bereitschaft',
-          '200',
-          0,
+        this.showInfoDialog('Neue Bereitschaft erfolgreich erstellt!');
+        this.statusPanelService.addMessageRequest(
           AppConstants.MSG_BEREITSCHAFTEN_CREATED_SUCCESS,
-          'unknown'
+          'POST',
+          0,
+          this.fakeOkResponse()
         );
         this.resetAlarmState();
       },
       error: (err: any) => {
         console.error('Create Bereitschaft failed', err);
-        this.statusPanelService.addMessage(
-          'error',
-          'POST',
-          'personen/bereitschaft',
-          '500',
-          0,
+        this.statusPanelService.addMessageRequest(
           AppConstants.MSG_BEREITSCHAFTEN_CREATED_ERROR,
-          'unknown'
+          'POST',
+          0,
+          this.fakeErrorResponse('personen/bereitschaft', 500)
         );
       }
     });
@@ -513,10 +510,8 @@ private mergeApiDataIntoTree(baseTree: TaetigkeitNode[], apiData: ApiStempelzeit
       const naechsterBuchbarerTag = new Date(this.abschlussInfo.naechsterBuchbarerTag);
 
       if (startDatum < naechsterBuchbarerTag) {
-        this.snackBar.open(
-          `Dieser Zeitraum ist bereits abgeschlossen. Frühestens ab ${this.abschlussInfo.naechsterBuchbarerTag} buchbar.`,
-          'Schließen',
-          { duration: 5000, verticalPosition: 'top' }
+        this.showErrorDialog(
+          `Dieser Zeitraum ist bereits abgeschlossen. Frühestens ab ${this.abschlussInfo.naechsterBuchbarerTag} buchbar.`
         );
         return;
       }
@@ -528,10 +523,13 @@ private mergeApiDataIntoTree(baseTree: TaetigkeitNode[], apiData: ApiStempelzeit
     );
 
     if (!validationResult.isValid) {
-      this.snackBar.open(validationResult.errorMessage!, 'Schließen', {
-        duration: 5000,
-        verticalPosition: 'top'
-      });
+      this.showErrorDialog(validationResult.errorMessage!);
+      this.statusPanelService.addMessageRequest(
+        AppConstants.MSG_BEREITSCHAFTEN_CREATED_ERROR,
+        'POST',
+        0,
+        this.fakeErrorResponse('personen/bereitschaft', 400)
+      );
       return;
     }
     const startDate: Date = formValue.startDatum;
@@ -595,10 +593,7 @@ private mergeApiDataIntoTree(baseTree: TaetigkeitNode[], apiData: ApiStempelzeit
       }
     }, 150);
 
-    this.snackBar.open('Neue Bereitschaft erfolgreich erstellt!', 'Schließen', {
-      duration: 3000,
-      verticalPosition: 'top'
-    });
+    this.showInfoDialog('Neue Bereitschaft erfolgreich erstellt!');
     this.resetAlarmState();
   }
 
@@ -617,7 +612,7 @@ private mergeApiDataIntoTree(baseTree: TaetigkeitNode[], apiData: ApiStempelzeit
     const errors = this.formValidationService.getValidationErrors(this.alarmForm, this.fieldDisplayMap);
     if (errors.length > 0) {
       const errorMessage = this.formValidationService.formatValidationErrors(errors);
-      this.snackBar.open(errorMessage, 'Schließen', { duration: 5000, verticalPosition: 'top' });
+      this.showErrorDialog(errorMessage);
     }
   }
   private addActivityToDay(dayNode: TaetigkeitNode, formData: any, timeRange: string, gestempeltTime: string, stempelzeitData?: ApiStempelzeit): void {
@@ -708,10 +703,8 @@ private mergeApiDataIntoTree(baseTree: TaetigkeitNode[], apiData: ApiStempelzeit
       const naechsterBuchbarerTag = new Date(this.abschlussInfo.naechsterBuchbarerTag);
 
       if (startDatum < naechsterBuchbarerTag) {
-        this.snackBar.open(
-          `Dieser Zeitraum ist bereits abgeschlossen. Frühestens ab ${this.abschlussInfo.naechsterBuchbarerTag} buchbar.`,
-          'Schließen',
-          { duration: 5000, verticalPosition: 'top' }
+        this.showErrorDialog(
+          `Dieser Zeitraum ist bereits abgeschlossen. Frühestens ab ${this.abschlussInfo.naechsterBuchbarerTag} buchbar.`
         );
         return;
       }
@@ -724,10 +717,13 @@ private mergeApiDataIntoTree(baseTree: TaetigkeitNode[], apiData: ApiStempelzeit
     );
 
     if (!validationResult.isValid) {
-      this.snackBar.open(validationResult.errorMessage!, 'Schließen', {
-        duration: 5000,
-        verticalPosition: 'top'
-      });
+      this.showErrorDialog(validationResult.errorMessage!);
+      this.statusPanelService.addMessageRequest(
+        AppConstants.MSG_BEREITSCHAFTEN_CREATED_ERROR,
+        'POST',
+        0,
+        this.fakeErrorResponse('personen/bereitschaft', 400)
+      );
       return;
     }
 
@@ -798,18 +794,12 @@ private mergeApiDataIntoTree(baseTree: TaetigkeitNode[], apiData: ApiStempelzeit
           }
         }, 150);
 
-        this.snackBar.open('Änderungen gespeichert!', 'Schließen', {
-          duration: 3000,
-          verticalPosition: 'top'
-        });
-        this.statusPanelService.addMessage(
-          'success',
-          'POST',
-          'personen/bereitschaft',
-          '200',
-          0,
+        this.showInfoDialog('Änderungen gespeichert!');
+        this.statusPanelService.addMessageRequest(
           AppConstants.MSG_BEREITSCHAFTEN_CREATED_SUCCESS,
-          'unknown'
+          'POST',
+          0,
+          this.fakeOkResponse()
         );
         this.isEditing = false;
         this.isCreatingNew = false;
@@ -818,14 +808,12 @@ private mergeApiDataIntoTree(baseTree: TaetigkeitNode[], apiData: ApiStempelzeit
       },
       error: (err: any) => {
         console.error('Create Bereitschaft failed', err);
-        this.statusPanelService.addMessage(
-          'error',
-          'POST',
-          'personen/bereitschaft',
-          '500',
-          0,
+        this.showErrorDialog('Fehler beim Speichern der Bereitschaft.');
+        this.statusPanelService.addMessageRequest(
           AppConstants.MSG_BEREITSCHAFTEN_CREATED_ERROR,
-          'unknown'
+          'POST',
+          0,
+          this.fakeErrorResponse('personen/bereitschaft', 500)
         );
       }
     });
@@ -881,7 +869,7 @@ private mergeApiDataIntoTree(baseTree: TaetigkeitNode[], apiData: ApiStempelzeit
     const errors = this.formValidationService.getValidationErrors(this.bereitschaftForm, this.fieldDisplayMap);
     if (errors.length > 0) {
       const errorMessage = this.formValidationService.formatValidationErrors(errors);
-      this.snackBar.open(errorMessage, 'Schließen', { duration: 5000, verticalPosition: 'top' });
+      this.showErrorDialog(errorMessage);
     }
   }
   /////////////////////////DELETE///////////////////////////////////////
@@ -904,15 +892,12 @@ private mergeApiDataIntoTree(baseTree: TaetigkeitNode[], apiData: ApiStempelzeit
         );
 
         this.dataSource.data = [...this.dataSource.data];
-        this.snackBar.open('Eintrag gelöscht!', 'Schließen', { duration: 3000 });
-        this.statusPanelService.addMessage(
-          'success',
-          'DELETE',
-          'personen/bereitschaft',
-          '200',
-          0,
+        this.showInfoDialog('Bereitschaft erfolgreich gelöscht!');
+        this.statusPanelService.addMessageRequest(
           AppConstants.MSG_BEREITSCHAFTEN_DELETED_SUCCESS,
-          'unknown'
+          'DELETE',
+          0,
+          this.fakeOkResponse()
         );
 
         this.selectedNode = null;
@@ -921,15 +906,12 @@ private mergeApiDataIntoTree(baseTree: TaetigkeitNode[], apiData: ApiStempelzeit
       },
       error: (err: any) => {
         console.error('Delete failed', err);
-        this.snackBar.open('Fehler beim Löschen', 'Schließen', { duration: 3000 });
-        this.statusPanelService.addMessage(
-          'error',
-          'DELETE',
-          'personen/bereitschaft',
-          '500',
-          0,
+        this.showErrorDialog('Fehler beim Löschen der Bereitschaft.');
+        this.statusPanelService.addMessageRequest(
           AppConstants.MSG_BEREITSCHAFTEN_DELETED_ERROR,
-          'unknown'
+          'DELETE',
+          0,
+          this.fakeErrorResponse('personen/bereitschaft', 500)
         );
       }
     });
@@ -1027,6 +1009,28 @@ private mergeApiDataIntoTree(baseTree: TaetigkeitNode[], apiData: ApiStempelzeit
       form.get('endeMinuten')?.patchValue(0, { emitEvent: false });
     }
     form.updateValueAndValidity();
+  }
+
+  private fakeErrorResponse(url: string = 'personen/bereitschaft', status: number = 400): HttpErrorResponse {
+    return new HttpErrorResponse({ status, statusText: 'Bad Request', url });
+  }
+
+  private fakeOkResponse(url: string = 'personen/bereitschaft'): HttpResponse<unknown> {
+    return new HttpResponse<unknown>({ status: 200, statusText: 'OK', url });
+  }
+
+  private showInfoDialog(detail: string, title: string = 'Erfolgreich'): void {
+    this.dialog.open(InfoDialogComponent, {
+      data: { title, detail },
+      panelClass: 'custom-dialog-width'
+    });
+  }
+
+  private showErrorDialog(detail: string, title: string = 'Fehler'): void {
+    this.dialog.open(ErrorDialogComponent, {
+      data: { title, detail },
+      panelClass: 'custom-dialog-width'
+    });
   }
 
   private finalizeNewEntry(newNode: FlatNode): void {

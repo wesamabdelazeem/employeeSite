@@ -87,6 +87,13 @@ private readonly json5 = '/bereitschaft-korrigieren-hassan-2.json';
     );
   }
 
+  getPersonNachverrechnung(): Observable<ApiPerson[]> {
+    return this.http.get<ApiPerson[]>(this.json3).pipe(
+      delay(this.apiDelay),
+      map(response => Array.isArray(response) ? response : [])
+    );
+  }
+
   getPersonen(berechneteStunden?: string,
   nurNamen?: string,
   funktion?: string): Observable<ApiPerson[]> {

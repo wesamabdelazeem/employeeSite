@@ -51,7 +51,8 @@ import { TatigkeitenHistorischListComponent } from './components/taetigkeiten-hi
 import { TaetigkeitenHistorischDetailsComponent } from './components/taetigkeiten-historisch/taetigkeiten-historisch-details/taetigkeiten-historisch-details.component';
 import { TaetigkeitenKorrigierenListComponent } from './components/taetigkeiten-korrigieren/taetigkeiten-korrigieren-list/taetigkeiten-korrigieren-list.component';
 import { TaetigkeitenKorrigierenDetailsComponent } from './components/taetigkeiten-korrigieren/taetigkeiten-korrigieren-details/taetigkeiten-korrigieren-details.component';
-import { NachverrechnungComponent } from './components/nachverrechnung/nachverrechnung.component';
+import { NachverrechnungListComponent } from './components/nachverrechnung/nachverrechnung-list/nachverrechnung-list.component';
+import { NachverrechnungDetailsComponent } from './components/nachverrechnung/nachverrechnung-details/nachverrechnung-details.component';
 import { AuswertungenComponent } from './components/auswertungen/auswertungen.component';
 import { ExitComponent } from './components/exit/exit.component';
 
@@ -95,7 +96,8 @@ export const routes: Routes = [
   { path: 'taetigkeitebuchen', component: TaetigkeitenBuchenComponent },
   { path: 'taetigkeitenhistorischlist', component: TatigkeitenHistorischListComponent },
   { path: 'taetigkeitenhistorischlist/:id', component: TaetigkeitenHistorischDetailsComponent, canActivate: [refreshGuard] },
-  { path: 'calculation', component: NachverrechnungComponent },
+  { path: 'calculation', component: NachverrechnungListComponent },
+  { path: 'calculation/:id', component: NachverrechnungDetailsComponent, canActivate: [refreshGuard] },
   { path: 'reports', component: AuswertungenComponent },
   { path: 'exit', component: ExitComponent },
 

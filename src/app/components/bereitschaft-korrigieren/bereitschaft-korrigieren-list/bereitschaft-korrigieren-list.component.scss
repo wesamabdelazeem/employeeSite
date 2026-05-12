@@ -240,9 +240,8 @@ $tablet: 900px;
 ::ng-deep .fixed-table {
   th.first-column,
   td.first-column {
-    width: 70px !important;
-    min-width: 70px !important;
-    max-width: 70px !important;
+    width: 5% !important;
+    max-width: 5% !important;
     text-align: center !important;
     padding-left: 0 !important;
     padding-right: 0 !important;

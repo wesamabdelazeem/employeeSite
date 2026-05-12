@@ -16,6 +16,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { ActivatedRoute, Router } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
 import { MatCheckboxChange } from "@angular/material/checkbox";
+import { HttpErrorResponse, HttpResponse } from '@angular/common/http';
 
 import { FormValidationService } from '../../../services/utils/form-validation.service';
 import { TimeUtilityService } from '../../../services/utils/time-utility.service';
@@ -150,7 +151,7 @@ export class BereitschaftKorrigierenDetailsComponent {
     private cdr: ChangeDetectorRef,
     private dialog: MatDialog,
 
-   
+
     private bereitschaftKorrigierenService: BereitschaftKorrigierenService,
     private formValidationService: FormValidationService,
     private timeUtilityService: TimeUtilityService,
@@ -443,10 +444,14 @@ if (this.abschlussInfo && this.abschlussInfo.naechsterBuchbarerTag) {
     const naechsterBuchbarerTag = new Date(this.abschlussInfo.naechsterBuchbarerTag);
 
     if (startDatum < naechsterBuchbarerTag) {
-      this.snackBar.open(
-        `Dieser Zeitraum ist bereits abgeschlossen. Frühestens ab ${this.abschlussInfo.naechsterBuchbarerTag} buchbar.`,
-        'Schließen',
-        { duration: 5000, verticalPosition: 'top' }
+      this.showErrorDialog(
+        `Dieser Zeitraum ist bereits abgeschlossen. Frühestens ab ${this.abschlussInfo.naechsterBuchbarerTag} buchbar.`
+      );
+      this.statusPanelService.addMessageRequest(
+        AppConstants.MSG_BEREITSCHAFTEN_CREATED_ERROR,
+        'POST',
+        0,
+        this.fakeErrorResponse()
       );
       return;
     }
@@ -458,10 +463,13 @@ if (this.abschlussInfo && this.abschlussInfo.naechsterBuchbarerTag) {
   );
 
   if (!validationResult.isValid) {
-    this.snackBar.open(validationResult.errorMessage!, 'Schließen', {
-      duration: 5000,
-      verticalPosition: 'top'
-    });
+    this.showErrorDialog(validationResult.errorMessage!);
+    this.statusPanelService.addMessageRequest(
+      AppConstants.MSG_BEREITSCHAFTEN_CREATED_ERROR,
+      'POST',
+      0,
+      this.fakeErrorResponse()
+    );
     return;
   }
 const startDate: Date = formValue.startDatum;
@@ -513,18 +521,12 @@ const endDate: Date = formValue.endeDatum;
     }
   }, 150);
 
-  this.snackBar.open('Neue Bereitschaft erfolgreich erstellt!', 'Schließen', {
-    duration: 3000,
-    verticalPosition: 'top'
-  });
-  this.statusPanelService.addMessage(
-    'success',
-    'POST',
-    'personen/bereitschaft',
-    '200',
-    0,
+  this.showInfoDialog('Neue Bereitschaft erfolgreich erstellt!');
+  this.statusPanelService.addMessageRequest(
     AppConstants.MSG_BEREITSCHAFTEN_CREATED_SUCCESS,
-    'unknown'
+    'POST',
+    0,
+    this.fakeOkResponse()
   );
   this.resetAlarmState();
 }
@@ -545,7 +547,7 @@ const endDate: Date = formValue.endeDatum;
     const errors = this.formValidationService.getValidationErrors(this.alarmForm, this.fieldDisplayMap);
     if (errors.length > 0) {
       const errorMessage = this.formValidationService.formatValidationErrors(errors);
-      this.snackBar.open(errorMessage, 'Schließen', { duration: 5000, verticalPosition: 'top' });
+      this.showErrorDialog(errorMessage);
     }
   }
   private addActivityToDay(dayNode: TaetigkeitNode, formData: any, timeRange: string, gestempeltTime: string, stempelzeitData?: ApiStempelzeit): void {
@@ -627,14 +629,11 @@ saveBereitschaft() {
   this.formValidationService.validateAllFields(this.bereitschaftForm);
   if (!this.bereitschaftForm.valid) {
     this.showValidationErrors();
-    this.statusPanelService.addMessage(
-      'error',
-      'POST',
-      'personen/bereitschaft',
-      '400',
-      0,
+    this.statusPanelService.addMessageRequest(
       AppConstants.MSG_BEREITSCHAFTEN_CREATED_ERROR,
-      'unknown'
+      'POST',
+      0,
+      this.fakeErrorResponse()
     );
     return;
   }
@@ -645,19 +644,14 @@ if (this.abschlussInfo && this.abschlussInfo.naechsterBuchbarerTag) {
     const naechsterBuchbarerTag = new Date(this.abschlussInfo.naechsterBuchbarerTag);
 
     if (startDatum < naechsterBuchbarerTag) {
-      this.snackBar.open(
-        `Dieser Zeitraum ist bereits abgeschlossen. Frühestens ab ${this.abschlussInfo.naechsterBuchbarerTag} buchbar.`,
-        'Schließen',
-        { duration: 5000, verticalPosition: 'top' }
+      this.showErrorDialog(
+        `Dieser Zeitraum ist bereits abgeschlossen. Frühestens ab ${this.abschlussInfo.naechsterBuchbarerTag} buchbar.`
       );
-      this.statusPanelService.addMessage(
-        'error',
-        'POST',
-        'personen/bereitschaft',
-        '400',
-        0,
+      this.statusPanelService.addMessageRequest(
         AppConstants.MSG_BEREITSCHAFTEN_CREATED_ERROR,
-        'unknown'
+        'POST',
+        0,
+        this.fakeErrorResponse()
       );
       return;
     }
@@ -670,18 +664,12 @@ if (this.abschlussInfo && this.abschlussInfo.naechsterBuchbarerTag) {
   );
 
   if (!validationResult.isValid) {
-    this.snackBar.open(validationResult.errorMessage!, 'Schließen', {
-      duration: 5000,
-      verticalPosition: 'top'
-    });
-    this.statusPanelService.addMessage(
-      'error',
-      'POST',
-      'personen/bereitschaft',
-      '400',
-      0,
+    this.showErrorDialog(validationResult.errorMessage!);
+    this.statusPanelService.addMessageRequest(
       AppConstants.MSG_BEREITSCHAFTEN_CREATED_ERROR,
-      'unknown'
+      'POST',
+      0,
+      this.fakeErrorResponse()
     );
     return;
   }
@@ -689,32 +677,13 @@ if (this.abschlussInfo && this.abschlussInfo.naechsterBuchbarerTag) {
   if (this.isCreatingNew || this.isNewlyCreated) {
     this.saveNewEntry(formValue);
   }
-
-  this.snackBar.open('Änderungen gespeichert!', 'Schließen', {
-    duration: 3000,
-    verticalPosition: 'top'
-  });
-  this.statusPanelService.addMessage(
-    'success',
-    'POST',
-    'personen/bereitschaft',
-    '200',
-    0,
-    AppConstants.MSG_BEREITSCHAFTEN_CREATED_SUCCESS,
-    'unknown'
-  );
-
-  this.isEditing = false;
-  this.isCreatingNew = false;
-  this.isNewlyCreated = false;
-  this.disableAllFormControls();
 }
 
 
 
 private saveNewEntry(formValue: any): void {
-  const startDate:Date=formValue.startDatum
-  const endDate:Date=formValue.endeDatum;
+  const startDate: Date = formValue.startDatum;
+  const endDate: Date = formValue.endeDatum;
   if (!startDate || !endDate) return;
 
   const loginDate = new Date(startDate);
@@ -726,17 +695,19 @@ private saveNewEntry(formValue: any): void {
   const gebuchtTime = this.timeUtilityService.calculateGestempelt(loginDate, logoffDate);
   const timeRange = `${this.timeUtilityService.formatTime(loginDate)} - ${this.timeUtilityService.formatTime(logoffDate)}`;
 
- const dto: ApiStempelzeit = {
+  const dto: ApiStempelzeit = {
     login: loginDate.toISOString(),
     logoff: logoffDate.toISOString(),
     zeitTyp: ApiZeitTyp.BEREITSCHAFT,
     anmerkung: formValue.anmerkung || ''
   };
 
+  const startTime = Date.now();
   this.bereitschaftKorrigierenService
     .createBereitschaft(this.personId, dto)
     .subscribe({
       next: (response) => {
+        const duration = Date.now() - startTime;
         const savedEntries = response.body ?? [];
         const savedEntry = savedEntries.find(
           e => e.login === dto.login && e.logoff === dto.logoff
@@ -757,6 +728,18 @@ private saveNewEntry(formValue: any): void {
         this.dataSource.data = [...this.dataSource.data];
         this.treeNodeManagementService.expandParentNodesForNewEntry(this.treeControl, monthYear, dayKey);
 
+        this.showInfoDialog('Änderungen gespeichert!');
+        this.statusPanelService.addMessageRequest(
+          AppConstants.MSG_BEREITSCHAFTEN_CREATED_SUCCESS,
+          'POST',
+          duration,
+          response
+        );
+        this.isEditing = false;
+        this.isCreatingNew = false;
+        this.isNewlyCreated = false;
+        this.disableAllFormControls();
+
         setTimeout(() => {
           const newNode = this.treeControl.dataNodes.find(node =>
             node.level === 2 &&
@@ -771,9 +754,6 @@ private saveNewEntry(formValue: any): void {
             this.cdr.detectChanges();
           }
         }, 150);
-      },
-      error: err => {
-        console.error('Create Bereitschaft failed', err);
       }
     });
 }
@@ -782,7 +762,7 @@ private saveNewEntry(formValue: any): void {
     const errors = this.formValidationService.getValidationErrors(this.bereitschaftForm, this.fieldDisplayMap);
     if (errors.length > 0) {
       const errorMessage = this.formValidationService.formatValidationErrors(errors);
-      this.snackBar.open(errorMessage, 'Schließen', { duration: 5000, verticalPosition: 'top' });
+      this.showErrorDialog(errorMessage);
     }
   }
 /////////////////////////DELETE///////////////////////////////////////
@@ -799,14 +779,11 @@ async deleteEntry() {
     this.selectedNode = null;
     this.isEditing = false;
     this.bereitschaftForm.reset();
-    this.statusPanelService.addMessage(
-      'success',
-      'DELETE',
-      'personen/bereitschaft',
-      '200',
-      0,
+    this.statusPanelService.addMessageRequest(
       AppConstants.MSG_BEREITSCHAFTEN_DELETED_SUCCESS,
-      'unknown'
+      'DELETE',
+      0,
+      this.fakeOkResponse()
     );
     return;
   }
@@ -917,6 +894,14 @@ onTimeBoxChange(
     form.get('endeMinuten')?.patchValue(0, { emitEvent: false });
   }
   form.updateValueAndValidity();
+}
+
+private fakeErrorResponse(url: string = 'personen/bereitschaft', status: number = 400): HttpErrorResponse {
+  return new HttpErrorResponse({ status, statusText: 'Bad Request', url });
+}
+
+private fakeOkResponse(url: string = 'personen/bereitschaft'): HttpResponse<unknown> {
+  return new HttpResponse<unknown>({ status: 200, statusText: 'OK', url });
 }
 
 private showInfoDialog(detail: string, title: string = 'Erfolgreich'): void {

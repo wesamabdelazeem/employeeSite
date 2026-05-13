@@ -18,6 +18,7 @@ export interface FlatNode {
   productName?: string;
   positionName?: string;
   gebuchtTime?: string;
+  gestempeltTime?: string;
   timeRange?: string;
   hasAlarm?: boolean;
   alarmData?: any;

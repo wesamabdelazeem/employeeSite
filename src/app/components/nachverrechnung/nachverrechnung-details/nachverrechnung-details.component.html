@@ -1,1 +1,317 @@
-<p>nachverrechnung-details works!</p>
+<div class="container2">
+  <!-- Left Panel: Tree -->
+
+  <div class="left-panel">
+    <div class="left-panel-header">
+      <button matTooltip="Zurück" matTooltipPosition="below">
+        <mat-icon class="icon-header" (click)="goBackToList()"
+          >arrow_back</mat-icon
+        >
+      </button>
+
+      <h1 class="title">Nachverrechnung - {{ personName }}</h1>
+
+      <button (click)="openNachverrechnungForm()" matTooltip="Neue Buchung" matTooltipPosition="below">
+        <mat-icon class="icon-header">alarm</mat-icon>
+      </button>
+    </div>
+
+    <div *ngIf="isLoading" class="loading">
+      <mat-spinner diameter="40"></mat-spinner>
+
+      <span>Lade Daten...</span>
+    </div>
+    <div class="tree-container" *ngIf="!isLoading">
+      <mat-tree
+        [dataSource]="dataSource"
+        [treeControl]="treeControl"
+        class="tree"
+        *ngIf="!isLoading"
+      >
+        <!-- Leaf nodes (Level 2 - Stempelzeiten) -->
+        <mat-tree-node
+          *matTreeNodeDef="let node"
+          matTreeNodePadding
+          (click)="onNodeClick(node)"
+          (dblclick)="onNodeDoubleClick(node)"
+          [class.selected]="selectedNode === node"
+        >
+          <div class="tree-node leaf-node2">
+            <div class="third-container-top">
+              <mat-icon class="icon-add">access_time</mat-icon>
+              <span class="activity-product">
+                Stempelzeiten: {{ node.timeRange }} 00:00-00:00:00
+              </span>
+            </div>
+          </div>
+        </mat-tree-node>
+
+        <!-- Parent nodes (Level 0 & 1) -->
+        <mat-tree-node
+          *matTreeNodeDef="let node; when: hasChild"
+          matTreeNodePadding
+          (click)="onNodeClick(node)"
+          (dblclick)="onNodeDoubleClick(node)"
+          [class.selected]="selectedNode === node"
+        >
+          <!-- Level 0: Month Node -->
+          <div class="tree-node expandable-node" *ngIf="node.level === 0">
+            <mat-icon class="calendar-icon">calendar_month</mat-icon>
+            <div class="level-container">
+              <div class="month-content">
+                <span class="month-name">{{ node.monthName }}</span>
+                <span class="abgeschlossen-badge" *ngIf="node.hasNotification">
+                  [abgeschlossen]
+                </span>
+              </div>
+              <div class="month-gebucht">
+                <i class="mdi mdi-file-tree gebucht-icon"></i>
+                <span class="gebucht-label">Gebucht [Std:Min]:</span>
+                <span class="gebucht-value">{{ node.gebuchtTotal || '00:00' }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Level 1: Day Node -->
+          <div
+            class="tree-node expandable-node-level2"
+            *ngIf="node.level === 1"
+          >
+            <div class="level2-container">
+              <div class="day-row">
+                <mat-icon class="event-icon">event</mat-icon>
+                <span class="day-name">{{ node.dayName }}</span>
+                <span class="gebucht-label">Gestempelt:</span>
+                <span class="gebucht-value">{{ node.gestempelt || '00:00' }}</span>
+                <span class="gebucht-label">Gebucht:</span>
+                <span class="gebucht-value">{{ node.gebucht || '00:00' }}</span>
+              </div>
+
+              <div class="third-container-top">
+                <mat-icon class="icon-add">access_time</mat-icon>
+                <span class="activity-product">
+                  Stempelzeiten: {{ node.timeRange || '00:00 - 00:00' }}
+                </span>
+              </div>
+            </div>
+          </div>
+        </mat-tree-node>
+      </mat-tree>
+    </div>
+  </div>
+
+  <!-- Right Panel: Month Summary (Level 0) -->
+  <div
+    class="right-panel"
+    *ngIf="
+      selectedNode &&
+      selectedNode.level === 0 &&
+      !isLoading &&
+      !showRightPanelAlarmActions &&
+      !showNachverrechnungForm
+    "
+  >
+    <div class="right-panel-header">
+      <h2 class="right-header">{{ selectedNode.monthName }}</h2>
+    </div>
+
+    <form [formGroup]="monthSummaryForm" class="taetigkeit-form month-summary-form">
+      <div class="month-summary-row">
+        <label class="month-summary-label checkbox-Month">Abgeschlossen:</label>
+        <mat-checkbox
+          class="field-input"
+          formControlName="abgeschlossen"
+        ></mat-checkbox>
+      </div>
+
+      <div class="month-summary-row">
+        <label class="month-summary-label">Gebucht [Std:Min]:</label>
+        <input
+          type="text"
+          class="month-summary-input"
+          formControlName="gebucht"
+          readonly
+        />
+      </div>
+    </form>
+  </div>
+
+  <!-- Right Panel: Day Summary (Level 1) -->
+  <div
+    class="right-panel"
+    *ngIf="
+      selectedNode &&
+      selectedNode.level === 1 &&
+      !isLoading &&
+      !showRightPanelAlarmActions &&
+      !showNachverrechnungForm
+    "
+  >
+    <div class="right-panel-header">
+      <h2 class="right-header">
+        {{ getFullDayOfWeek(selectedNode) }}
+        {{ getDateDisplay(selectedNode) }}
+      </h2>
+    </div>
+
+    <div class="day-summary-form taetigkeit-form">
+      <div class="day-summary-row">
+        <label class="day-summary-label">Abgeschlossen:</label>
+        <mat-checkbox
+          class="field-input"
+          [checked]="!!selectedNode.hasNotification"
+          (change)="onDayAbgeschlossenChange($event.checked)"
+        ></mat-checkbox>
+      </div>
+
+      <div class="day-summary-row">
+        <label class="day-summary-label">Gestempelt [Std:Min]:</label>
+        <input
+          type="text"
+          class="day-summary-input"
+          [value]="selectedNode.gestempelt || '00:00'"
+          readonly
+        />
+      </div>
+
+      <div class="day-summary-row">
+        <label class="day-summary-label">Gebucht [Std:Min]:</label>
+        <input
+          type="text"
+          class="day-summary-input"
+          [value]="selectedNode.gebucht || '00:00'"
+          readonly
+        />
+      </div>
+
+      <div class="day-summary-row align-top">
+        <label class="day-summary-label">Stempelzeiten:</label>
+        <textarea
+          class="day-summary-textarea"
+          [value]="(selectedNode.stempelzeitenList || []).join('\n') || (selectedNode.timeRange || '')"
+          readonly
+          rows="3"
+        ></textarea>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right Panel: Nachverrechnung Form (Header alarm) -->
+  <div
+    class="right-panel"
+    *ngIf="showNachverrechnungForm && !isLoading"
+  >
+    <div class="form-header">
+      <button mat-button class="header-btn" (click)="cancelNachverrechnung()">
+        <mat-icon class="delete-icon">close</mat-icon>
+        <span>Abbrechen</span>
+      </button>
+      <h2 class="right-header">Nachverrechnung</h2>
+      <button mat-button class="header-btn primary" (click)="saveNachverrechnung()">
+        <mat-icon>check</mat-icon>
+        <span>Speichern</span>
+      </button>
+    </div>
+
+    <form [formGroup]="nachverrechnungForm" class="nachverrechnung-form">
+      <div class="nv-row">
+        <label class="nv-label">Produkt:</label>
+        <mat-form-field appearance="outline" class="nv-field">
+          <mat-select formControlName="produkt" placeholder="< Produkt wählen >" panelClass="drop-down">
+            <mat-option *ngFor="let p of produktOptions" [value]="p">{{ p }}</mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+
+      <div class="nv-row">
+        <label class="nv-label">Produktposition:</label>
+        <mat-form-field appearance="outline" class="nv-field">
+          <mat-select formControlName="produktposition" placeholder="< Produktposition wählen >" panelClass="drop-down">
+            <mat-option *ngFor="let p of produktpositionOptions" [value]="p">{{ p }}</mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+
+      <div class="nv-row">
+        <label class="nv-label">Buchungspunkt:</label>
+        <mat-form-field appearance="outline" class="nv-field">
+          <mat-select formControlName="buchungspunkt" placeholder="< Buchungspunkt wählen >" panelClass="drop-down">
+            <mat-option *ngFor="let b of buchungspunktOptions" [value]="b">{{ b }}</mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+
+      <div class="nv-row">
+        <label class="nv-label">Tätigkeit:</label>
+        <mat-form-field appearance="outline" class="nv-field">
+          <mat-select formControlName="taetigkeit" placeholder="< Tätigkeit wählen >" panelClass="drop-down">
+            <mat-option *ngFor="let t of taetigkeitOptions" [value]="t">{{ t }}</mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+
+      <div class="nv-row">
+        <label class="nv-label">Datum:</label>
+        <mat-form-field appearance="outline" class="nv-field nv-date">
+          <input
+            matInput
+            [matDatepicker]="nvPicker"
+            formControlName="datum"
+            class="form-input"
+          />
+          <mat-datepicker-toggle matSuffix [for]="nvPicker" class="date-picker-toggle"></mat-datepicker-toggle>
+          <mat-datepicker #nvPicker panelClass="drop-down-date" yPosition="below" xPosition="end"></mat-datepicker>
+        </mat-form-field>
+      </div>
+
+      <div class="nv-row nv-dauer-row">
+        <label class="nv-label">Dauer [Stunden]:</label>
+        <div class="nv-dauer-group">
+          <app-time-box
+            field="dauerStunden"
+            [value]="nachverrechnungForm.get('dauerStunden')?.value || 0"
+            [max]="24"
+            (valueChange)="onDauerChange('dauerStunden', $event)"
+          />
+          <span class="nv-inner-label">[Minuten]</span>
+          <app-time-box
+            field="dauerMinuten"
+            [value]="nachverrechnungForm.get('dauerMinuten')?.value || 0"
+            [max]="59"
+            (valueChange)="onDauerChange('dauerMinuten', $event)"
+          />
+        </div>
+      </div>
+
+      <div class="nv-row nv-row-top">
+        <label class="nv-label">Anmerkung:</label>
+        <textarea
+          class="nv-textarea"
+          formControlName="anmerkung"
+          rows="3"
+        ></textarea>
+      </div>
+
+      <div class="nv-row">
+        <label class="nv-label">Jira-Ticket Nr.:</label>
+        <input
+          type="text"
+          class="nv-text-input"
+          formControlName="jiraTicket"
+        />
+      </div>
+    </form>
+  </div>
+
+  <!-- Empty State -->
+  <div
+    class="right-panel"
+    *ngIf="!selectedNode && !isLoading && !showRightPanelAlarmActions && !showNachverrechnungForm"
+  >
+    <div class="right-panel-header">
+      <div class="selected-node-info title2">
+        <h2 class="selected-node-title">Bitte wählen Sie einen Eintrag</h2>
+      </div>
+    </div>
+  </div>
+</div>

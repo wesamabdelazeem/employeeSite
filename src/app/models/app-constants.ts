@@ -80,6 +80,11 @@ export class AppConstants {
   static readonly MSG_BEREITSCHAFTEN_DELETED_SUCCESS = 'Die Bereitschaft wurde erfolgreich gelöscht';
   static readonly MSG_BEREITSCHAFTEN_DELETED_ERROR = 'Die Bereitschaft wurde nicht gelöscht';
 
+  static readonly MSG_NACHVERRECHNUNG_CREATED_SUCCESS = 'Die Nachverrechnung wurde erfolgreich erzeugt';
+  static readonly MSG_NACHVERRECHNUNG_CREATED_ERROR = 'Die Nachverrechnung wurde nicht erzeugt';
+  static readonly MSG_NACHVERRECHNUNG_DELETED_SUCCESS = 'Die Nachverrechnung wurde erfolgreich gelöscht';
+  static readonly MSG_NACHVERRECHNUNG_DELETED_ERROR = 'Die Nachverrechnung wurde nicht gelöscht';
+
   static getFunctionValue(label: string): string {
         const item = PERSON_FUNCTION_TYPEN.find(item => item.label === label);
         return item ? item.value : label; // fallback to value if not found

@@ -24,5 +24,8 @@ export interface TaetigkeitNode {
     buchungspunkt?: string;
     dateKey?: string;
     monthKey?: string;
-
+    isNachverrechnung?: boolean;
+    taetigkeit?: string;
+    anmerkung?: string;
+    jiraTicket?: string;
   }

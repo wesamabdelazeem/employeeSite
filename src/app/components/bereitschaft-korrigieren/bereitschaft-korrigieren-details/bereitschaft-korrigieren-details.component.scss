@@ -350,7 +350,7 @@ overflow: hidden;
 }
 
 .header-btn:has(.delete-icon) {
-  background-color: #d32f2f !important;
+  background-color: #8F2020 !important;
   color: white !important;
   border: none !important;
 
@@ -358,7 +358,8 @@ overflow: hidden;
     color: white !important;
   }
 
-  mat-icon {
+  mat-icon,
+  i.delete-icon {
     color: white !important;
   }
 }
@@ -991,6 +992,15 @@ position: relative;
 .form-input-date{width: 160px!important;}
 .form-input-date:focus{border :1px solid #e6e3e3 !important}
 
+// .form-row-custom{display: flex;align-items: start!important;align-items: center!important;}
+
+// .date-picker-toggle{position:relative;left: -18px !important;}
+// .form-row-date{display: flex;
+//   flex-direction: row;
+//   min-height: 50px;
+//   margin-left: 2px;
+
+// }
 .form-row-custom{display: flex;align-items: start!important;align-items: center!important;}
 
 .date-picker-toggle{position:relative;left: -18px !important;}
@@ -998,7 +1008,6 @@ position: relative;
   flex-direction: row;
   min-height: 50px;
   margin-left: 2px;
-
 }
 
 

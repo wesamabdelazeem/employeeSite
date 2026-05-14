@@ -78,6 +78,12 @@ overflow: hidden;
   box-sizing: border-box;
   padding: 0;
 }
+
+.icon-header-i i {
+  color: white;
+  font-size: 20px;
+  line-height: 1;
+}
 .icon-r{font-size: 15px;padding-right: 7px;color: red;}
 .icon-add{font-size: 15px;padding-right: 7px;color: #2E4155;}
 .right-panel {
@@ -160,7 +166,7 @@ overflow: hidden;
 .taetigkeit-form .time-input {
   font-size: 14px !important;
 }
-.form-input{}
+.form-input{ width: 100% !important;}
 .taetigkeit-form .inner-label{
   margin: 0 5px 0 5px !important;
 }
@@ -194,7 +200,7 @@ overflow: hidden;
 
 .gebucht-value {
   color:  #911B17 !important;
-  font-weight: 500;
+  font-weight: bold;
   font-size: 13px;
   min-width: 50px;
 }
@@ -218,6 +224,30 @@ overflow: hidden;
     min-height: 50px;
   }
 }
+
+.day-alarm-btn {
+  background: transparent;
+  border: none;
+  padding: 0;
+  margin-left: auto;
+  margin-right: 12px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.icon-header.day-alarm-icon {
+  width: 30px !important;
+  height: 28px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  font-size: 16px !important;
+  line-height: 1 !important;
+  position: relative;
+  top: 10px;
+}
 .mat-tree-node:has(.expandable-node-level2) {
   height: 44px !important;
   min-height: 44px !important;
@@ -235,6 +265,7 @@ overflow: hidden;
     align-items: center;
     gap: 8px;
     line-height: 1;
+    width: 100%;
   }
 
   .day-name {
@@ -249,6 +280,8 @@ overflow: hidden;
     margin-left: 24px !important;
     height: 20px !important;
     line-height: 1;
+    position: relative;
+    bottom: 3px !important;
   }
 
   .gebucht-icon{font-size: 15px;}
@@ -341,7 +374,7 @@ overflow: hidden;
 }
 
 .header-btn:has(.delete-icon) {
-  background-color: #d32f2f !important;
+  background-color: #8F2020 !important;
   color: white !important;
   border: none !important;
 
@@ -349,9 +382,39 @@ overflow: hidden;
     color: white !important;
   }
 
-  mat-icon {
+  mat-icon,
+  i.delete-icon {
     color: white !important;
   }
+}
+
+.nv-info-row {
+  display: flex;
+  justify-content: flex-end;
+  padding: 0 12px;
+}
+
+.nv-info-btn {
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.nv-info-icon {
+  color: #338E9C;
+  font-size: 22px;
+  line-height: 1;
+  position: relative;
+  top: 81px;
+  right: 47px;
+}
+
+.nv-info-btn:hover .nv-info-icon {
+  color: #8F2020;
 }
 
 .datum:focus {
@@ -872,7 +935,7 @@ margin-top: 5px!important;
   min-width: 140px;
   text-align: right;
   font-size: 15px;
-  padding-right: 1.25rem !important;
+  padding-right: 0 !important;
 }
 
 .inner-label {
@@ -884,9 +947,20 @@ margin-top: 5px!important;
   margin-top: 5px !important;
 }
 
-.date-field {
-  width: 180px;
+// .date-field {
+//   width: 186px!important;
+//    margin-left: 2px!important;
+// }
+.date-field-wrapper {
+  width: 186px;
    margin-left: 2px!important;
+  .date-field {
+    width: 100%;
+    
+    ::ng-deep .mat-mdc-text-field-wrapper {
+      width: 100%;
+    }
+  }
 }
 
 .full-field {
@@ -917,6 +991,7 @@ margin-top: 5px!important;
 
 :host ::ng-deep .mat-mdc-text-field-wrapper {
   padding-left: 0 !important;
+  width: 124%;
 }
 .dash {
   color: #292929;
@@ -984,7 +1059,7 @@ position: relative;
 
 .form-row-custom{display: flex;align-items: start!important;align-items: center!important;}
 
-.date-picker-toggle{position:relative;left: -18px !important;}
+.date-picker-toggle{position:relative;left: -25px !important;}
 .form-row-date{display: flex;
   flex-direction: row;
   min-height: 50px;
@@ -1005,6 +1080,7 @@ position: relative;
 .date-field-container {
   display: flex;
   align-items: center;
+  margin-left: 9px !important;
 }
 
 .half-width .date-picker-toggle {
@@ -1044,7 +1120,54 @@ position: relative;
 
 .leaf-node2 .activity-product {
   font-size: 13px;
-  line-height: 1.2;
+  line-height: 0;
+}
+
+.mat-tree-node:has(.leaf-node2 .third-container-bottom) {
+  height: 44px !important;
+  min-height: 44px !important;
+  padding-block: 2px;
+}
+
+.leaf-node2:has(.third-container-bottom) {
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  height: 44px !important;
+  padding: 4px;
+  line-height: 1;
+
+  .third-container-top {
+    height: 20px !important;
+    line-height: 1;
+  }
+}
+
+.third-container-bottom {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  height: 20px;
+  line-height: 1;
+  margin-left: 2px;
+  position: relative;
+  // bottom: 5px;
+  .gebucht-label {
+    color: #555;
+  }
+
+  .gebucht-value {
+    font-weight: bold;
+    color: #911B17;
+  }
+}
+
+.nachverrechnung-badge {
+  font-size: 12px;
+  color: #338E9C;
+  font-style: italic;
+  margin-left: 8px;
 }
 
 .leaf-gebucht {
@@ -1203,9 +1326,40 @@ position: relative;
   font-size: 14px;
   font-weight: 500;
 }
+.nv-date{
+  width:40% !important;
+}
+
+.date-nvch {
+  width: 40% !important;
+  max-width: 400px;
+  display: flex;
+  align-items: center;
+
+  .nv-field,
+  .nv-field.nv-date {
+    width: 100% !important;
+    max-width: none !important;
+  }
+
+  ::ng-deep .mat-mdc-form-field,
+  .mat-form-field {
+    width: 80% !important;
+  }
+
+  .form-input {
+    width: 100% !important;
+  }
+
+  .date-picker-toggle {
+    position: relative;
+    left: 0 !important;
+    margin-left: -4px;
+  }
+}
 
 .nv-field {
-  width: 50% !important;
+  width: 40% !important;
   max-width: 400px;
 
   ::ng-deep .mat-mdc-form-field-subscript-wrapper {
@@ -1214,14 +1368,15 @@ position: relative;
 
   ::ng-deep .mat-mdc-form-field,
   .mat-form-field {
-    width: 80%;
+    width: 80% !important;
   }
+  
 }
 
 
 
 .nv-text-input {
-  width: 270px;
+  width: 261px;
   padding: 6px 8px;
   border: 1px solid #ccc;
   border-radius: 2px;
@@ -1231,7 +1386,7 @@ position: relative;
 }
 
 .nv-textarea {
-  width: 270px;
+  width: 261px;
   min-height: 70px;
   padding: 6px 8px;
   border: 1px solid #ccc;

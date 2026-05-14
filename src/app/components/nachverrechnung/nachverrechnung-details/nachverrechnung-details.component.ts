@@ -34,6 +34,10 @@ import { AppConstants } from '../../../models/app-constants';
 import { TaetigkeitNode } from '../../../models/taetigkeit-node';
 import { NachverrechnungService } from '../../../services/nachverrechnung.service';
 import { ApiTaetigkeitsbuchung } from '../../../models/ApiTaetigkeitsbuchung';
+import { ApiProdukt } from '../../../models/ApiProdukt';
+import { ApiProduktPosition } from '../../../models/ApiProduktPosition';
+import { ApiProduktPositionBuchungspunkt } from '../../../models/ApiProduktPositionBuchungspunkt';
+import { ApiTaetigkeitTyp, getApiTaetigkeitTypDisplayValues } from '../../../models/ApiTaetigkeitTyp';
 import { DateUtilsService } from '../../../services/utils/date-utils.service';
 import { FlatNode } from '../../../models/Flat-node';
 import { TreeBuilderService } from '../../../services/utils/tree-builder.service';
@@ -111,7 +115,14 @@ export class NachverrechnungDetailsComponent {
   gestempeltTime: node.gestempeltTime,
   timeRange: node.timeRange,
   hasAlarm: node.hasAlarm || false,
-  alarmData: node.alarmData || null
+  alarmData: node.alarmData || null,
+  productName: node.productName,
+  positionName: node.positionName,
+  buchungspunkt: node.buchungspunkt,
+  isNachverrechnung: node.isNachverrechnung || false,
+  taetigkeit: node.taetigkeit,
+  anmerkung: node.anmerkung,
+  jiraTicket: node.jiraTicket
 });
 
   treeFlattener = new MatTreeFlattener(
@@ -128,10 +139,14 @@ export class NachverrechnungDetailsComponent {
   nachverrechnungForm!: FormGroup;
   monthSummaryForm!: FormGroup;
   showNachverrechnungForm = false;
-  produktOptions: any[] = [];
-  produktpositionOptions: any[] = [];
-  buchungspunktOptions: any[] = [];
-  taetigkeitOptions: any[] = [];
+  hideDateField = false;
+  isViewingNachverrechnung = false;
+  currentDayDate: Date | null = null;
+  selectedNachverrechnungNode: FlatNode | null = null;
+  produktOptions: ApiProdukt[] = [];
+  produktpositionOptions: ApiProduktPosition[] = [];
+  buchungspunktOptions: ApiProduktPositionBuchungspunkt[] = [];
+  taetigkeitOptions: { key: ApiTaetigkeitTyp; value: string }[] = getApiTaetigkeitTypDisplayValues();
   selectedNode: FlatNode | null = null;
   isEditing = false;
   isLoading = true;
@@ -150,7 +165,11 @@ export class NachverrechnungDetailsComponent {
     'endeDatum': 'Ende Datum',
     'endeStunde': 'Ende Stunde',
     'endeMinuten': 'Ende Minuten',
-    'anmerkung': 'Anmerkung'
+    'anmerkung': 'Anmerkung',
+    'produkt': 'Produkt',
+    'produktposition': 'Produktposition',
+    'buchungspunkt': 'Buchungspunkt',
+    'taetigkeit': 'Tätigkeit'
   };
 
   constructor(
@@ -182,11 +201,11 @@ export class NachverrechnungDetailsComponent {
 
   private createNachverrechnungForm(): FormGroup {
     return this.fb.group({
-      produkt: [null],
-      produktposition: [null],
-      buchungspunkt: [null],
-      taetigkeit: [null],
-      datum: [new Date()],
+      produkt: [null, Validators.required],
+      produktposition: [null, Validators.required],
+      buchungspunkt: [null, Validators.required],
+      taetigkeit: [null, Validators.required],
+      startDatum: [new Date(), Validators.required],
       dauerStunden: [0],
       dauerMinuten: [0],
       anmerkung: [''],
@@ -220,12 +239,18 @@ export class NachverrechnungDetailsComponent {
     this.isCreatingNew = false;
     this.isNewlyCreated = false;
     this.isEditing = false;
+    this.hideDateField = false;
+    this.isViewingNachverrechnung = false;
+    this.currentDayDate = null;
+    this.selectedNachverrechnungNode = null;
+    this.produktpositionOptions = [];
+    this.buchungspunktOptions = [];
     this.nachverrechnungForm.reset({
       produkt: null,
       produktposition: null,
       buchungspunkt: null,
       taetigkeit: null,
-      datum: new Date(),
+      startDatum: new Date(),
       dauerStunden: 0,
       dauerMinuten: 0,
       anmerkung: '',
@@ -233,16 +258,146 @@ export class NachverrechnungDetailsComponent {
     });
   }
 
+  openDayNachverrechnungForm(node: FlatNode, event?: Event): void {
+    if (event) event.stopPropagation();
+    const dayDate = this.dateParserService.getDateFromFormattedDay(node.dayName || '');
+    this.showNachverrechnungForm = true;
+    this.selectedNode = null;
+    this.showRightPanelAlarmActions = false;
+    this.isCreatingNew = false;
+    this.isNewlyCreated = false;
+    this.isEditing = false;
+    this.hideDateField = true;
+    this.isViewingNachverrechnung = false;
+    this.currentDayDate = dayDate;
+    this.selectedNachverrechnungNode = null;
+    this.produktpositionOptions = [];
+    this.buchungspunktOptions = [];
+    this.nachverrechnungForm.reset({
+      produkt: null,
+      produktposition: null,
+      buchungspunkt: null,
+      taetigkeit: null,
+      startDatum: dayDate,
+      dauerStunden: 0,
+      dauerMinuten: 0,
+      anmerkung: '',
+      jiraTicket: ''
+    });
+  }
+
+  viewNachverrechnungEntry(node: FlatNode): void {
+    if (!node.formData) return;
+    this.showNachverrechnungForm = true;
+    this.selectedNode = node;
+    this.showRightPanelAlarmActions = false;
+    this.isCreatingNew = false;
+    this.isNewlyCreated = false;
+    this.isEditing = false;
+    this.hideDateField = true;
+    this.isViewingNachverrechnung = true;
+    this.selectedNachverrechnungNode = node;
+    const formData = node.formData;
+    this.produktpositionOptions = formData.produkt?.produktPosition ?? [];
+    this.buchungspunktOptions = formData.produktposition?.produktPositionBuchungspunkt ?? [];
+    this.nachverrechnungForm.reset(formData);
+  }
+
+  onProduktChange(produkt: ApiProdukt | null): void {
+    this.produktpositionOptions = produkt?.produktPosition ?? [];
+    this.buchungspunktOptions = [];
+    this.nachverrechnungForm.patchValue({
+      produktposition: null,
+      buchungspunkt: null
+    });
+  }
+
+  onProduktpositionChange(position: ApiProduktPosition | null): void {
+    this.buchungspunktOptions = position?.produktPositionBuchungspunkt ?? [];
+    this.nachverrechnungForm.patchValue({ buchungspunkt: null });
+  }
+
+  private loadProdukte(): void {
+    const planungsjahr = String(new Date().getFullYear());
+    this.nachverrechnungService.getProdukte(this.personId, 'buchbar', planungsjahr).subscribe({
+      next: (produkte) => {
+        this.produktOptions = produkte;
+      },
+      error: (err) => {
+        console.warn('loadProdukte failed:', err);
+        this.produktOptions = [];
+      }
+    });
+  }
+
   cancelNachverrechnung(): void {
     this.showNachverrechnungForm = false;
+    this.hideDateField = false;
+    this.isViewingNachverrechnung = false;
+    this.currentDayDate = null;
+    this.selectedNachverrechnungNode = null;
     this.nachverrechnungForm.reset();
   }
 
+  showNachverrechnungInfo(): void {
+    this.dialog.open(InfoDialogComponent, {
+      data: {
+        title: 'Es sind Fehler aufgetreten',
+        detail: 'Eine Nachverrechnung darf nur für das letzte verrechnete Monat gemacht werden'
+      },
+      panelClass: 'custom-dialog-width'
+    });
+  }
+
+  async deleteNachverrechnungEntry(): Promise<void> {
+    const node = this.selectedNachverrechnungNode;
+    if (!node) return;
+
+    const confirmed = await this.showDeleteConfirmation(node.name || 'Nachverrechnung');
+    if (!confirmed) return;
+
+    this.treeNodeService.deleteNodeFromTree(this.dataSource.data, node);
+    this.dataSource.data = [...this.dataSource.data];
+    this.cancelNachverrechnung();
+    this.showInfoDialog('Nachverrechnung gelöscht!');
+    this.statusPanelService.addMessageRequest(
+      AppConstants.MSG_NACHVERRECHNUNG_DELETED_SUCCESS,
+      'DELETE',
+      0,
+      this.fakeOkResponse()
+    );
+  }
+
   saveNachverrechnung(): void {
+    if (this.isViewingNachverrechnung) {
+      return;
+    }
+    this.formValidationService.validateAllFields(this.nachverrechnungForm);
+    if (!this.nachverrechnungForm.valid) {
+      const errors = this.formValidationService.getValidationErrors(this.nachverrechnungForm, this.fieldDisplayMap);
+      if (errors.length > 0) {
+        this.showErrorDialog(this.formValidationService.formatValidationErrors(errors));
+      }
+      this.statusPanelService.addMessageRequest(
+        AppConstants.MSG_NACHVERRECHNUNG_CREATED_ERROR,
+        'POST',
+        0,
+        this.fakeErrorResponse()
+      );
+      return;
+    }
+
     const formValue = this.nachverrechnungForm.value;
-    const datum: Date = formValue.datum instanceof Date ? formValue.datum : new Date(formValue.datum);
+    const rawDate = this.hideDateField && this.currentDayDate ? this.currentDayDate : formValue.startDatum;
+    const datum: Date = rawDate instanceof Date ? rawDate : new Date(rawDate);
     if (!datum || isNaN(datum.getTime())) {
       this.showErrorDialog('Bitte ein gültiges Datum auswählen.');
+      this.statusPanelService.addMessageRequest(
+        AppConstants.MSG_NACHVERRECHNUNG_CREATED_ERROR,
+        'POST',
+        0,
+        this.fakeErrorResponse()
+      );
       return;
     }
 
@@ -251,7 +406,17 @@ export class NachverrechnungDetailsComponent {
     const dauer = `${String(stunden).padStart(2, '0')}:${String(minuten).padStart(2, '0')}`;
     const minutenDauer = stunden * 60 + minuten;
 
-    const buchungspunktId = formValue.buchungspunkt?.id ?? formValue.buchungspunkt ?? '';
+    const buchungspunktId: string = formValue.buchungspunkt?.id ?? formValue.buchungspunkt ?? '';
+    if (!buchungspunktId) {
+      this.showErrorDialog('Bitte einen Buchungspunkt auswählen.');
+      this.statusPanelService.addMessageRequest(
+        AppConstants.MSG_NACHVERRECHNUNG_CREATED_ERROR,
+        'POST',
+        0,
+        this.fakeErrorResponse()
+      );
+      return;
+    }
 
     const dto: ApiTaetigkeitsbuchung = {
       datum: datum.toISOString(),
@@ -264,7 +429,7 @@ export class NachverrechnungDetailsComponent {
 
     const startTime = Date.now();
     this.nachverrechnungService
-      .createNachverrechnung(dto, buchungspunktId, this.personId)
+      .createTaetigkeitsbuchung(dto, buchungspunktId, this.personId, 'BuchungErfassen')
       .subscribe({
         next: (response) => {
           const duration = Date.now() - startTime;
@@ -281,11 +446,23 @@ export class NachverrechnungDetailsComponent {
           );
 
           if (!dayNode.children) dayNode.children = [];
+          const produkt: ApiProdukt | null = formValue.produkt ?? null;
+          const position: ApiProduktPosition | null = formValue.produktposition ?? null;
+          const buchungspunktNode: ApiProduktPositionBuchungspunkt | null = formValue.buchungspunkt ?? null;
+          const taetigkeitLabel = this.taetigkeitOptions.find(o => o.key === formValue.taetigkeit)?.value ?? '';
           dayNode.children.push({
-            name: `Stempelzeiten ${dauer}`,
+            name: `${produkt?.kurzName ?? ''} ${position?.produktPositionname ?? ''} ${buchungspunktNode?.buchungspunkt ?? ''}`.trim(),
             timeRange: dauer,
             gestempeltTime: dauer,
             gebucht: dauer,
+            gebuchtTime: dauer,
+            productName: produkt?.kurzName ?? produkt?.produktname ?? '',
+            positionName: position?.produktPositionname ?? '',
+            buchungspunkt: buchungspunktNode?.buchungspunkt ?? '',
+            taetigkeit: taetigkeitLabel,
+            anmerkung: formValue.anmerkung || '',
+            jiraTicket: formValue.jiraTicket || '',
+            isNachverrechnung: true,
             formData: formValue,
             buchungData: response.body ?? undefined,
             children: [],
@@ -298,20 +475,19 @@ export class NachverrechnungDetailsComponent {
           this.treeNodeManagementService.expandParentNodesForNewEntry(this.treeControl, monthYear, dayKey);
 
           this.statusPanelService.addMessageRequest(
-            AppConstants.MSG_BEREITSCHAFTEN_CREATED_SUCCESS,
+            AppConstants.MSG_NACHVERRECHNUNG_CREATED_SUCCESS,
             'POST',
             duration,
             response
           );
 
           this.showInfoDialog('Nachverrechnung gespeichert!');
-          this.showNachverrechnungForm = false;
-          this.nachverrechnungForm.reset();
+          this.cancelNachverrechnung();
         },
         error: (err) => {
           const duration = Date.now() - startTime;
           this.statusPanelService.addMessageRequest(
-            AppConstants.MSG_BEREITSCHAFTEN_CREATED_ERROR,
+            AppConstants.MSG_NACHVERRECHNUNG_CREATED_ERROR,
             'POST',
             duration,
             err
@@ -336,6 +512,7 @@ export class NachverrechnungDetailsComponent {
 ngOnInit() {
   this.personId  = this.nachverrechnungService.getLoggedInPersonId();
   this.loadData(this.personId );
+  this.loadProdukte();
 }
 
   private createBereitschaftForm(): FormGroup {
@@ -526,6 +703,11 @@ onNodeDoubleClick(node: FlatNode, event?: MouseEvent) {
 private handleSingleClick(node:  FlatNode) {
   if (this.showRightPanelAlarmActions && node !== this.alarmNode) {
     this.resetAlarmState();
+  }
+
+  if (node.level === 2 && node.isNachverrechnung) {
+    this.viewNachverrechnungEntry(node);
+    return;
   }
 
   this.showNachverrechnungForm = false;

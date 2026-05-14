@@ -27,5 +27,9 @@ export interface FlatNode {
     dateKey?: string;
   monthKey?: string;
 zeitTyp?: string;
+isNachverrechnung?: boolean;
+taetigkeit?: string;
+anmerkung?: string;
+jiraTicket?: string;
 }
 

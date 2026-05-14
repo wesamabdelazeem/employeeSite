@@ -20,6 +20,7 @@ import {
   MOCK_ORGANISATIONSEINHEITEN,
   MOCK_PERSONEN,
   MOCK_PRODUKTE,
+  MOCK_PRODUKTE_DROPDOWN,
   MOCK_STEMPELZEITEN,
   MOCK_TAETIGKEITSBUCHUNGEN,
   MOCK_TRIGGER,
@@ -61,7 +62,7 @@ export class MockBackendInterceptor implements HttpInterceptor {
     }
 
     const endpoint = this.extractEndpoint(req.url);
-    const body = this.handle(endpoint, req.method, req.body);
+    const body = this.handle(endpoint, req.method, req.body, req.urlWithParams);
 
     if (body === undefined) {
       // No mock matched — fall through so the real interceptor chain runs.
@@ -108,7 +109,7 @@ export class MockBackendInterceptor implements HttpInterceptor {
    * Returns mock response body for a given endpoint/method, or `undefined`
    * to indicate "no mock — pass through".
    */
-  private handle(endpoint: string, method: string, body: unknown): unknown {
+  private handle(endpoint: string, method: string, body: unknown, url: string = ''): unknown {
     const m = method.toUpperCase();
 
     // ── infopdf ───────────────────────────────────────────────────────────
@@ -150,6 +151,9 @@ export class MockBackendInterceptor implements HttpInterceptor {
       return MOCK_LOGGED_IN_PERSON;
     }
     if (endpoint.match(/^personen\/[^/]+\/produkte$/) && m === 'GET') {
+      if (url.includes('filter=buchbar')) {
+        return MOCK_PRODUKTE_DROPDOWN;
+      }
       return MOCK_PRODUKTE;
     }
     const stempelzeitenByPersonMatch = endpoint.match(/^personen\/([^/]+)\/stempelzeiten$/);

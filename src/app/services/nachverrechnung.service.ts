@@ -6,11 +6,13 @@ import { ApiPerson } from '../models/ApiPerson';
 import { ApiAbschlussInfo } from '../models/ApiAbschlussInfo';
 import { ApiStempelzeit } from '../models/ApiStempelzeit';
 import { ApiTaetigkeitsbuchung } from '../models/ApiTaetigkeitsbuchung';
+import { ApiProdukt } from '../models/ApiProdukt';
 import {
   MOCK_PERSONEN,
   MOCK_LOGGED_IN_PERSON,
   MOCK_STEMPELZEITEN,
   MOCK_ABSCHLUSS_INFO,
+  MOCK_PRODUKTE_DROPDOWN,
 } from '../mock/mock-data';
 import { GetitRest3Service } from './getit-rest-3.service';
 import { GetitRest2Service } from './getit-rest-2.service';
@@ -108,27 +110,35 @@ export class NachverrechnungService {
     );
   }
 
-  createNachverrechnung(
+  createTaetigkeitsbuchung(
     dto: ApiTaetigkeitsbuchung,
     produktPositionBuchungspunktId: string,
     personId: string,
     vorgang?: string
   ): Observable<HttpResponse<ApiTaetigkeitsbuchung>> {
+    return this.getitRest3Service.createTaetigkeitsbuchung(
+      dto,
+      produktPositionBuchungspunktId,
+      personId,
+      vorgang
+    );
+  }
+
+  getProdukte(
+    personId: string,
+    filter: string = 'buchbar',
+    planungsjahr: string = String(new Date().getFullYear()),
+    taetigkeitenAb?: string,
+    taetigkeitenBis?: string
+  ): Observable<ApiProdukt[]> {
     return this.getitRest3Service
-      .createTaetigkeitsbuchung(dto, produktPositionBuchungspunktId, personId, vorgang)
+      .getPersonProdukte(personId, filter, taetigkeitenAb, taetigkeitenBis, planungsjahr)
       .pipe(
+        map((res) => res.body ?? []),
+        map((data) => (data && data.length ? data : MOCK_PRODUKTE_DROPDOWN)),
         catchError((err) => {
-          console.warn('createNachverrechnung failed, falling back to mock response:', err);
-          const mockEntry: ApiTaetigkeitsbuchung = {
-            ...dto,
-            id: `new-${Date.now()}`
-          };
-          return of(new HttpResponse<ApiTaetigkeitsbuchung>({
-            body: mockEntry,
-            status: 200,
-            statusText: 'OK (mock)',
-            url: `produkt-positionen-buchungspunkte/${produktPositionBuchungspunktId}/taetigkeitsbuchungen`
-          }));
+          console.warn('getProdukte failed, falling back to mock data:', err);
+          return of(MOCK_PRODUKTE_DROPDOWN);
         })
       );
   }

@@ -3,16 +3,18 @@
 
   <div class="left-panel">
     <div class="left-panel-header">
-      <button matTooltip="Zurück" matTooltipPosition="below">
-        <mat-icon class="icon-header" (click)="goBackToList()"
-          >arrow_back</mat-icon
-        >
+      <button matTooltip="Zurück" matTooltipPosition="below" (click)="goBackToList()">
+        <span class="icon-header icon-header-i">
+          <i class="mdi mdi-chevron-left mdi-24px" aria-hidden="true"></i>
+        </span>
       </button>
 
       <h1 class="title">Nachverrechnung - {{ personName }}</h1>
 
-      <button (click)="openNachverrechnungForm()" matTooltip="Neue Buchung" matTooltipPosition="below">
-        <mat-icon class="icon-header">alarm</mat-icon>
+      <button (click)="openNachverrechnungForm()" matTooltip="Neue Nachverrechnung" matTooltipPosition="below">
+        <span class="icon-header icon-header-i">
+          <i class="mdi mdi-contrast" aria-hidden="true"></i>
+        </span>
       </button>
     </div>
 
@@ -28,7 +30,7 @@
         class="tree"
         *ngIf="!isLoading"
       >
-        <!-- Leaf nodes (Level 2 - Stempelzeiten) -->
+        <!-- Leaf nodes (Level 2 - Stempelzeiten / Nachverrechnung) -->
         <mat-tree-node
           *matTreeNodeDef="let node"
           matTreeNodePadding
@@ -37,12 +39,28 @@
           [class.selected]="selectedNode === node"
         >
           <div class="tree-node leaf-node2">
-            <div class="third-container-top">
-              <mat-icon class="icon-add">access_time</mat-icon>
-              <span class="activity-product">
-                Stempelzeiten: {{ node.timeRange }} 00:00-00:00:00
-              </span>
-            </div>
+            <ng-container *ngIf="node.isNachverrechnung; else stempelzeitenLeaf">
+              <div class="third-container-top">
+                <mat-icon class="icon-add">add_circle_outline</mat-icon>
+                <span class="activity-product">
+                  {{ node.productName }} {{ node.positionName }} {{ node.buchungspunkt }}
+                </span>
+                <span class="nachverrechnung-badge">[Nachverrechnung]</span>
+              </div>
+              <div class="third-container-bottom">
+                <span class="gebucht-label">Gebucht [Std:Min]:</span>
+                <span class="gebucht-value">{{ node.gebuchtTime || '00:00' }}</span>
+                <span class="nachverrechnung-badge">[Nachverrechnung]</span>
+              </div>
+            </ng-container>
+            <ng-template #stempelzeitenLeaf>
+              <div class="third-container-top">
+                <mat-icon class="icon-add">access_time</mat-icon>
+                <span class="activity-product">
+                  Stempelzeiten: {{ node.timeRange }} 00:00-00:00:00
+                </span>
+              </div>
+            </ng-template>
           </div>
         </mat-tree-node>
 
@@ -85,6 +103,17 @@
                 <span class="gebucht-value">{{ node.gestempelt || '00:00' }}</span>
                 <span class="gebucht-label">Gebucht:</span>
                 <span class="gebucht-value">{{ node.gebucht || '00:00' }}</span>
+                <button
+                  type="button"
+                  class="day-alarm-btn"
+                  matTooltip="Neue Nachverrechnung"
+                  matTooltipPosition="below"
+                  (click)="openDayNachverrechnungForm(node, $event)"
+                >
+                  <span class="icon-header day-alarm-icon icon-header-i">
+                    <i class="mdi mdi-contrast" aria-hidden="true"></i>
+                  </span>
+                </button>
               </div>
 
               <div class="third-container-top">
@@ -202,23 +231,68 @@
     *ngIf="showNachverrechnungForm && !isLoading"
   >
     <div class="form-header">
-      <button mat-button class="header-btn" (click)="cancelNachverrechnung()">
-        <mat-icon class="delete-icon">close</mat-icon>
-        <span>Abbrechen</span>
+      <button
+        mat-button
+        class="header-btn"
+        [matTooltip]="isViewingNachverrechnung ? 'Löschen' : 'Abbrechen'"
+        matTooltipPosition="below"
+        (click)="isViewingNachverrechnung ? deleteNachverrechnungEntry() : cancelNachverrechnung()"
+      >
+        <i
+          *ngIf="isViewingNachverrechnung"
+          class="mdi mdi-delete-forever delete-icon"
+        ></i>
+        <mat-icon *ngIf="!isViewingNachverrechnung">close</mat-icon>
+        <span>{{ isViewingNachverrechnung ? 'Löschen' : 'Abbrechen' }}</span>
       </button>
       <h2 class="right-header">Nachverrechnung</h2>
-      <button mat-button class="header-btn primary" (click)="saveNachverrechnung()">
+      <button
+        *ngIf="!isViewingNachverrechnung"
+        mat-button
+        class="header-btn primary"
+        (click)="saveNachverrechnung()"
+      >
         <mat-icon>check</mat-icon>
         <span>Speichern</span>
+      </button>
+      <button
+        *ngIf="isViewingNachverrechnung"
+        mat-button
+        class="header-btn"
+        matTooltip="Schließen"
+        matTooltipPosition="below"
+        (click)="cancelNachverrechnung()"
+      >
+        <mat-icon>close</mat-icon>
+        <span>Schließen</span>
       </button>
     </div>
 
     <form [formGroup]="nachverrechnungForm" class="nachverrechnung-form">
+      <div
+        class="nv-info-row"
+        *ngIf="!hideDateField && !isViewingNachverrechnung"
+      >
+        <button
+          type="button"
+          class="nv-info-btn"
+          matTooltip="Hinweise anzeigen"
+          matTooltipPosition="left"
+          (click)="showNachverrechnungInfo()"
+        >
+          <i class="mdi mdi-information nv-info-icon" aria-hidden="true"></i>
+        </button>
+      </div>
       <div class="nv-row">
         <label class="nv-label">Produkt:</label>
         <mat-form-field appearance="outline" class="nv-field">
-          <mat-select formControlName="produkt" placeholder="< Produkt wählen >" panelClass="drop-down">
-            <mat-option *ngFor="let p of produktOptions" [value]="p">{{ p }}</mat-option>
+          <mat-select
+            formControlName="produkt"
+            placeholder="< Produkt wählen >"
+            panelClass="drop-down"
+            (selectionChange)="onProduktChange($event.value)"
+          >
+            <mat-option *ngFor="let p of produktOptions" [value]="p">{{ p.produktname }}</mat-option>
           </mat-select>
         </mat-form-field>
       </div>
@@ -226,8 +300,13 @@
       <div class="nv-row">
         <label class="nv-label">Produktposition:</label>
         <mat-form-field appearance="outline" class="nv-field">
-          <mat-select formControlName="produktposition" placeholder="< Produktposition wählen >" panelClass="drop-down">
-            <mat-option *ngFor="let p of produktpositionOptions" [value]="p">{{ p }}</mat-option>
+          <mat-select
+            formControlName="produktposition"
+            placeholder="< Produktposition wählen >"
+            panelClass="drop-down"
+            (selectionChange)="onProduktpositionChange($event.value)"
+          >
+            <mat-option *ngFor="let p of produktpositionOptions" [value]="p">{{ p.produktPositionname }}</mat-option>
           </mat-select>
         </mat-form-field>
       </div>
@@ -236,7 +315,7 @@
         <label class="nv-label">Buchungspunkt:</label>
         <mat-form-field appearance="outline" class="nv-field">
           <mat-select formControlName="buchungspunkt" placeholder="< Buchungspunkt wählen >" panelClass="drop-down">
-            <mat-option *ngFor="let b of buchungspunktOptions" [value]="b">{{ b }}</mat-option>
+            <mat-option *ngFor="let b of buchungspunktOptions" [value]="b">{{ b.buchungspunkt }}</mat-option>
           </mat-select>
         </mat-form-field>
       </div>
@@ -245,25 +324,52 @@
         <label class="nv-label">Tätigkeit:</label>
         <mat-form-field appearance="outline" class="nv-field">
           <mat-select formControlName="taetigkeit" placeholder="< Tätigkeit wählen >" panelClass="drop-down">
-            <mat-option *ngFor="let t of taetigkeitOptions" [value]="t">{{ t }}</mat-option>
+            <mat-option *ngFor="let t of taetigkeitOptions" [value]="t.key">{{ t.value }}</mat-option>
           </mat-select>
         </mat-form-field>
       </div>
 
-      <div class="nv-row">
+      <!-- <div class="nv-row">
+
         <label class="nv-label">Datum:</label>
-        <mat-form-field appearance="outline" class="nv-field nv-date">
+        <mat-form-field appearance="outline" class="nv-field nv-date-field">
           <input
             matInput
-            [matDatepicker]="nvPicker"
-            formControlName="datum"
-            class="form-input"
+            formControlName="startDatum"
+            [matDatepicker]="startPicker"
+            placeholder="DD.MM.YYYY"
           />
-          <mat-datepicker-toggle matSuffix [for]="nvPicker" class="date-picker-toggle"></mat-datepicker-toggle>
-          <mat-datepicker #nvPicker panelClass="drop-down-date" yPosition="below" xPosition="end"></mat-datepicker>
+          <mat-datepicker-toggle
+            matSuffix
+            [for]="startPicker"
+            class="date-picker-toggle"
+          ></mat-datepicker-toggle>
+          <mat-datepicker #startPicker></mat-datepicker>
         </mat-form-field>
-      </div>
+      </div> -->
 
+        <div class="form-row" *ngIf="!hideDateField">
+        <label class="field-label">Ende [Datum]:</label>
+        <div class="date-field-container half-width">
+         <div class="date-field-wrapper">
+            <mat-form-field appearance="outline" class="date-field">
+              <input
+                matInput
+                formControlName="endeDatum"
+                placeholder="DD.MM.YYYY"
+                class="form-input-date"
+                [matDatepicker]="endePicker"
+              />
+              <mat-datepicker-toggle
+                matSuffix
+                [for]="endePicker"
+                class="date-picker-toggle"
+              ></mat-datepicker-toggle>
+              <mat-datepicker #endePicker></mat-datepicker>
+            </mat-form-field>
+          </div>
+        </div>
+      </div>
       <div class="nv-row nv-dauer-row">
         <label class="nv-label">Dauer [Stunden]:</label>
         <div class="nv-dauer-group">

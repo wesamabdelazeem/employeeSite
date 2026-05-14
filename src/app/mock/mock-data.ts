@@ -793,6 +793,14 @@ export const MOCK_ANWESEND_PERSONEN: ApiPersonAnwesenheit[] = MOCK_PERSONEN.map(
 );
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Dropdown-only product/position/buchungspunkt data (sourced from the
+// asset JSON shipped with the app). Used by NachverrechnungService when
+// the real backend is unavailable.
+// ─────────────────────────────────────────────────────────────────────────────
+import MOCK_PRODUKTE_DROPDOWN_JSON from '../../assets/drop_dowm_list_product_product_positions.json';
+export const MOCK_PRODUKTE_DROPDOWN: ApiProdukt[] = MOCK_PRODUKTE_DROPDOWN_JSON as unknown as ApiProdukt[];
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Produkte
 // ─────────────────────────────────────────────────────────────────────────────
 export const MOCK_PRODUKTE: ApiProdukt[] = [

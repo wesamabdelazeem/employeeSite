@@ -122,10 +122,16 @@ export class TimeUtilityService {
       totalMinutes += Math.floor(diffMs / (1000 * 60));
     });
 
-    const hours = Math.floor(totalMinutes / 60);
+    const days = Math.floor(totalMinutes / (60 * 24));
+    const hours = Math.floor((totalMinutes % (60 * 24)) / 60);
     const minutes = totalMinutes % 60;
 
-    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+    const hh = hours.toString().padStart(2, '0');
+    const mm = minutes.toString().padStart(2, '0');
+    if (days > 0) {
+      return `${days.toString().padStart(2, '0')}:${hh}:${mm}`;
+    }
+    return `${hh}:${mm}`;
   }
 
   /**

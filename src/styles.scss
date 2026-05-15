@@ -8,8 +8,10 @@
 .mat-mdc-select-panel.drop-down,
 .cdk-overlay-pane .drop-down.mat-mdc-select-panel {
   min-width: 90% !important;
-  width: 90% !important;
-  margin-left: 15px !important;
+  // width: 90% !important;
+  width: 94% !important;
+  // margin-left: 15px !important;
+  margin-left: 0px !important;
 }
 
 /* mat-menu panels also render in the CDK overlay. Force MDI icons inside

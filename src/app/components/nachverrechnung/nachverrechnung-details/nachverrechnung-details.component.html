@@ -23,7 +23,7 @@
 
       <span>Lade Daten...</span>
     </div>
-    <div class="tree-container" *ngIf="!isLoading">
+    <div class="tree-container" id="scroll-screen" *ngIf="!isLoading">
       <mat-tree
         [dataSource]="dataSource"
         [treeControl]="treeControl"
@@ -59,6 +59,7 @@
                 <span class="activity-product">
                   Stempelzeiten: {{ node.timeRange }} 00:00-00:00:00
                 </span>
+
               </div>
             </ng-template>
           </div>
@@ -119,7 +120,9 @@
               <div class="third-container-top">
                 <mat-icon class="icon-add">access_time</mat-icon>
                 <span class="activity-product">
-                  Stempelzeiten: {{ node.timeRange || '00:00 - 00:00' }}
+                  {{ (node.stempelzeitenList && node.stempelzeitenList.length)
+                    ? node.stempelzeitenList.join(', ')
+                    : 'Stempelzeiten: 00:00 - 00:00' }}
                 </span>
               </div>
             </div>
@@ -129,7 +132,8 @@
     </div>
   </div>
 
-  <!-- Right Panel: Month Summary (Level 0) -->
+  <!-- Righ
+   nth Summary (Level 0) -->
   <div
     class="right-panel"
     *ngIf="
@@ -216,6 +220,7 @@
       <div class="day-summary-row align-top">
         <label class="day-summary-label">Stempelzeiten:</label>
         <textarea
+        
           class="day-summary-textarea"
           [value]="(selectedNode.stempelzeitenList || []).join('\n') || (selectedNode.timeRange || '')"
           readonly
@@ -290,6 +295,7 @@
             formControlName="produkt"
             placeholder="< Produkt wählen >"
             panelClass="drop-down"
+            class="selectwidth"
             (selectionChange)="onProduktChange($event.value)"
           >
             <mat-option *ngFor="let p of produktOptions" [value]="p">{{ p.produktname }}</mat-option>
@@ -350,13 +356,14 @@
 
         <div class="form-row" *ngIf="!hideDateField">
         <label class="field-label">Ende [Datum]:</label>
-        <div class="date-field-container half-width">
+        <div class="date-field-container ">
          <div class="date-field-wrapper">
             <mat-form-field appearance="outline" class="date-field">
               <input
                 matInput
                 formControlName="endeDatum"
                 placeholder="DD.MM.YYYY"
+                id="input-date"
                 class="form-input-date"
                 [matDatepicker]="endePicker"
               />
@@ -364,6 +371,7 @@
                 matSuffix
                 [for]="endePicker"
                 class="date-picker-toggle"
+                id="date-picker"
               ></mat-datepicker-toggle>
               <mat-datepicker #endePicker></mat-datepicker>
             </mat-form-field>

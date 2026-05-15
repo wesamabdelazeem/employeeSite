@@ -10,6 +10,7 @@ overflow: hidden;
   border-right: 1px solid #e0e0e0;
   background-color: #fafafa;
   width: 50%;
+  
 }
 .left-panel {
   width: 50%;
@@ -29,12 +30,17 @@ overflow: hidden;
   top: 0;
   z-index: 10;
 }
+#scroll-screen{
+  max-height: calc(100vh - 200px) !important;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
 .tree-container {
   flex: 1 1 auto;
   min-height: 0;
-  height: calc(100vh - 90px);
-  overflow-y: auto;
-  overflow-x: hidden;
+  // height: calc(100vh - 400px) !important;
+  // overflow-y: auto;
+  // overflow-x: hidden;
   box-sizing: border-box;
 
   @media (max-width: 780px) {
@@ -89,6 +95,9 @@ overflow: hidden;
 .right-panel {
   flex: 1;
   background-color: white;
+  max-height: 100vh;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .title {
@@ -174,7 +183,7 @@ overflow: hidden;
 
 .left-panel .month-name,
 .left-panel .day-name,
-.left-panel .activity-product,
+
 .left-panel .level2-sub-info,
 .left-panel .selected-node-title {
   font-size: 14px !important;
@@ -338,9 +347,9 @@ overflow: hidden;
 }
 
 .activity-product {
-  font-weight: 500;
+  // font-weight: 500;
   color: #2E4155;
-  font-size:15px;
+  font-size:13px;
 }
 
 .activity-position {
@@ -363,6 +372,8 @@ overflow: hidden;
   align-items: center;
   justify-content: space-between;
   margin-bottom: 30px;
+  margin-bottom: 4px;
+  // margin-bottom: -6px;
   padding-bottom: 15px;
   border-bottom: 2px solid #e0e0e0;
   padding: 1px;
@@ -405,16 +416,17 @@ overflow: hidden;
 }
 
 .nv-info-icon {
-  color: #338E9C;
+  color: #7080a0;
   font-size: 22px;
   line-height: 1;
   position: relative;
   top: 81px;
-  right: 47px;
+  right: -3px;
 }
 
 .nv-info-btn:hover .nv-info-icon {
-  color: #8F2020;
+  // color: #8F2020;
+  color:#7080a0;
 }
 
 .datum:focus {
@@ -991,7 +1003,7 @@ margin-top: 5px!important;
 
 :host ::ng-deep .mat-mdc-text-field-wrapper {
   padding-left: 0 !important;
-  width: 124%;
+  width: 158%;
 }
 .dash {
   color: #292929;
@@ -1059,7 +1071,7 @@ position: relative;
 
 .form-row-custom{display: flex;align-items: start!important;align-items: center!important;}
 
-.date-picker-toggle{position:relative;left: -25px !important;}
+// .date-picker-toggle{position:relative !important;left: 60px !important;}
 .form-row-date{display: flex;
   flex-direction: row;
   min-height: 50px;
@@ -1178,10 +1190,10 @@ position: relative;
 }
 
 .day-summary-form {
-  padding: 30px 40px;
+  padding: 10px 40px;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 8px;
   max-width: 520px;
 }
 
@@ -1238,10 +1250,10 @@ position: relative;
 
 /* Month Summary Form (Level 0 right panel) */
 .month-summary-form {
-  padding: 30px 40px;
+  padding: 10px 40px;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 8px;
   max-width: 520px;
 }
 
@@ -1302,11 +1314,14 @@ position: relative;
 
 /* Nachverrechnung Form (Header alarm) */
 .nachverrechnung-form {
-  padding: 0px 30px;
+  padding: 0px 30px 24px;
   display: flex;
   flex-direction: column;
   gap: 10px;
   max-width: 620px;
+  max-height: calc(100vh - 200px) !important;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .nv-row {
@@ -1376,7 +1391,7 @@ position: relative;
 
 
 .nv-text-input {
-  width: 261px;
+  width: 300px;
   padding: 6px 8px;
   border: 1px solid #ccc;
   border-radius: 2px;
@@ -1386,8 +1401,8 @@ position: relative;
 }
 
 .nv-textarea {
-  width: 261px;
-  min-height: 70px;
+  width: 300px;
+  min-height: 40px;
   padding: 6px 8px;
   border: 1px solid #ccc;
   border-radius: 2px;
@@ -1457,7 +1472,8 @@ position: relative;
 .nv-inner-label {
   color: #7080A0;
   font-size: 13px;
-  margin-left: 4px;
+  margin-left: -4px;
+  margin-right: -2px;
 }
 
 .header-btn.primary {
@@ -1470,7 +1486,7 @@ position: relative;
 }
 
 .right-panel .form-header .header-btn:has(.delete-icon) {
-  background-color: #32475B !important;
+  background-color: #891F1F !important;
   border-color: #32475B !important;
 
   mat-icon, span {
@@ -1485,4 +1501,13 @@ position: relative;
 
 .checkbox-Month{
   margin-top: 22px !important;
+}
+
+#input-date{
+  width:292px !important;
+}
+
+#date-picker{
+  position: relative !important;
+  left:110px !important;
 }

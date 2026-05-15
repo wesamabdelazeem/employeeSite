@@ -29,12 +29,17 @@ overflow: hidden;
   top: 0;
   z-index: 10;
 }
+#scroll-screen{
+  max-height: calc(100vh - 200px) !important;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
 .tree-container {
   flex: 1 1 auto;
   min-height: 0;
-  height: calc(100vh - 90px);
-  overflow-y: auto;
-  overflow-x: hidden;
+  // height: calc(100vh - 90px);
+  // overflow-y: auto;
+  // overflow-x: hidden;
   box-sizing: border-box;
 
   @media (max-width: 780px) {

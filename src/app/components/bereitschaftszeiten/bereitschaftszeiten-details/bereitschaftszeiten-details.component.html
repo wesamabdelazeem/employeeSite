@@ -21,7 +21,7 @@
 
       <span>Lade Daten...</span>
     </div>
-    <div class="tree-container" *ngIf="!isLoading">
+    <div class="tree-container" id="scroll-screen" *ngIf="!isLoading">
       <mat-tree
         [dataSource]="dataSource"
         [treeControl]="treeControl"

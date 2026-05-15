@@ -29,12 +29,17 @@ overflow: hidden;
   top: 0;
   z-index: 10;
 }
+#scroll-screen{
+  max-height: calc(100vh - 200px) !important;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
 .tree-container {
   flex: 1 1 auto;
   min-height: 0;
-  height: calc(100vh - 90px);
-  overflow-y: auto;
-  overflow-x: hidden;
+  // height: calc(100vh - 200px) !important;
+  // overflow-y: auto;
+  // overflow-x: hidden;
   box-sizing: border-box;
 
   @media (max-width: 780px) {
@@ -77,6 +82,12 @@ overflow: hidden;
   justify-content: center;
   box-sizing: border-box;
   padding: 0;
+}
+
+.icon-header-i i {
+  color: white;
+  font-size: 20px;
+  line-height: 1;
 }
 .icon-r{font-size: 15px;padding-right: 7px;color: red;}
 .icon-add{font-size: 15px;padding-right: 7px;color: #2E4155;}
@@ -166,8 +177,8 @@ overflow: hidden;
 
 .left-panel .month-name,
 .left-panel .day-name,
-.left-panel .activity-product,
-.left-panel .level2-sub-info,
+// .left-panel .activity-product,
+// .left-panel .level2-sub-info,
 .left-panel .selected-node-title {
   font-size: 14px !important;
 }
@@ -230,6 +241,8 @@ overflow: hidden;
     // grid-row: 1 / span 2;
     grid-column: 1;
     align-self: center;
+    position: relative;
+    top:-2px;
   }
 
   .day-name {

@@ -1,4 +1,5 @@
-import { Component, OnInit, ChangeDetectorRef, Renderer2 } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef, Renderer2, inject } from '@angular/core';
+import { forkJoin } from 'rxjs';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MatTreeFlatDataSource, MatTreeFlattener } from '@angular/material/tree';
 import { FlatTreeControl } from '@angular/cdk/tree';
@@ -48,6 +49,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { TimeBoxComponent } from '../../../shared/components/time-box/time-box.component';
 import { TreeNodeManagementService } from '../../../services/utils/tree-node-management.service';
+import { TreeManagementService } from '../../../services/utils/tree-management.service';
 import { CustomDateAdapter } from '../../../services/custom-date-adapter.service';
 //import {PersonService} from '../../../services/person.service';
 
@@ -171,6 +173,8 @@ export class NachverrechnungDetailsComponent {
     'buchungspunkt': 'Buchungspunkt',
     'taetigkeit': 'Tätigkeit'
   };
+
+  private treeManagementService = inject(TreeManagementService);
 
   constructor(
     private fb: FormBuilder,
@@ -316,19 +320,8 @@ export class NachverrechnungDetailsComponent {
     this.buchungspunktOptions = position?.produktPositionBuchungspunkt ?? [];
     this.nachverrechnungForm.patchValue({ buchungspunkt: null });
   }
+  
 
-  private loadProdukte(): void {
-    const planungsjahr = String(new Date().getFullYear());
-    this.nachverrechnungService.getProdukte(this.personId, 'buchbar', planungsjahr).subscribe({
-      next: (produkte) => {
-        this.produktOptions = produkte;
-      },
-      error: (err) => {
-        console.warn('loadProdukte failed:', err);
-        this.produktOptions = [];
-      }
-    });
-  }
 
   cancelNachverrechnung(): void {
     this.showNachverrechnungForm = false;
@@ -512,7 +505,6 @@ export class NachverrechnungDetailsComponent {
 ngOnInit() {
   this.personId  = this.nachverrechnungService.getLoggedInPersonId();
   this.loadData(this.personId );
-  this.loadProdukte();
 }
 
   private createBereitschaftForm(): FormGroup {
@@ -578,7 +570,7 @@ loadData(personId: string) {
   const currentYear = new Date().getFullYear();
   const startDate = `${currentYear}-01-01`;
   const endDate = `${currentYear}-12-31`;
-  let firstDayOfLastMonth = DateUtilsService.getFirstDayOfLastMonth();
+  const planungsjahr = String(currentYear);
 
   this.nachverrechnungService.getPerson(
     personId,
@@ -588,23 +580,43 @@ loadData(personId: string) {
   ).subscribe({
     next: (person) => {
       this.personName = `${person.vorname} ${person.nachname}`;
-      this.nachverrechnungService.getPersonStempelzeitenNoAbwesenheit(personId, startDate, endDate).subscribe({
-        next: (stempelzeiten) => {
-          const filtered = stempelzeiten;
-          const baseTreeData = this.treeExpansionService.generateCurrentAndPreviousMonth();
-          const mergedTreeData = this.mergeApiDataIntoTree(baseTreeData, filtered);
 
-          this.dataSource.data = mergedTreeData;
+      forkJoin({
+        dropdownProducts: this.nachverrechnungService.getProdukte(personId, 'buchbar', planungsjahr),
+        treeProducts: this.nachverrechnungService.getPersonProdukteForTree(personId, startDate, endDate),
+        stempelzeiten: this.nachverrechnungService.getPersonStempelzeitenNoAbwesenheit(personId, startDate, endDate),
+        abschlussInfo: this.nachverrechnungService.getPersonAbschlussInfo(personId)
+      }).subscribe({
+        next: ({ dropdownProducts, treeProducts, stempelzeiten, abschlussInfo }) => {
+          this.abschlussInfo = abschlussInfo;
+          this.produktOptions = dropdownProducts;
+
+          const populatedTree = this.treeManagementService.transformToTreeStructure(
+            treeProducts,
+            stempelzeiten,
+            currentYear,
+            abschlussInfo,
+            true,
+            true
+          );
+
+          const baseTree = this.treeExpansionService.generateCurrentAndPreviousMonth();
+          const treeData = this.mergePopulatedIntoBase(baseTree, populatedTree);
+
+          const naechster = abschlussInfo?.naechsterBuchbarerTag ?? null;
+          treeData.forEach((month: any) => {
+            (month.children || []).forEach((day: any) => {
+              if (!day.hasNotification && day.dateKey && naechster && day.dateKey < naechster) {
+                day.hasNotification = true;
+              }
+            });
+          });
+
+          this.dataSource.data = treeData;
           this.isLoading = false;
-
           this.treeExpansionService.expandCurrentAndLastMonth(this.treeControl);
         },
         error: () => this.isLoading = false
-      });
-      this.nachverrechnungService.getPersonAbschlussInfo(personId).subscribe({
-        next: (info) => {
-          this.abschlussInfo = info;
-        }
       });
     },
     error: () => this.isLoading = false
@@ -647,6 +659,36 @@ loadData_2(personId: string) {
        error: () => this.isLoading = false
      });
    }
+private mergePopulatedIntoBase(
+  baseTree: TaetigkeitNode[],
+  populatedTree: TaetigkeitNode[]
+): TaetigkeitNode[] {
+  for (const populatedMonth of populatedTree) {
+    const baseMonth = baseTree.find(m => m.monthName === populatedMonth.monthName);
+    if (!baseMonth) continue;
+
+    baseMonth.monthKey = populatedMonth.monthKey ?? baseMonth.monthKey;
+    baseMonth.gebuchtTotal = populatedMonth.gebuchtTotal ?? baseMonth.gebuchtTotal;
+    baseMonth.hasNotification = populatedMonth.hasNotification ?? baseMonth.hasNotification;
+
+    if (!populatedMonth.children) continue;
+    for (const populatedDay of populatedMonth.children) {
+      const baseDay = baseMonth.children?.find(d => d.dayName === populatedDay.dayName);
+      if (!baseDay) continue;
+
+      baseDay.children = populatedDay.children ?? [];
+      baseDay.gestempelt = populatedDay.gestempelt ?? '00:00';
+      baseDay.gebucht = populatedDay.gebucht ?? '00:00';
+      baseDay.stempelzeitenList = populatedDay.stempelzeitenList ?? [];
+      baseDay.hasEntries = populatedDay.hasEntries
+        ?? ((populatedDay.children?.length ?? 0) > 0);
+      baseDay.hasNotification = populatedDay.hasNotification ?? baseDay.hasNotification;
+      baseDay.dateKey = populatedDay.dateKey ?? baseDay.dateKey;
+    }
+  }
+  return baseTree;
+}
+
 private mergeApiDataIntoTree(baseTree: TaetigkeitNode[], apiData: ApiStempelzeit[]): TaetigkeitNode[] {
   if (!apiData || apiData.length === 0) {
     return baseTree;
@@ -705,6 +747,10 @@ private handleSingleClick(node:  FlatNode) {
     this.resetAlarmState();
   }
 
+  if (node.expandable) {
+    this.toggleExpandAccordion(node);
+  }
+
   if (node.level === 2 && node.isNachverrechnung) {
     this.viewNachverrechnungEntry(node);
     return;
@@ -729,16 +775,24 @@ private handleSingleClick(node:  FlatNode) {
 }
 
 private handleDoubleClick(node:  FlatNode) {
-  if (node.expandable) {
-    if (this.treeControl.isExpanded(node)) {
-      this.treeControl.collapse(node);
-    } else {
-      this.treeControl.expand(node);
-    }
+  this.handleSingleClick(node);
+}
+
+private toggleExpandAccordion(node: FlatNode): void {
+  if (!node.expandable) return;
+
+  if (this.treeControl.isExpanded(node)) {
+    this.treeControl.collapse(node);
+    return;
   }
 
+  this.treeControl.dataNodes.forEach((other) => {
+    if (other !== node && other.level === node.level && this.treeControl.isExpanded(other)) {
+      this.treeControl.collapse(other);
+    }
+  });
 
-  this.handleSingleClick(node);
+  this.treeControl.expand(node);
 }
 
   populateForm(formData: any) {

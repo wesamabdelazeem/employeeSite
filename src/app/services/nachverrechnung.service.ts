@@ -142,4 +142,20 @@ export class NachverrechnungService {
         })
       );
   }
+
+  getPersonProdukteForTree(
+    personId: string,
+    taetigkeitenAb?: string,
+    taetigkeitenBis?: string
+  ): Observable<ApiProdukt[]> {
+    return this.getitRest3Service
+      .getPersonProdukte(personId, '', taetigkeitenAb, taetigkeitenBis)
+      .pipe(
+        map((res) => res.body ?? []),
+        catchError((err) => {
+          console.warn('getPersonProdukteForTree failed, returning empty list:', err);
+          return of([] as ApiProdukt[]);
+        })
+      );
+  }
 }
